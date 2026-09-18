@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediCare HMS - Hospital Administration</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="ambient-background">
+        <div class="ambient-orb orb-1"></div>
+        <div class="ambient-orb orb-2"></div>
+        <div class="ambient-orb orb-3"></div>
+        <div class="ambient-grid"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-hospital brand-icon"></i>
+                <h2>MediCare HMS</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+                <a href="patients.html" class="nav-item"><i class="fas fa-user-injured"></i><span>Patients</span></a>
+                <a href="doctors.html" class="nav-item"><i class="fas fa-user-md"></i><span>Doctors</span></a>
+                <a href="appointments.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>Appointments</span></a>
+                <a href="billing.html" class="nav-item"><i class="fas fa-file-invoice-dollar"></i><span>Billing</span></a>
+                <a href="prescriptions.html" class="nav-item"><i class="fas fa-prescription"></i><span>Prescriptions</span></a>
+                <a href="admin.html" class="nav-item active"><i class="fas fa-cogs"></i><span>Administration</span></a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="index.html" class="nav-item"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header HUD -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="btn-icon sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar"><i class="fas fa-bars"></i></button>
+                    <div>
+                        <h1 style="font-size: 1.35rem; font-weight: 700;">Operations & Hospital Administration</h1>
+                        <span style="font-size: 0.76rem; color: var(--text-muted); font-family: 'JetBrains Mono';">Staff Duty, Resources, Backups & System Architecture</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="header-search-pill" onclick="toggleCommandPalette(true)" title="Universal Search & Actions (Ctrl + K)">
+                        <i class="fas fa-search" style="font-size: 0.8rem; color: var(--primary);"></i>
+                        <span>Search</span>
+                        <kbd>Ctrl K</kbd>
+                    </div>
+                    <div class="live-emergency-ticker">
+                        <i class="fas fa-shield-alt"></i> <span>SECURITY: AUTHORIZED</span>
+                    </div>
+                    <div class="live-clock-widget">
+                        <span class="clock-dot"></span>
+                        <span class="clock-time" id="liveTime">--:--:--</span>
+                        <span style="opacity:0.4;">|</span>
+                        <span class="clock-date" id="liveDate">---</span>
+                    </div>
+                    <button class="btn-icon notification-bell-btn" onclick="toggleNotificationCenter()" title="Notifications & Clinical Alerts"><i class="fas fa-bell"></i></button>
+                    <button class="btn-icon sound-toggle" onclick="toggleSound()" title="Toggle Audio Feedback"><i class="fas fa-volume-up"></i></button>
+                    <button class="btn-icon wallpaper-toggle" onclick="cycleWallpaperMode()" title="Switch Interactive Live Wallpaper"><i class="fas fa-magic"></i></button>
+                    <button class="btn-icon theme-toggle" onclick="toggleTheme()" title="Switch Glass Theme"><i class="fas fa-moon"></i></button>
+                    <div class="user-info">
+                        <img src="https://ui-avatars.com/api/?name=Admin&background=0284c7&color=fff" alt="User Avatar" class="avatar">
+                        <span>Dr. Admin</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <!-- Navigation Tabs -->
+                <div class="tabs" style="margin-bottom: 24px;">
+                    <button class="tab-btn active" onclick="switchAdminTab('staff')"><i class="fas fa-users"></i> Staff Directory</button>
+                    <button class="tab-btn" onclick="switchAdminTab('resources')"><i class="fas fa-cubes"></i> Hospital Resources</button>
+                    <button class="tab-btn" onclick="switchAdminTab('departments')"><i class="fas fa-clinic-medical"></i> Departmental Grid</button>
+                    <button class="tab-btn" onclick="switchAdminTab('system')"><i class="fas fa-database"></i> Database & System Tools</button>
+                </div>
+
+                <!-- 1. Staff Management Tab -->
+                <div id="staffTab">
+                    <div class="actions-bar">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="staffSearch" placeholder="Search staff members by name, role, department..." oninput="filterStaff()">
+                        </div>
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn btn-outline" onclick="exportStaffToCSV()" title="Export Staff Roster to CSV">
+                                <i class="fas fa-file-csv"></i> Export CSV
+                            </button>
+                            <button class="btn btn-primary" onclick="showAddStaffModal()">
+                                <i class="fas fa-user-plus"></i> Add Staff Member
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-id-badge" style="color:var(--primary);"></i> Active Clinical & Support Staff</h3>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table" id="staffTable">
+                                <thead>
+                                    <tr>
+                                        <th>Staff ID</th>
+                                        <th>Employee Name</th>
+                                        <th>Designation / Role</th>
+                                        <th>Assigned Department</th>
+                                        <th>Shift</th>
+                                        <th>Phone Contact</th>
+                                        <th>Duty Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="staffTableBody">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Resources Tab -->
+                <div id="resourcesTab" style="display:none;">
+                    <div class="resource-grid" id="resourceGrid">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- 3. Departments Tab -->
+                <div id="departmentsTab" style="display:none;">
+                    <div class="stats-grid">
+                        <div class="stat-card blue">
+                            <div class="stat-icon"><i class="fas fa-heartbeat"></i></div>
+                            <div class="stat-details">
+                                <h3 class="stat-number" style="font-size:1.4rem;">Cardiology</h3>
+                                <p class="stat-label">Head: Dr. Priya Sharma</p>
+                                <p class="stat-label">Active Doctors: 2 | Inpatients: 15</p>
+                            </div>
+                        </div>
+                        <div class="stat-card green">
+                            <div class="stat-icon"><i class="fas fa-bone"></i></div>
+                            <div class="stat-details">
+                                <h3 class="stat-number" style="font-size:1.4rem;">Orthopedics</h3>
+                                <p class="stat-label">Head: Dr. Rahul Verma</p>
+                                <p class="stat-label">Active Doctors: 1 | Inpatients: 10</p>
+                            </div>
+                        </div>
+                        <div class="stat-card orange">
+                            <div class="stat-icon"><i class="fas fa-brain"></i></div>
+                            <div class="stat-details">
+                                <h3 class="stat-number" style="font-size:1.4rem;">Neurology</h3>
+                                <p class="stat-label">Head: Dr. Sneha Desai</p>
+                                <p class="stat-label">Active Doctors: 1 | Inpatients: 8</p>
+                            </div>
+                        </div>
+                        <div class="stat-card red">
+                            <div class="stat-icon"><i class="fas fa-baby"></i></div>
+                            <div class="stat-details">
+                                <h3 class="stat-number" style="font-size:1.4rem;">Pediatrics</h3>
+                                <p class="stat-label">Head: Dr. Anil Kumar</p>
+                                <p class="stat-label">Active Doctors: 1 | Inpatients: 12</p>
+                            </div>
+                        </div>
+                        <div class="stat-card blue">
+                            <div class="stat-icon"><i class="fas fa-stethoscope"></i></div>
+                            <div class="stat-details">
+                                <h3 class="stat-number" style="font-size:1.4rem;">General Medicine</h3>
+                                <p class="stat-label">Head: Dr. Meera Iyer</p>
+                                <p class="stat-label">Active Doctors: 2 | Inpatients: 20</p>
+                            </div>
+                        </div>
+                        <div class="stat-card green">
+                            <div class="stat-icon"><i class="fas fa-allergies"></i></div>
+                            <div class="stat-details">
+                                <h3 class="stat-number" style="font-size:1.4rem;">Dermatology</h3>
+                                <p class="stat-label">Head: Dr. Sanjay Kapoor</p>
+                                <p class="stat-label">Active Doctors: 1 | Inpatients: 7</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Database & System Tools Tab -->
+                <div id="systemTab" style="display:none;">
+                    <div class="card" style="margin-bottom: 24px;">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-server" style="color:var(--primary);"></i> Hospital Database Management & Backup Engine</h3>
+                        </div>
+                        <div class="card-body" style="padding: 24px;">
+                            <p style="color:var(--text-secondary); margin-bottom: 20px; line-height: 1.6;">
+                                Manage, export, and restore the complete MediCare HMS client-side database. All records (patients, physicians, consultations, invoices, digital prescriptions, hospital staff, and resource allocations) are backed up in standardized JSON format.
+                            </p>
+
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                                <!-- Export Card -->
+                                <div style="background: var(--glass-bg); border: 1px solid var(--glass-border); padding: 20px; border-radius: var(--border-radius);">
+                                    <div style="font-size: 1.8rem; color: var(--primary); margin-bottom: 12px;"><i class="fas fa-file-export"></i></div>
+                                    <h4 style="margin-bottom: 8px;">Export Database Backup</h4>
+                                    <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 16px;">Download all clinical & administrative data into a secure JSON snapshot.</p>
+                                    <button class="btn btn-primary" onclick="exportDatabaseBackup()" style="width: 100%;">
+                                        <i class="fas fa-download"></i> Download Backup JSON
+                                    </button>
+                                </div>
+
+                                <!-- Restore Card -->
+                                <div style="background: var(--glass-bg); border: 1px solid var(--glass-border); padding: 20px; border-radius: var(--border-radius);">
+                                    <div style="font-size: 1.8rem; color: var(--warning); margin-bottom: 12px;"><i class="fas fa-file-import"></i></div>
+                                    <h4 style="margin-bottom: 8px;">Restore from Backup</h4>
+                                    <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 16px;">Upload a previously saved JSON snapshot to restore all tables and stats.</p>
+                                    <input type="file" id="importDbInput" accept=".json" style="display:none;" onchange="importDatabaseBackup(event)">
+                                    <button class="btn btn-outline" onclick="document.getElementById('importDbInput').click()" style="width: 100%;">
+                                        <i class="fas fa-upload"></i> Choose JSON File to Restore
+                                    </button>
+                                </div>
+
+                                <!-- Demo Reset Card -->
+                                <div style="background: var(--glass-bg); border: 1px solid var(--glass-border); padding: 20px; border-radius: var(--border-radius);">
+                                    <div style="font-size: 1.8rem; color: var(--danger); margin-bottom: 12px;"><i class="fas fa-sync-alt"></i></div>
+                                    <h4 style="margin-bottom: 8px;">Factory Demo Data</h4>
+                                    <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 16px;">Reset system to fresh, rich demonstration records with simulated patients & doctors.</p>
+                                    <button class="btn btn-danger" onclick="resetToDemoData()" style="width: 100%;">
+                                        <i class="fas fa-redo"></i> Reset Demo Database
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Staff Modal -->
+    <div class="modal-overlay" id="staffModal" style="display:none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Add Medical Staff</h3>
+                <button class="btn-icon" onclick="closeModal('staffModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="staffForm" onsubmit="event.preventDefault(); saveStaff();">
+                    <div class="form-group">
+                        <label class="form-label">Full Name *</label>
+                        <input type="text" class="form-control" id="staffName" placeholder="e.g. Nurse Anita Verma" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Role / Category *</label>
+                            <select class="form-control form-select" id="staffRole">
+                                <option value="Nurse">Staff Nurse</option>
+                                <option value="Lab Technician">Lab Technician</option>
+                                <option value="Pharmacist">Pharmacist</option>
+                                <option value="Receptionist">Receptionist</option>
+                                <option value="Ward Boy">Ward Assistant</option>
+                                <option value="Technician">Biomedical Technician</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Assigned Department</label>
+                            <select class="form-control form-select" id="staffDepartment">
+                                <option value="Cardiology">Cardiology</option>
+                                <option value="ICU">Critical Care / ICU</option>
+                                <option value="Orthopedics">Orthopedics</option>
+                                <option value="Neurology">Neurology</option>
+                                <option value="Pediatrics">Pediatrics</option>
+                                <option value="Pathology">Pathology Lab</option>
+                                <option value="Pharmacy">Pharmacy</option>
+                                <option value="General Ward">General Ward</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Roster Shift</label>
+                            <select class="form-control form-select" id="staffShift">
+                                <option value="Morning">Morning (07:00 - 15:00)</option>
+                                <option value="Evening">Evening (15:00 - 23:00)</option>
+                                <option value="Night">Night (23:00 - 07:00)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Phone Contact *</label>
+                            <input type="tel" class="form-control" id="staffPhone" placeholder="Mobile number" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Duty Status</label>
+                        <select class="form-control form-select" id="staffStatus">
+                            <option value="On Duty">On Duty</option>
+                            <option value="Off Duty">Off Duty</option>
+                            <option value="On Leave">On Leave</option>
+                        </select>
+                    </div>
+                    <div class="modal-footer" style="padding-right:0; padding-bottom:0;">
+                        <button type="button" class="btn btn-outline" onclick="closeModal('staffModal')">Cancel</button>
+                        <button type="button" class="btn btn-primary" onclick="saveStaff()">Save Staff Member</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resource Capacity Adjuster Modal -->
+    <div class="modal-overlay" id="resourceModal" style="display:none;">
+        <div class="modal" style="max-width:440px;">
+            <div class="modal-header">
+                <h3>Adjust Resource Capacity</h3>
+                <button class="btn-icon" onclick="closeModal('resourceModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="resourceForm" onsubmit="event.preventDefault(); saveResourceUpdate();">
+                    <div class="form-group">
+                        <label class="form-label">Resource Description</label>
+                        <input type="text" class="form-control" id="resName" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Total Installed Capacity</label>
+                        <input type="number" class="form-control" id="resTotal" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Currently Occupied Units</label>
+                        <input type="number" class="form-control" id="resOccupied" required min="0">
+                    </div>
+                    <div class="modal-footer" style="padding-right:0; padding-bottom:0;">
+                        <button type="button" class="btn btn-outline" onclick="closeModal('resourceModal')">Cancel</button>
+                        <button type="button" class="btn btn-primary" onclick="saveResourceUpdate()">Update Utilization</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+    <script src="js/app.js"></script>
+</body>
+</html>
