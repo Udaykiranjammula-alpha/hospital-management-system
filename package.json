@@ -4,8 +4,7 @@
   "description": "MediCare HMS — Enterprise Glassmorphic Hospital Management System with Real-Time Analytics & EHR",
   "main": "index.html",
   "scripts": {
-    "start": "npx serve .",
-    "build": "echo 'MediCare HMS Masterpiece static assets ready for Vercel deployment'"
+    "start": "npx serve ."
   },
   "keywords": [
     "hospital-management-system",
