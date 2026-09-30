@@ -3901,7 +3901,7 @@ function initAIChatbot() {
         <button class="ai-chatbot-trigger" id="aiChatTrigger" onclick="toggleAIChatbot()" title="MediCare AI Assistant">
             <span class="ai-chatbot-pulse"></span>
             <i class="fas fa-robot"></i>
-            <span class="ai-chatbot-tooltip">Ask MediCare AI Assistant</span>
+            <span>Ask AI Assistant</span>
         </button>
 
         <div class="ai-chatbot-window" id="aiChatWindow">
