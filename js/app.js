@@ -1307,6 +1307,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. Live Clock HUD & Universal Command/Notification Mesh
     initLiveHUD();
     initGlobalHUD();
+    initAIChatbot();
     // 4. Modal Backdrop Click Dismiss (ONLY when clicking outer dark overlay)
     document.addEventListener('click', (e) => {
         if (e.target.classList.contains('modal-overlay')) {
@@ -3882,4 +3883,384 @@ function initGlobalHUD() {
 
     updateNotificationBadge();
 }
+
+// ==========================================
+// 22. MEDICARE AI HEALTH ASSISTANT ENGINE
+// ==========================================
+let isAIOpen = false;
+let isAITyping = false;
+let aiRecognition = null;
+
+function initAIChatbot() {
+    if (document.getElementById('aiChatbotContainer')) return;
+
+    const container = document.createElement('div');
+    container.id = 'aiChatbotContainer';
+    container.className = 'ai-chatbot-container';
+    container.innerHTML = `
+        <button class="ai-chatbot-trigger" id="aiChatTrigger" onclick="toggleAIChatbot()" title="MediCare AI Assistant">
+            <span class="ai-chatbot-pulse"></span>
+            <i class="fas fa-robot"></i>
+            <span class="ai-chatbot-tooltip">Ask MediCare AI Assistant</span>
+        </button>
+
+        <div class="ai-chatbot-window" id="aiChatWindow">
+            <div class="ai-chatbot-header">
+                <div class="ai-header-left">
+                    <div class="ai-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="ai-header-info">
+                        <h4>MediCare AI Assistant <span style="font-size:10px; background:rgba(37,99,235,0.3); border:1px solid #38bdf8; padding:2px 6px; border-radius:10px; color:#38bdf8;">v2.5</span></h4>
+                        <span><span class="ai-online-dot"></span> Online • Clinical Triage Bot</span>
+                    </div>
+                </div>
+                <div class="ai-header-actions">
+                    <button class="ai-action-btn" onclick="clearAIChat()" title="Clear Chat"><i class="fas fa-rotate-right"></i></button>
+                    <button class="ai-action-btn" onclick="toggleAIChatbot(false)" title="Close Chat"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+
+            <!-- Quick Suggestions -->
+            <div class="ai-quick-prompts">
+                <button class="ai-chip" onclick="sendQuickPrompt('I have high fever and shivering')"><i class="fas fa-thermometer-half" style="color:#ef4444;"></i> Fever & Chills</button>
+                <button class="ai-chip" onclick="sendQuickPrompt('I am feeling chest tightness and pressure')"><i class="fas fa-heartbeat" style="color:#f59e0b;"></i> Chest Pain</button>
+                <button class="ai-chip" onclick="sendQuickPrompt('Find a Cardiologist')"><i class="fas fa-user-md" style="color:#06b6d4;"></i> Cardiologist</button>
+                <button class="ai-chip" onclick="sendQuickPrompt('How do I book an appointment?')"><i class="fas fa-calendar-check" style="color:#10b981;"></i> Book Visit</button>
+                <button class="ai-chip" onclick="sendQuickPrompt('What are the hospital visiting hours?')"><i class="fas fa-clock" style="color:#a855f7;"></i> Visiting Hours</button>
+                <button class="ai-chip" onclick="sendQuickPrompt('Who built this website?')"><i class="fas fa-users" style="color:#38bdf8;"></i> Project Team</button>
+            </div>
+
+            <!-- Messages Area -->
+            <div class="ai-chatbot-messages" id="aiChatMessages">
+                <div class="ai-msg-row">
+                    <div class="ai-msg-avatar bot"><i class="fas fa-robot"></i></div>
+                    <div class="ai-bubble bot-bubble">
+                        Hello! 👋 I am your <strong>MediCare AI Clinical Assistant</strong>.
+                        <br><br>
+                        I can triage medical symptoms, recommend specialist doctors, guide appointment scheduling, and answer hospital inquiries.
+                        <br><br>
+                        <em>How can I assist you today?</em>
+                        <span class="ai-time">Just now</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Bar -->
+            <div class="ai-chatbot-input-bar">
+                <div class="ai-input-wrapper">
+                    <input type="text" id="aiChatInput" class="ai-input" placeholder="Describe symptoms or ask anything..." onkeydown="handleAIChatKey(event)">
+                    <button class="ai-mic-btn" id="aiMicBtn" onclick="toggleAIVoiceInput()" title="Voice Input (Speech-to-text)"><i class="fas fa-microphone"></i></button>
+                </div>
+                <button class="ai-send-btn" onclick="sendAIMessage()" title="Send Message">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(container);
+}
+
+function toggleAIChatbot(forceState) {
+    const windowEl = document.getElementById('aiChatWindow');
+    if (!windowEl) return;
+    isAIOpen = (typeof forceState === 'boolean') ? forceState : !isAIOpen;
+    if (isAIOpen) {
+        windowEl.classList.add('open');
+        setTimeout(() => {
+            const input = document.getElementById('aiChatInput');
+            if (input) input.focus();
+        }, 150);
+        if (typeof playSound === 'function') playSound('open');
+    } else {
+        windowEl.classList.remove('open');
+        if (typeof playSound === 'function') playSound('close');
+    }
+}
+
+function clearAIChat() {
+    const messages = document.getElementById('aiChatMessages');
+    if (!messages) return;
+    messages.innerHTML = `
+        <div class="ai-msg-row">
+            <div class="ai-msg-avatar bot"><i class="fas fa-robot"></i></div>
+            <div class="ai-bubble bot-bubble">
+                Chat cleared. How can I help you today?
+                <span class="ai-time">Just now</span>
+            </div>
+        </div>
+    `;
+    if (typeof playSound === 'function') playSound('click');
+}
+
+function sendQuickPrompt(promptText) {
+    const input = document.getElementById('aiChatInput');
+    if (input) {
+        input.value = promptText;
+        sendAIMessage();
+    }
+}
+
+function handleAIChatKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendAIMessage();
+    }
+}
+
+function sendAIMessage() {
+    const input = document.getElementById('aiChatInput');
+    if (!input || !input.value.trim() || isAITyping) return;
+
+    const userText = input.value.trim();
+    input.value = '';
+
+    appendChatMessage('user', userText);
+    if (typeof playSound === 'function') playSound('click');
+
+    showAITypingIndicator();
+
+    // Simulate intelligent AI medical analysis delay
+    setTimeout(() => {
+        hideAITypingIndicator();
+        const response = generateAIClinicalResponse(userText);
+        appendChatMessage('bot', response.text, response.link, response.linkText);
+        if (typeof playSound === 'function') playSound('notify');
+    }, 850);
+}
+
+function appendChatMessage(sender, text, link, linkText) {
+    const messages = document.getElementById('aiChatMessages');
+    if (!messages) return;
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    const row = document.createElement('div');
+    row.className = `ai-msg-row ${sender === 'user' ? 'user-msg' : ''}`;
+
+    let actionBtnHtml = '';
+    if (link && linkText) {
+        actionBtnHtml = `<br><a href="${link}" class="ai-action-link">${linkText} &rarr;</a>`;
+    }
+
+    row.innerHTML = `
+        <div class="ai-msg-avatar ${sender}"><i class="fas ${sender === 'user' ? 'fa-user' : 'fa-robot'}"></i></div>
+        <div class="ai-bubble ${sender === 'user' ? 'user-bubble' : 'bot-bubble'}">
+            ${text}
+            ${actionBtnHtml}
+            <span class="ai-time">${timeStr}</span>
+        </div>
+    `;
+
+    messages.appendChild(row);
+    messages.scrollTop = messages.scrollHeight;
+}
+
+function showAITypingIndicator() {
+    isAITyping = true;
+    const messages = document.getElementById('aiChatMessages');
+    if (!messages) return;
+
+    const ind = document.createElement('div');
+    ind.id = 'aiTypingIndicator';
+    ind.className = 'ai-msg-row';
+    ind.innerHTML = `
+        <div class="ai-msg-avatar bot"><i class="fas fa-robot"></i></div>
+        <div class="ai-typing-indicator">
+            <span class="ai-typing-dot"></span>
+            <span class="ai-typing-dot"></span>
+            <span class="ai-typing-dot"></span>
+        </div>
+    `;
+    messages.appendChild(ind);
+    messages.scrollTop = messages.scrollHeight;
+}
+
+function hideAITypingIndicator() {
+    isAITyping = false;
+    const ind = document.getElementById('aiTypingIndicator');
+    if (ind) ind.remove();
+}
+
+function generateAIClinicalResponse(rawInput) {
+    const input = rawInput.toLowerCase();
+
+    // 1. Emergency / Urgent
+    if (input.includes('chest pain') || input.includes('heart attack') || input.includes('cannot breathe') || input.includes('stroke') || input.includes('unconscious') || input.includes('emergency')) {
+        return {
+            text: `🚨 <strong>CRITICAL EMERGENCY TRIAGE:</strong><br>If you or someone nearby is experiencing acute chest tightness, severe shortness of breath, or sudden numbness, please contact emergency dispatch immediately: <strong>Dial 108</strong>.<br><br>MediCare's 24/7 Trauma & Cardiac Resuscitation ICU is on standby.`,
+            link: 'dashboard.html',
+            linkText: 'View Emergency Telemetry'
+        };
+    }
+
+    // 2. Cardiac / Heart
+    if (input.includes('heart') || input.includes('cardiologist') || input.includes('palpitation') || input.includes('blood pressure') || input.includes('bp') || input.includes('hypertension')) {
+        return {
+            text: `❤️ <strong>Cardiology Assessment:</strong><br>For cardiovascular evaluation, BP monitoring, or ECG reviews, we recommend our Chief Interventional Cardiologist, <strong>Dr. Priya Sharma</strong> (12+ years experience, Available Mon-Fri 9AM-5PM).`,
+            link: 'appointments.html?doctor=D001',
+            linkText: 'Book with Dr. Priya Sharma'
+        };
+    }
+
+    // 3. Bones / Joint / Fracture / Ortho
+    if (input.includes('fracture') || input.includes('bone') || input.includes('joint') || input.includes('leg') || input.includes('arm') || input.includes('knee') || input.includes('back pain') || input.includes('arthritis')) {
+        return {
+            text: `🦴 <strong>Orthopedic Triage:</strong><br>For trauma, bone alignment, knee osteoarthritis, or joint stiffness, we recommend our Senior Orthopedic Surgeon, <strong>Dr. Rahul Verma</strong>. If swelling is present, apply ice packs and elevate the affected limb.`,
+            link: 'doctors.html?dept=Orthopedics',
+            linkText: 'View Orthopedics Schedule'
+        };
+    }
+
+    // 4. Brain / Neuro / Headache / Migraine
+    if (input.includes('headache') || input.includes('migraine') || input.includes('dizzy') || input.includes('dizziness') || input.includes('neurolog') || input.includes('nerve') || input.includes('brain')) {
+        return {
+            text: `🧠 <strong>Neurology Evaluation:</strong><br>Chronic headaches, migraine auras, or balance issues are managed by <strong>Dr. Sneha Desai</strong> (Senior Neuro Physician, Mon-Fri 9AM-4PM). Keep a hydration log and avoid direct screen glare.`,
+            link: 'appointments.html?doctor=D003',
+            linkText: 'Consult Dr. Sneha Desai'
+        };
+    }
+
+    // 5. Fever / Cold / Dengue / Flu / Infection
+    if (input.includes('fever') || input.includes('cold') || input.includes('cough') || input.includes('dengue') || input.includes('infection') || input.includes('vomit') || input.includes('stomach') || input.includes('diabetes')) {
+        return {
+            text: `🩺 <strong>Internal Medicine Triage:</strong><br>For febrile illness, seasonal viral infections, dengue screening, or diabetic care, please consult <strong>Dr. Meera Iyer</strong> (Internal Medicine Specialist). Stay well-hydrated with electrolyte fluids (ORS).`,
+            link: 'appointments.html?doctor=D005',
+            linkText: 'Book General Medicine Visit'
+        };
+    }
+
+    // 6. Child / Pediatric
+    if (input.includes('child') || input.includes('baby') || input.includes('infant') || input.includes('pediatric') || input.includes('kid') || input.includes('vaccin')) {
+        return {
+            text: `👶 <strong>Pediatric Wing:</strong><br>Childhood vaccinations, growth monitoring, and pediatric consultations are led by <strong>Dr. Anil Kumar</strong> (Chief Pediatrician, Mon-Sat 8AM-2PM).`,
+            link: 'doctors.html?dept=Pediatrics',
+            linkText: 'View Pediatrician Availability'
+        };
+    }
+
+    // 7. Skin / Dermatology
+    if (input.includes('skin') || input.includes('rash') || input.includes('acne') || input.includes('allergy') || input.includes('itch') || input.includes('hair')) {
+        return {
+            text: `✨ <strong>Dermatology Care:</strong><br>For skin eruptions, contact dermatitis, or allergy profiling, consult <strong>Dr. Sanjay Kapoor</strong> (Clinical Dermatologist, Mon-Thu 9AM-5PM).`,
+            link: 'doctors.html?dept=Dermatology',
+            linkText: 'Consult Dr. Sanjay Kapoor'
+        };
+    }
+
+    // 8. Booking Appointments
+    if (input.includes('book') || input.includes('appointment') || input.includes('schedule') || input.includes('visit') || input.includes('consultation')) {
+        return {
+            text: `📅 <strong>Appointment Scheduling:</strong><br>You can schedule a consultation with any specialist using our interactive booking portal. Select your patient record, choose your physician, pick a date & time slot, and receive instant confirmation.`,
+            link: 'appointments.html',
+            linkText: 'Open Appointment Scheduler'
+        };
+    }
+
+    // 9. Billing / Cost / Insurance
+    if (input.includes('bill') || input.includes('cost') || input.includes('price') || input.includes('invoice') || input.includes('insurance') || input.includes('pay')) {
+        return {
+            text: `💳 <strong>Billing & Insurance Desk:</strong><br>MediCare accepts Cash, Cards, UPI, and major Health Insurance TPAs. Itemized discharge invoices with dynamic pharmacy and bed charge calculations are available in the Billing module.`,
+            link: 'billing.html',
+            linkText: 'Access Billing & Invoices'
+        };
+    }
+
+    // 10. Patient Records
+    if (input.includes('patient') || input.includes('record') || input.includes('history') || input.includes('medical file')) {
+        return {
+            text: `📋 <strong>Patient Directory:</strong><br>Access comprehensive patient health records, blood groups, admission status, and chronological clinical history timelines in the Patient Management portal.`,
+            link: 'patients.html',
+            linkText: 'Open Patient Directory'
+        };
+    }
+
+    // 11. Project Team / Creators
+    if (input.includes('who built') || input.includes('creator') || input.includes('team') || input.includes('developer') || input.includes('author') || input.includes('student')) {
+        return {
+            text: `👑 <strong>MediCare Project Engineering Team:</strong><br>This Hospital Management System was engineered as a Frontend Web Development Showcase by:<br><br>• <strong>Team Lead:</strong> NISTALA SAI PHANEENDRA KUMAR<br>• <strong>Team Member:</strong> KANASANI NEELAKANTA BALAJI<br>• <strong>Team Member:</strong> JAMMULA UDAY KIRAN<br><br>Deployed on Vercel with zero framework overhead!`,
+            link: 'slides.html',
+            linkText: 'View Presentation Slide Deck'
+        };
+    }
+
+    // 12. Visiting hours / Location
+    if (input.includes('hour') || input.includes('time') || input.includes('visit') || input.includes('location') || input.includes('address') || input.includes('phone') || input.includes('contact')) {
+        return {
+            text: `🏥 <strong>Hospital Facility Information:</strong><br>• <strong>OPD Clinic Hours:</strong> Mon - Sat: 8:00 AM - 8:00 PM<br>• <strong>Patient Visiting Hours:</strong> Daily 4:00 PM - 7:00 PM<br>• <strong>Emergency Wing:</strong> 24/7 / 365 Days<br>• <strong>Ambulance Dispatch:</strong> Dial 108 / 1800-MEDICARE`,
+            link: 'admin.html',
+            linkText: 'View Hospital Administration'
+        };
+    }
+
+    // 13. Greetings
+    if (input.includes('hello') || input.includes('hi') || input.includes('hey') || input.includes('good morning') || input.includes('good afternoon')) {
+        return {
+            text: `Hello! 👋 How can I help you today? You can ask me to:<br>• Triage symptoms (e.g. <em>"severe chest pain"</em>, <em>"high fever"</em>)<br>• Recommend doctors for your condition<br>• Check appointment scheduling or billing procedures.`,
+            link: null,
+            linkText: null
+        };
+    }
+
+    // 14. Default Fallback
+    return {
+        text: `Thank you for your inquiry. I can triage common medical symptoms, suggest specialist physicians, guide you through appointment booking, or assist with hospital billing.<br><br>Could you please provide more details about your symptoms or what service you are looking for?`,
+        link: 'appointments.html',
+        linkText: 'Browse Specialist Doctors'
+    };
+}
+
+// Speech Recognition (Web Speech API)
+function toggleAIVoiceInput() {
+    const micBtn = document.getElementById('aiMicBtn');
+    const input = document.getElementById('aiChatInput');
+    if (!micBtn || !input) return;
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        showToast('Speech recognition not supported in this browser.', 'warning');
+        return;
+    }
+
+    if (aiRecognition) {
+        aiRecognition.stop();
+        aiRecognition = null;
+        micBtn.classList.remove('listening');
+        return;
+    }
+
+    aiRecognition = new SpeechRecognition();
+    aiRecognition.lang = 'en-US';
+    aiRecognition.interimResults = false;
+    aiRecognition.maxAlternatives = 1;
+
+    micBtn.classList.add('listening');
+    if (typeof playSound === 'function') playSound('click');
+    showToast('Listening... Speak your symptom or question.', 'info');
+
+    aiRecognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        input.value = transcript;
+        micBtn.classList.remove('listening');
+        aiRecognition = null;
+        sendAIMessage();
+    };
+
+    aiRecognition.onerror = (event) => {
+        console.warn('Speech Recognition error:', event.error);
+        micBtn.classList.remove('listening');
+        aiRecognition = null;
+        showToast('Voice input stopped.', 'info');
+    };
+
+    aiRecognition.onend = () => {
+        micBtn.classList.remove('listening');
+        aiRecognition = null;
+    };
+
+    aiRecognition.start();
+}
+
 

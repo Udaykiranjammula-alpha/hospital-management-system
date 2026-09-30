@@ -491,7 +491,32 @@ add_image_with_frame(s11, "screenshots/09_admin_staff.png", Inches(5.3), Inches(
 add_image_with_frame(s11, "screenshots/10_admin_resources.png", Inches(5.3), Inches(4.4), Inches(7.2), Inches(2.4), "Resource Allocation dashboard showing bed & equipment utilization bars")
 
 # ==============================================================================
-# SLIDE 12: Modern UI/UX: Dark Mode & Responsive Layout
+# SLIDE 12: MediCare AI Health Assistant
+# ==============================================================================
+s_ai = prs.slides.add_slide(blank_slide_layout)
+set_slide_background(s_ai)
+add_header(s_ai, "Innovation Showcase", "MediCare AI Health Assistant & Clinical Triage")
+
+c_left = add_card(s_ai, Inches(0.8), Inches(1.6), Inches(4.8), Inches(5.3), CARD_BG, CARD_BORDER)
+tb = s_ai.shapes.add_textbox(Inches(1.0), Inches(1.8), Inches(4.4), Inches(4.9))
+tf = tb.text_frame
+tf.word_wrap = True
+
+p = tf.paragraphs[0]
+p.text = "AI Conversational Features"
+p.font.size = Pt(17)
+p.font.bold = True
+p.font.color.rgb = CYAN_ACCENT
+
+add_bullet_point(tf, "Symptom Triage Engine", "Analyzes complaints (fever, cardiac tightness, fractures) and directs to the appropriate department.", "🤖")
+add_bullet_point(tf, "Voice Speech Recognition", "Integrated HTML5 Web Speech API allowing hands-free microphone voice queries.", "🎙️")
+add_bullet_point(tf, "Emergency SOS Protocols", "Flags acute medical distress keywords with immediate 108 ambulance contact directives.", "🚨")
+add_bullet_point(tf, "Interactive Action Shortcuts", "Generates direct in-chat appointment booking and physician consultation buttons.", "⚡")
+
+add_image_with_frame(s_ai, "screenshots/12_ai_chatbot.png", Inches(5.9), Inches(1.6), Inches(6.6), Inches(5.1), "MediCare AI Health Assistant in Action (Triage & Speech Recognition)")
+
+# ==============================================================================
+# SLIDE 13: Modern UI/UX: Dark Mode & Responsive Layout
 # ==============================================================================
 s12 = prs.slides.add_slide(blank_slide_layout)
 set_slide_background(s12)

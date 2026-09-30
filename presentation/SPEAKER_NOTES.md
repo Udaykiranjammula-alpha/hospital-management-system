@@ -87,19 +87,25 @@
 
 ---
 
-### Slide 12: Design Engineering — CSS Variables & Dark Mode
+### Slide 12: Innovation Showcase — MediCare AI Health Assistant
+> *(Point to chatbot screenshot)*  
+> *"Now for our flagship innovation: the **MediCare AI Health Assistant**. Located as a floating widget on every page, patients and staff can type or speak symptoms into the bot. It runs a client-side clinical triage engine that flags emergency symptoms like chest pain, recommends specialist physicians like Dr. Priya Sharma, and supports hands-free voice input via the native HTML5 Web Speech API — all with zero backend server lag!"*
+
+---
+
+### Slide 13: Design Engineering — CSS Variables & Dark Mode
 > *(Point to dark mode dashboard)*  
 > *"One of our proudest frontend achievements is our design architecture. By defining design tokens in CSS custom properties (`:root`), we built an instant Dark Mode toggle. Clicking the moon icon updates the theme across all cards, tables, inputs, and borders with zero styling conflicts, and the user's preference is saved in LocalStorage."*
 
 ---
 
-### Slide 13: Deployment & DevOps — Live on Vercel
+### Slide 14: Deployment & DevOps — Live on Vercel
 > *(Point to Vercel URL)*  
 > *"To ensure our application is real and accessible, we deployed it live on Vercel's global edge network at `hospital-management-system-msz2.vercel.app`. Because it's 100% client-side, assets are served with Brotli compression over HTTP/2, giving near-instant load times worldwide. You can open this URL right now on your phones to test it live."*
 
 ---
 
-### Slide 14: Conclusion & Q&A
+### Slide 15: Conclusion & Q&A
 > *"To conclude, on behalf of our entire engineering team — Lead NISTALA SAI PHANEENDRA KUMAR, KANASANI NEELAKANTA BALAJI, and JAMMULA UDAY KIRAN — this project taught us deep lessons in modular DOM manipulation, scalable CSS architecture, client-side state persistence, and production deployment. Thank you for your time and attention! We would now love to answer any questions or give a live demonstration of the website."*
 
 ---
