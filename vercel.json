@@ -6,6 +6,21 @@
   "name": "medicare-hospital-management-system",
   "routes": [
     {
+      "src": "/slides",
+      "dest": "/presentation/slides.html"
+    },
+    {
+      "src": "/presentation",
+      "dest": "/presentation/slides.html"
+    },
+    {
+      "src": "/screenshots/(.*)",
+      "headers": {
+        "cache-control": "public, max-age=86400"
+      },
+      "dest": "/screenshots/$1"
+    },
+    {
       "src": "/videos/(.*)",
       "headers": {
         "cache-control": "public, max-age=31536000, immutable"
