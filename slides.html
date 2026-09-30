@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediCare HMS - Frontend Class Presentation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --surface-1: #0f172a;
+            --surface-2: #1e293b;
+            --surface-border: #334155;
+            --primary: #2563eb;
+            --primary-glow: rgba(37, 99, 235, 0.4);
+            --cyan: #06b6d4;
+            --emerald: #10b981;
+            --amber: #f59e0b;
+            --rose: #ef4444;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            user-select: none;
+        }
+
+        /* Top Progress Bar */
+        .progress-bar-container {
+            width: 100%;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.05);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 7%;
+            background: linear-gradient(90deg, var(--primary), var(--cyan));
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        /* Top App Bar */
+        header.deck-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 40px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            z-index: 50;
+        }
+
+        .brand-badge {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .brand-badge i {
+            color: var(--primary);
+            font-size: 20px;
+        }
+
+        .tag-pill {
+            background: rgba(37, 99, 235, 0.15);
+            color: var(--cyan);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .live-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .live-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(16, 185, 129, 0.45);
+        }
+
+        .icon-btn {
+            background: var(--surface-2);
+            border: 1px solid var(--surface-border);
+            color: var(--text-muted);
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .icon-btn:hover {
+            color: var(--text-main);
+            border-color: var(--primary);
+        }
+
+        /* Slide Deck Container */
+        .deck-viewport {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 50px 30px 50px;
+        }
+
+        .slide {
+            position: absolute;
+            width: calc(100% - 100px);
+            max-width: 1400px;
+            height: calc(100% - 30px);
+            background: var(--surface-1);
+            border: 1px solid var(--surface-border);
+            border-radius: 20px;
+            padding: 40px 48px;
+            display: none;
+            flex-direction: column;
+            opacity: 0;
+            transform: scale(0.97) translateY(10px);
+            transition: opacity 0.35s ease, transform 0.35s ease;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .slide.active {
+            display: flex;
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+
+        /* Slide Elements */
+        .slide-header {
+            margin-bottom: 24px;
+        }
+
+        .slide-eyebrow {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--cyan);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .slide-title {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.5px;
+        }
+
+        .slide-body {
+            flex: 1;
+            display: grid;
+            gap: 32px;
+            align-items: center;
+        }
+
+        .grid-2 {
+            grid-template-columns: 1fr 1.25fr;
+        }
+
+        .grid-equal {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .grid-4 {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        .feature-card {
+            background: var(--surface-2);
+            border: 1px solid var(--surface-border);
+            border-radius: 14px;
+            padding: 24px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .feature-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+        }
+
+        .feature-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: rgba(37, 99, 235, 0.15);
+            color: var(--cyan);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .feature-text h4 {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+
+        .feature-text p {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* Screenshot Mockup Container */
+        .mockup-wrapper {
+            position: relative;
+            background: #020617;
+            border-radius: 14px;
+            border: 2px solid var(--primary);
+            overflow: hidden;
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 20px var(--primary-glow);
+            max-height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .mockup-header {
+            background: #0f172a;
+            padding: 8px 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid var(--surface-border);
+        }
+
+        .mockup-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+        }
+
+        .dot-red { background: #ef4444; }
+        .dot-yellow { background: #f59e0b; }
+        .dot-green { background: #10b981; }
+
+        .mockup-url {
+            margin-left: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 3px 12px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--cyan);
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .mockup-img {
+            width: 100%;
+            height: auto;
+            max-height: 480px;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Dual screenshot stacked */
+        .stacked-mockups {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .stacked-mockups .mockup-img {
+            max-height: 220px;
+        }
+
+        /* Title Slide Styles */
+        .hero-slide {
+            text-align: center;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at 50% 30%, rgba(37, 99, 235, 0.15) 0%, transparent 70%), var(--surface-1);
+        }
+
+        .hero-badge {
+            background: rgba(37, 99, 235, 0.2);
+            color: var(--cyan);
+            border: 1px solid var(--primary);
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .hero-title {
+            font-size: 52px;
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -1.5px;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #ffffff 40%, var(--cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: 20px;
+            color: var(--text-muted);
+            max-width: 800px;
+            margin: 0 auto 36px auto;
+            line-height: 1.6;
+        }
+
+        .hero-tags {
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .hero-tag {
+            background: var(--surface-2);
+            border: 1px solid var(--surface-border);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .hero-url-card {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--emerald);
+            padding: 14px 28px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 14px;
+            color: var(--emerald);
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        /* Bottom Controls Bar */
+        footer.deck-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 40px;
+            background: var(--surface-1);
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            z-index: 50;
+        }
+
+        .nav-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-btn {
+            background: var(--surface-2);
+            border: 1px solid var(--surface-border);
+            color: var(--text-main);
+            padding: 8px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        .slide-counter {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--text-muted);
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .shortcuts-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex;
+            gap: 16px;
+        }
+
+        .kbd {
+            background: var(--surface-2);
+            border: 1px solid var(--surface-border);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--cyan);
+        }
+
+        /* Speaker Notes Panel */
+        .speaker-notes-panel {
+            position: fixed;
+            bottom: 60px;
+            right: 40px;
+            width: 440px;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid var(--cyan);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            display: none;
+            backdrop-filter: blur(16px);
+            z-index: 200;
+        }
+
+        .speaker-notes-panel.active {
+            display: block;
+        }
+
+        .speaker-notes-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--surface-border);
+        }
+
+        .speaker-notes-header h5 {
+            font-size: 13px;
+            color: var(--cyan);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .speaker-notes-content {
+            font-size: 13px;
+            color: #cbd5e1;
+            line-height: 1.6;
+            max-height: 220px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Progress Bar -->
+    <div class="progress-bar-container">
+        <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="deck-header">
+        <div class="brand-badge">
+            <i class="fas fa-hospital-alt"></i>
+            <span>MediCare HMS</span>
+            <span class="tag-pill">Frontend Project</span>
+        </div>
+        <div class="header-actions">
+            <a href="https://hospital-management-system-msz2.vercel.app/" target="_blank" class="live-btn">
+                <i class="fas fa-external-link-alt"></i> Live App on Vercel
+            </a>
+            <button class="icon-btn" onclick="toggleNotes()" title="Toggle Speaker Notes (S)">
+                <i class="fas fa-comment-alt"></i>
+            </button>
+            <button class="icon-btn" onclick="toggleFullscreen()" title="Fullscreen (F)">
+                <i class="fas fa-expand"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Slide Deck Viewport -->
+    <main class="deck-viewport">
+
+        <!-- SLIDE 1: Hero Cover -->
+        <section class="slide hero-slide active" data-notes="Welcome professors and classmates. Today I am presenting MediCare HMS, a production-deployed hospital management system frontend built with semantic HTML5, modern CSS3 variables and grid, and pure vanilla JavaScript ES6. The app is live right now on Vercel.">
+            <div class="hero-badge">
+                <i class="fas fa-code"></i> FRONTEND WEB ENGINEERING SHOWCASE
+            </div>
+            <h1 class="hero-title">MediCare Hospital Management System</h1>
+            <p class="hero-subtitle">
+                A modern client-side hospital administration portal engineered with responsive UI architectures, instant LocalStorage persistence, and multi-role operations.
+            </p>
+            <div class="hero-tags">
+                <span class="hero-tag">✨ Semantic HTML5</span>
+                <span class="hero-tag">🎨 Modern CSS3 & Variables</span>
+                <span class="hero-tag">⚡ Vanilla JavaScript ES6+</span>
+                <span class="hero-tag">💾 Web Storage Persistence</span>
+                <span class="hero-tag">🚀 Vercel Edge Deployment</span>
+            </div>
+            <a href="https://hospital-management-system-msz2.vercel.app/" target="_blank" class="hero-url-card">
+                <i class="fas fa-globe"></i> https://hospital-management-system-msz2.vercel.app/
+            </a>
+        </section>
+
+        <!-- SLIDE 2: Problem Statement -->
+        <section class="slide" data-notes="Why did we build this? Traditional hospital administration suffers from paper record loss, appointment double-bookings, and billing inaccuracies. MediCare solves this with real-time digital record keeping, instant scheduling, automated invoicing, and zero server lag.">
+            <div class="slide-header">
+                <div class="slide-eyebrow">Project Motivation</div>
+                <h2 class="slide-title">Why Digitize Healthcare Operations?</h2>
+            </div>
+            <div class="slide-body grid-equal">
+                <div class="feature-card" style="border-color: rgba(239, 68, 68, 0.4);">
+                    <h3 style="color: var(--rose); margin-bottom: 20px; font-size: 18px;"><i class="fas fa-exclamation-triangle"></i> Traditional Hospital Pitfalls</h3>
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <div class="feature-icon" style="background: rgba(239,68,68,0.15); color: var(--rose);"><i class="fas fa-file-excel"></i></div>
+                            <div class="feature-text">
+                                <h4>Fragmented Physical Files</h4>
+                                <p>Paper records are easily misplaced, damage-prone, and take valuable minutes to locate during emergencies.</p>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon" style="background: rgba(239,68,68,0.15); color: var(--rose);"><i class="fas fa-user-clock"></i></div>
+                            <div class="feature-text">
+                                <h4>Appointment Double-Bookings</h4>
+                                <p>Unsynchronized paper logs lead to doctor schedule conflicts, patient delays, and missed check-ups.</p>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon" style="background: rgba(239,68,68,0.15); color: var(--rose);"><i class="fas fa-receipt"></i></div>
+                            <div class="feature-text">
+                                <h4>Opaque Billing Calculations</h4>
+                                <p>Manual invoice tallying causes errors in medication charges, bed day tallies, and insurance delays.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="feature-card" style="border-color: rgba(16, 185, 129, 0.4);">
+                    <h3 style="color: var(--emerald); margin-bottom: 20px; font-size: 18px;"><i class="fas fa-check-circle"></i> The MediCare Solution</h3>
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <div class="feature-icon" style="background: rgba(16,185,129,0.15); color: var(--emerald);"><i class="fas fa-laptop-medical"></i></div>
+                            <div class="feature-text">
+                                <h4>Centralized Digital Records</h4>
+                                <p>Instant CRUD access to medical history, blood group, contact info, and patient admission states.</p>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon" style="background: rgba(16,185,129,0.15); color: var(--emerald);"><i class="fas fa-calendar-check"></i></div>
+                            <div class="feature-text">
+                                <h4>Synchronized Calendar & List Engine</h4>
+                                <p>Dual-mode appointment views showing real-time clinical availability and status badges.</p>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon" style="background: rgba(16,185,129,0.15); color: var(--emerald);"><i class="fas fa-calculator"></i></div>
+                            <div class="feature-text">
+                                <h4>Dynamic Invoicing & Printable Rx</h4>
+                                <p>Real-time itemized price computation, payment method tagging, and formal print-ready receipts.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 3: Tech Stack & Architecture -->
+        <section class="slide" data-notes="Here is our technology stack: 100% vanilla web technologies without heavyweight frameworks like React or Angular. This ensures ultra-fast loading, zero compile overhead, complete browser compatibility, and deep mastery of core DOM APIs.">
+            <div class="slide-header">
+                <div class="slide-eyebrow">Engineering Architecture</div>
+                <h2 class="slide-title">Core Technologies & Design Decisions</h2>
+            </div>
+            <div class="slide-body grid-4">
+                <div class="feature-card">
+                    <div class="feature-icon" style="font-size: 22px; width: 44px; height: 44px; margin-bottom: 16px;"><i class="fab fa-html5"></i></div>
+                    <h3 style="font-size: 17px; margin-bottom: 10px;">Semantic HTML5</h3>
+                    <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">
+                        Structured with semantic tags (&lt;aside&gt;, &lt;header&gt;, &lt;table&gt;). Integrated accessible modal dialogs with backdrop click delegation.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon" style="font-size: 22px; width: 44px; height: 44px; margin-bottom: 16px; color: var(--cyan);"><i class="fab fa-css3-alt"></i></div>
+                    <h3 style="font-size: 17px; margin-bottom: 10px;">Modern CSS3</h3>
+                    <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">
+                        1,600+ lines of CSS utilizing CSS custom properties (:root), CSS Grid, Flexbox, micro-animations, and complete Dark Mode support.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon" style="font-size: 22px; width: 44px; height: 44px; margin-bottom: 16px; color: var(--amber);"><i class="fab fa-js"></i></div>
+                    <h3 style="font-size: 17px; margin-bottom: 10px;">Vanilla JS ES6+</h3>
+                    <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">
+                        1,400+ lines of modular client logic. Event delegation, dynamic templating, real-time filters, calendar calculations, and custom toasts.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon" style="font-size: 22px; width: 44px; height: 44px; margin-bottom: 16px; color: var(--emerald);"><i class="fas fa-server"></i></div>
+                    <h3 style="font-size: 17px; margin-bottom: 10px;">Web Storage & Vercel</h3>
+                    <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">
+                        Persistent state management across browser sessions using LocalStorage API. Deployed on Vercel's global Edge CDN for high availability.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 4: Role-Based Authentication -->
+        <section class="slide" data-notes="Slide 4 covers user authentication. We built role-based entry buttons for Admin, Doctor, and Receptionist with custom active states, form validation, and animated toast feedback before smoothly routing to the dashboard.">
+            <div class="slide-header">
+                <div class="slide-eyebrow">Module 01</div>
+                <h2 class="slide-title">User Authentication & Role-Based Entry</h2>
+            </div>
+            <div class="slide-body grid-2">
+                <div class="feature-card">
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-user-shield"></i></div>
+                            <div class="feature-text">
+                                <h4>Role Switcher Interface</h4>
+                                <p>Allows users to authenticate as Admin, Doctor, or Receptionist with dynamic UI role highlighting.</p>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-bell"></i></div>
+                            <div class="feature-text">
+                                <h4>Animated Toast Notification</h4>
+                                <p>Custom non-blocking notification engine built in JS that alerts the user and auto-dismisses after 3 seconds.</p>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-database"></i></div>
+                            <div class="feature-text">
+                                <h4>Client-Side Session Storage</h4>
+                                <p>Stores credentials and selected permissions in Web Storage to personalize dashboard header avatars.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="mockup-wrapper">
+                    <div class="mockup-header">
+                        <span class="mockup-dot dot-red"></span>
+                        <span class="mockup-dot dot-yellow"></span>
+                        <span class="mockup-dot dot-green"></span>
+                        <span class="mockup-url">https://hospital-management-system-msz2.vercel.app/index.html</span>
+                    </div>
+                    <img src="screenshots/01_login.png" class="mockup-img" alt="Login Screenshot">
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 5: Interactive Executive Dashboard -->
+        <section class="slide" data-notes="Slide 5 shows the Executive Dashboard. It auto-aggregates data from localStorage into 4 live KPI cards: Total Patients, Today's Appointments, Gross Revenue, and Bed Availability. Notice the department percentage bars and recent appointments feed.">
+            <div class="slide-header">
+                <div class="slide-eyebrow">Module 02</div>
+                <h2 class="slide-title">Interactive Executive Dashboard & Analytics</h2>
+            </div>
+            <div class="slide-body grid-2">
+                <div class="feature-card">
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+                            <div class="feature-text">
+                                <h4>Real-Time Metric Aggregation</h4>
+                                <p>Dynamic counters compute patient headcounts, active appointments, revenue in INR (₹), and remaining beds.</p>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-poll"></i></div>
+                            <div class="feature-text">
+                                <h4>CSS Department Visualizer</h4>
+                                <p>Pure CSS horizontal progress bars representing patient volume across Cardiology, Orthopedics, and Neurology.</p>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-bolt"></i></div>
+                            <div class="feature-text">
+                                <h4>Quick Action Panel</h4>
+                                <p>Direct one-click triggers allowing operators to quickly register a patient, book an appointment, or bill an invoice.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="mockup-wrapper">
+                    <div class="mockup-header">
+                        <span class="mockup-dot dot-red"></span>
+                        <span class="mockup-dot dot-yellow"></span>
+                        <span class="mockup-dot dot-green"></span>
+                        <span class="mockup-url">https://hospital-management-system-msz2.vercel.app/dashboard.html</span>
+                    </div>
+                    <img src="screenshots/02_dashboard.png" class="mockup-img" alt="Dashboard Screenshot">
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 6: Patient Records -->
+        <section class="slide" data-notes="Slide 6 demonstrates the Patient Records module. It features full CRUD operations with modal dialogues, real-time live search that filters as you type, and a chronological medical history timeline for each patient.">
+            <div class="slide-header">
+                <div class="slide-eyebrow">Module 03</div>
+                <h2 class="slide-title">Patient Directory & Medical History Timeline</h2>
+            </div>
+            <div class="slide-body grid-2">
+                <div class="feature-card">
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-search"></i></div>
+                            <div class="feature-text">
+                                <h4>Real-Time Live Search</h4>
+                                <p>High-speed table filtering across patient name, ID, contact number, or medical condition without page reloads.</p>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-notes-medical"></i></div>
+                            <div class="feature-text">
+                                <h4>Complete CRUD Lifecycle</h4>
+                                <p>Register new patients, edit admission parameters, or archive discharged records with instant localStorage sync.</p>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-history"></i></div>
+                            <div class="feature-text">
+                                <h4>Chronological History View</h4>
+                                <p>A timeline modal tracking admission dates, surgical interventions, and stabilization events.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="mockup-wrapper">
+                    <div class="mockup-header">
+                        <span class="mockup-dot dot-red"></span>
+                        <span class="mockup-dot dot-yellow"></span>
+                        <span class="mockup-dot dot-green"></span>
+                        <span class="mockup-url">https://hospital-management-system-msz2.vercel.app/patients.html</span>
+                    </div>
+                    <img src="screenshots/03_patients.png" class="mockup-img" alt="Patients Screenshot">
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 7: Doctor Directory -->
+        <section class="slide" data-notes="Slide 7 presents the Doctor Directory. Built with a responsive CSS grid, doctors have profile cards with department badges, contact details, live availability status dots, and weekly consultation schedules.">
+            <div class="slide-header">
+                <div class="slide-eyebrow">Module 04</div>
+                <h2 class="slide-title">Doctor Profiles & Weekly Scheduling Grid</h2>
+            </div>
+            <div class="slide-body grid-2">
+                <div class="feature-card">
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-user-md"></i></div>
+                            <div class="feature-text">
+                                <h4>Responsive Physician Cards</h4>
+                                <p>Displays doctor avatar, specialization, department pill, phone, email, and total years of clinical experience.</p>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-filter"></i></div>
+                            <div class="feature-text">
+                                <h4>Department Filter Dropdown</h4>
+                                <p>Instant sorting between Cardiology, Orthopedics, Neurology, Pediatrics, General Medicine, and Dermatology.</p>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-calendar-alt"></i></div>
+                            <div class="feature-text">
+                                <h4>Weekly Shift Breakdown</h4>
+                                <p>Profile inspection modal displaying detailed daily clinic hours (e.g. Mon: 9AM-5PM, Sun: Off).</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="mockup-wrapper">
+                    <div class="mockup-header">
+                        <span class="mockup-dot dot-red"></span>
+                        <span class="mockup-dot dot-yellow"></span>
+                        <span class="mockup-dot dot-green"></span>
+                        <span class="mockup-url">https://hospital-management-system-msz2.vercel.app/doctors.html</span>
+                    </div>
+                    <img src="screenshots/04_doctors.png" class="mockup-img" alt="Doctors Screenshot">
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 8: Appointments Dual View -->
+        <section class="slide" data-notes="Slide 8 highlights our dual-view Appointment Engine. Operators can switch between a structured list table and an interactive monthly calendar. The calendar algorithm computes day grids and places colored event dots.">
+            <div class="slide-header">
+                <div class="slide-eyebrow">Module 05</div>
+                <h2 class="slide-title">Appointment Engine: List & Interactive Calendar</h2>
+            </div>
+            <div class="slide-body grid-2">
+                <div class="feature-card">
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-calendar-day"></i></div>
+                            <div class="feature-text">
+                                <h4>Custom Calendar Algorithm</h4>
+                                <p>Calculates month days, leap years, first-day offset, and plots appointment indicator dots natively in JS.</p>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-table"></i></div>
+                            <div class="feature-text">
+                                <h4>Tabular Operations View</h4>
+                                <p>Full table view allowing receptionist staff to mark consultations Completed, Cancelled, or Rescheduled.</p>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-handshake"></i></div>
+                            <div class="feature-text">
+                                <h4>Relational Booking Modal</h4>
+                                <p>Dynamic select menus populated from stored Doctors and Patients to prevent scheduling discrepancies.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="stacked-mockups">
+                    <div class="mockup-wrapper">
+                        <div class="mockup-header">
+                            <span class="mockup-dot dot-red"></span>
+                            <span class="mockup-dot dot-yellow"></span>
+                            <span class="mockup-dot dot-green"></span>
+                            <span class="mockup-url">Appointments List View</span>
+                        </div>
+                        <img src="screenshots/05_appointments_list.png" class="mockup-img" alt="Appointments List">
+                    </div>
+                    <div class="mockup-wrapper">
+                        <div class="mockup-header">
+                            <span class="mockup-dot dot-red"></span>
+                            <span class="mockup-dot dot-yellow"></span>
+                            <span class="mockup-dot dot-green"></span>
+                            <span class="mockup-url">Interactive Calendar View</span>
+                        </div>
+                        <img src="screenshots/06_appointments_calendar.png" class="mockup-img" alt="Appointments Calendar">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 9: Billing & Invoicing -->
+        <section class="slide" data-notes="Slide 9 covers the Billing and Invoicing system. It supports dynamic item row creation in the modal, real-time math calculation for total charges, payment method tagging, and formal print-ready receipts via @media print.">
+            <div class="slide-header">
+                <div class="slide-eyebrow">Module 06</div>
+                <h2 class="slide-title">Invoicing, Financial Analytics & Print View</h2>
+            </div>
+            <div class="slide-body grid-2">
+                <div class="feature-card">
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-coins"></i></div>
+                            <div class="feature-text">
+                                <h4>Financial KPI Cards</h4>
+                                <p>Calculates Gross Revenue, Pending Balances, Paid Invoices, and Overdue Settlement Alerts in INR (₹).</p>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-plus-circle"></i></div>
+                            <div class="feature-text">
+                                <h4>Dynamic Item Row Builder</h4>
+                                <p>Operators can dynamically append or remove billable charges with live mathematical auto-summing.</p>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-print"></i></div>
+                            <div class="feature-text">
+                                <h4>Print-Ready CSS Layouts</h4>
+                                <p>Specialized @media print styles hide navigation bars to produce formal clean hospital billing statements.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="mockup-wrapper">
+                    <div class="mockup-header">
+                        <span class="mockup-dot dot-red"></span>
+                        <span class="mockup-dot dot-yellow"></span>
+                        <span class="mockup-dot dot-green"></span>
+                        <span class="mockup-url">https://hospital-management-system-msz2.vercel.app/billing.html</span>
+                    </div>
+                    <img src="screenshots/07_billing.png" class="mockup-img" alt="Billing Screenshot">
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 10: Prescriptions -->
+        <section class="slide" data-notes="Slide 10 details the Digital Prescription workflow. Doctors can prescribe medications with dosage, frequency, and duration. The system formats this into an authentic medical Rx layout with digital doctor signature.">
+            <div class="slide-header">
+                <div class="slide-eyebrow">Module 07</div>
+                <h2 class="slide-title">Digital Prescriptions & Pharmacy Workflow</h2>
+            </div>
+            <div class="slide-body grid-2">
+                <div class="feature-card">
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-prescription"></i></div>
+                            <div class="feature-text">
+                                <h4>Authentic Rx Document Layout</h4>
+                                <p>Generates standardized clinical prescription previews with patient diagnosis, physician details, and Rx branding.</p>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-pills"></i></div>
+                            <div class="feature-text">
+                                <h4>Multi-Medication Rows</h4>
+                                <p>Supports structured drug entry including dosage, frequency (e.g. BD, TDS, SOS), and course duration.</p>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-file-medical-alt"></i></div>
+                            <div class="feature-text">
+                                <h4>Doctor Clinical Notes</h4>
+                                <p>Dedicated fields for dietary recommendations, contraindications, and scheduled follow-up dates.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="mockup-wrapper">
+                    <div class="mockup-header">
+                        <span class="mockup-dot dot-red"></span>
+                        <span class="mockup-dot dot-yellow"></span>
+                        <span class="mockup-dot dot-green"></span>
+                        <span class="mockup-url">https://hospital-management-system-msz2.vercel.app/prescriptions.html</span>
+                    </div>
+                    <img src="screenshots/08_prescriptions.png" class="mockup-img" alt="Prescriptions Screenshot">
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 11: Administration & Resources -->
+        <section class="slide" data-notes="Slide 11 showcases Hospital Administration. Notice how administrators can monitor staff duty shifts, and see live occupancy progress bars for critical resources like ICU Beds, Ventilators, and Ambulances.">
+            <div class="slide-header">
+                <div class="slide-eyebrow">Module 08</div>
+                <h2 class="slide-title">Hospital Administration & Resource Allocation</h2>
+            </div>
+            <div class="slide-body grid-2">
+                <div class="feature-card">
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-users-cog"></i></div>
+                            <div class="feature-text">
+                                <h4>Staff Duty Rostering</h4>
+                                <p>Tracks nurse and technician allocations across Morning, Evening, and Night shifts with on-duty status tags.</p>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-procedures"></i></div>
+                            <div class="feature-text">
+                                <h4>Live Resource Capacity Bars</h4>
+                                <p>Progress bars reflect occupied vs total capacities for ICU beds, General wards, Ventilators, and Ambulances.</p>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-sliders-h"></i></div>
+                            <div class="feature-text">
+                                <h4>Dynamic Resource Modulation</h4>
+                                <p>Admins can update occupancy numbers directly via modal dialogs, immediately recalculating hospital metrics.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="stacked-mockups">
+                    <div class="mockup-wrapper">
+                        <div class="mockup-header">
+                            <span class="mockup-dot dot-red"></span>
+                            <span class="mockup-dot dot-yellow"></span>
+                            <span class="mockup-dot dot-green"></span>
+                            <span class="mockup-url">Staff Shift Roster</span>
+                        </div>
+                        <img src="screenshots/09_admin_staff.png" class="mockup-img" alt="Admin Staff">
+                    </div>
+                    <div class="mockup-wrapper">
+                        <div class="mockup-header">
+                            <span class="mockup-dot dot-red"></span>
+                            <span class="mockup-dot dot-yellow"></span>
+                            <span class="mockup-dot dot-green"></span>
+                            <span class="mockup-url">Resource Utilization Capacity</span>
+                        </div>
+                        <img src="screenshots/10_admin_resources.png" class="mockup-img" alt="Admin Resources">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 12: Dark Mode & CSS Theming -->
+        <section class="slide" data-notes="Slide 12 demonstrates frontend design engineering: our CSS variable theming engine. By clicking the moon icon, the app seamlessly switches to Dark Mode. All cards, tables, borders, and text colors update instantly.">
+            <div class="slide-header">
+                <div class="slide-eyebrow">Design Engineering</div>
+                <h2 class="slide-title">CSS Variables, Dark Mode & Responsiveness</h2>
+            </div>
+            <div class="slide-body grid-2">
+                <div class="feature-card">
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-palette"></i></div>
+                            <div class="feature-text">
+                                <h4>CSS Custom Properties (:root)</h4>
+                                <p>Centralized design tokens for surface colors, typography scales, border radiuses, and elevation shadows.</p>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-moon"></i></div>
+                            <div class="feature-text">
+                                <h4>Seamless Dark Mode Switch</h4>
+                                <p>One-click theme toggle applying .dark-mode to &lt;body&gt;, instantly swapping variables and saving to LocalStorage.</p>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-mobile-alt"></i></div>
+                            <div class="feature-text">
+                                <h4>Responsive Media Queries</h4>
+                                <p>Fluid collapsible sidebar navigation that adjusts cleanly for tablets (768px) and mobile smartphones (480px).</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="mockup-wrapper">
+                    <div class="mockup-header">
+                        <span class="mockup-dot dot-red"></span>
+                        <span class="mockup-dot dot-yellow"></span>
+                        <span class="mockup-dot dot-green"></span>
+                        <span class="mockup-url">MediCare Dashboard in Dark Mode</span>
+                    </div>
+                    <img src="screenshots/11_dashboard_dark.png" class="mockup-img" alt="Dashboard Dark Mode">
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 13: Live Deployment on Vercel -->
+        <section class="slide" data-notes="Slide 13 details our cloud deployment on Vercel. We deployed directly to Vercel's global edge network. This gives our application instant load times worldwide, automatic HTTPS security, and zero server maintenance costs.">
+            <div class="slide-header">
+                <div class="slide-eyebrow">Deployment & DevOps</div>
+                <h2 class="slide-title">Live Production on Vercel Edge Network</h2>
+            </div>
+            <div class="slide-body grid-equal">
+                <div class="feature-card" style="display: flex; flex-direction: column; justify-content: center; gap: 20px;">
+                    <h3 style="font-size: 20px; color: var(--emerald);"><i class="fas fa-rocket"></i> Production Highlights</h3>
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <div class="feature-icon" style="background: rgba(16,185,129,0.15); color: var(--emerald);"><i class="fas fa-bolt"></i></div>
+                            <div class="feature-text">
+                                <h4>Edge Network Performance</h4>
+                                <p>Static assets served with Brotli compression and HTTP/2 across global edge points of presence.</p>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon" style="background: rgba(16,185,129,0.15); color: var(--emerald);"><i class="fas fa-lock"></i></div>
+                            <div class="feature-text">
+                                <h4>Automatic SSL Encryption</h4>
+                                <p>Pre-configured TLS/HTTPS encryption ensuring secure healthcare administrative simulation.</p>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon" style="background: rgba(16,185,129,0.15); color: var(--emerald);"><i class="fas fa-mobile"></i></div>
+                            <div class="feature-text">
+                                <h4>Testable on Any Device</h4>
+                                <p>Classmates and instructors can open the URL directly on mobile phones or laptops right now.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="feature-card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; border-color: var(--primary);">
+                    <div style="font-size: 48px; color: var(--cyan); margin-bottom: 16px;"><i class="fas fa-globe-americas"></i></div>
+                    <h3 style="font-size: 22px; margin-bottom: 12px;">Live Vercel Application</h3>
+                    <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 24px; max-width: 400px;">
+                        Deployed and accessible 24/7 with 100% uptime:
+                    </p>
+                    <a href="https://hospital-management-system-msz2.vercel.app/" target="_blank" style="background: var(--surface-1); border: 1px solid var(--emerald); color: var(--emerald); padding: 12px 24px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 14px; text-decoration: none; font-weight: 700; margin-bottom: 24px; display: inline-block;">
+                        hospital-management-system-msz2.vercel.app
+                    </a>
+                    <a href="https://hospital-management-system-msz2.vercel.app/" target="_blank" class="live-btn" style="padding: 12px 28px; font-size: 15px;">
+                        <i class="fas fa-play-circle"></i> Launch Live Website Demo
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 14: Conclusion & Q&A -->
+        <section class="slide hero-slide" data-notes="In conclusion, this project demonstrated end-to-end frontend engineering from layout architecture to responsive design, client-side state management, and cloud deployment. Thank you! I welcome any questions and would love to give a live walkthrough.">
+            <div class="hero-badge">
+                <i class="fas fa-graduation-cap"></i> PRESENTATION CONCLUSION
+            </div>
+            <h1 class="hero-title">Thank You!</h1>
+            <p class="hero-subtitle">
+                Questions, Feedback, & Live Demonstration Walkthrough
+            </p>
+            <div class="hero-tags" style="margin-bottom: 28px;">
+                <span class="hero-tag"><i class="fas fa-check"></i> Modular DOM Architecture</span>
+                <span class="hero-tag"><i class="fas fa-check"></i> Scalable CSS Design Tokens</span>
+                <span class="hero-tag"><i class="fas fa-check"></i> Zero Backend Overhead</span>
+                <span class="hero-tag"><i class="fas fa-check"></i> Live Production Vercel App</span>
+            </div>
+            <a href="https://hospital-management-system-msz2.vercel.app/" target="_blank" class="hero-url-card" style="font-size: 18px;">
+                <i class="fas fa-play"></i> Open Live App: hospital-management-system-msz2.vercel.app
+            </a>
+        </section>
+
+    </main>
+
+    <!-- Speaker Notes Overlay -->
+    <div class="speaker-notes-panel" id="speakerNotesPanel">
+        <div class="speaker-notes-header">
+            <h5><i class="fas fa-microphone"></i> Speaker Talking Points</h5>
+            <button onclick="toggleNotes()" style="background:none; border:none; color:var(--text-muted); cursor:pointer;"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="speaker-notes-content" id="speakerNotesContent">
+            Press S to toggle notes.
+        </div>
+    </div>
+
+    <!-- Footer Controls -->
+    <footer class="deck-footer">
+        <div class="nav-controls">
+            <button class="nav-btn" id="prevBtn" onclick="prevSlide()"><i class="fas fa-chevron-left"></i> Previous</button>
+            <span class="slide-counter" id="slideCounter">1 / 14</span>
+            <button class="nav-btn" id="nextBtn" onclick="nextSlide()">Next <i class="fas fa-chevron-right"></i></button>
+        </div>
+        <div class="shortcuts-hint">
+            <span><span class="kbd">←</span> <span class="kbd">→</span> Navigate</span>
+            <span><span class="kbd">Space</span> Next</span>
+            <span><span class="kbd">F</span> Fullscreen</span>
+            <span><span class="kbd">S</span> Notes</span>
+        </div>
+    </footer>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const progressFill = document.getElementById('progressFill');
+        const slideCounter = document.getElementById('slideCounter');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const speakerNotesPanel = document.getElementById('speakerNotesPanel');
+        const speakerNotesContent = document.getElementById('speakerNotesContent');
+        
+        let currentSlide = 0;
+        const totalSlides = slides.length;
+
+        function updateSlide(index) {
+            slides.forEach((s, i) => {
+                s.classList.remove('active');
+                if (i === index) s.classList.add('active');
+            });
+
+            // Update Progress & Counter
+            const progressPct = ((index + 1) / totalSlides) * 100;
+            progressFill.style.width = progressPct + '%';
+            slideCounter.textContent = `${index + 1} / ${totalSlides}`;
+
+            // Buttons state
+            prevBtn.disabled = (index === 0);
+            nextBtn.disabled = (index === totalSlides - 1);
+
+            // Update speaker notes
+            const notes = slides[index].getAttribute('data-notes') || 'No speaker notes for this slide.';
+            speakerNotesContent.innerHTML = notes;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateSlide(currentSlide);
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide(currentSlide);
+            }
+        }
+
+        function toggleNotes() {
+            speakerNotesPanel.classList.toggle('active');
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => console.log(err));
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+
+        // Keyboard listeners
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                e.preventDefault();
+                prevSlide();
+            } else if (e.key.toLowerCase() === 'f') {
+                toggleFullscreen();
+            } else if (e.key.toLowerCase() === 's') {
+                toggleNotes();
+            }
+        });
+
+        // Handle image resolution across both local and hosted routes
+        document.querySelectorAll('.mockup-img').forEach(img => {
+            img.onerror = function() {
+                if (!this.dataset.retried) {
+                    this.dataset.retried = '1';
+                    const filename = this.getAttribute('src').split('/').pop();
+                    this.src = '/screenshots/' + filename;
+                }
+            };
+        });
+
+        // Initialize
+        updateSlide(0);
+    </script>
+</body>
+</html>
