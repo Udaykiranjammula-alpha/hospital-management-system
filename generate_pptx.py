@@ -152,36 +152,57 @@ p2.font.color.rgb = CYAN_ACCENT
 # Features Row / Highlights
 tech_tags = ["Semantic HTML5", "Modern CSS3 (Variables & Grid)", "Vanilla JavaScript ES6+", "LocalStorage Data Persistence", "Vercel Production Deployment"]
 for i, tag in enumerate(tech_tags):
-    tag_card = add_card(s1, Inches(1.3 + (i * 2.15)), Inches(4.0), Inches(2.05), Inches(0.55), RGBColor(15, 23, 42), CARD_BORDER)
+    tag_card = add_card(s1, Inches(1.3 + (i * 2.15)), Inches(3.85), Inches(2.05), Inches(0.5), RGBColor(15, 23, 42), CARD_BORDER)
     tf = tag_card.text_frame
     p = tf.paragraphs[0]
     p.alignment = PP_ALIGN.CENTER
     p.text = tag
-    p.font.size = Pt(9.5)
+    p.font.size = Pt(9.2)
     p.font.color.rgb = TEXT_WHITE
 
+# Project Team Box
+team_box = add_card(s1, Inches(1.3), Inches(4.5), Inches(10.7), Inches(0.95), RGBColor(15, 23, 42), BLUE_ACCENT)
+tf_t = team_box.text_frame
+p_t = tf_t.paragraphs[0]
+p_t.alignment = PP_ALIGN.CENTER
+r1 = p_t.add_run()
+r1.text = "👑 TEAM LEAD: "
+r1.font.bold = True
+r1.font.size = Pt(11)
+r1.font.color.rgb = AMBER_ACCENT
+r2 = p_t.add_run()
+r2.text = "NISTALA SAI PHANEENDRA KUMAR         "
+r2.font.bold = True
+r2.font.size = Pt(12)
+r2.font.color.rgb = TEXT_WHITE
+
+r3 = p_t.add_run()
+r3.text = "✦ TEAM MEMBERS: "
+r3.font.bold = True
+r3.font.size = Pt(10.5)
+r3.font.color.rgb = CYAN_ACCENT
+r4 = p_t.add_run()
+r4.text = "KANASANI NEELAKANTA BALAJI   |   JAMMULA UDAY KIRAN"
+r4.font.bold = True
+r4.font.size = Pt(11.5)
+r4.font.color.rgb = TEXT_WHITE
+
+p_t2 = tf_t.add_paragraph()
+p_t2.alignment = PP_ALIGN.CENTER
+p_t2.space_before = Pt(3)
+p_t2.text = "Frontend Web Development Class Project"
+p_t2.font.size = Pt(10)
+p_t2.font.color.rgb = TEXT_MUTED
+
 # Live Vercel Banner inside hero
-url_banner = add_card(s1, Inches(1.3), Inches(4.9), Inches(10.7), Inches(0.9), RGBColor(15, 23, 42), CYAN_ACCENT)
+url_banner = add_card(s1, Inches(1.3), Inches(5.6), Inches(10.7), Inches(0.85), RGBColor(15, 23, 42), GREEN_ACCENT)
 tf = url_banner.text_frame
 p = tf.paragraphs[0]
 p.alignment = PP_ALIGN.CENTER
-p.text = "🌐 LIVE PRODUCTION DEPLOYMENT ON VERCEL"
-p.font.size = Pt(11)
+p.text = "🌐 LIVE PRODUCTION DEPLOYMENT ON VERCEL:  https://hospital-management-system-msz2.vercel.app/"
+p.font.size = Pt(12)
 p.font.bold = True
 p.font.color.rgb = GREEN_ACCENT
-
-p2 = tf.add_paragraph()
-p2.alignment = PP_ALIGN.CENTER
-p2.text = "https://hospital-management-system-msz2.vercel.app/"
-p2.font.size = Pt(14)
-p2.font.bold = True
-p2.font.color.rgb = CYAN_ACCENT
-
-p3 = tf.add_paragraph()
-p3.alignment = PP_ALIGN.CENTER
-p3.text = "Presenter: Frontend Engineering Student  |  Class Presentation"
-p3.font.size = Pt(11)
-p3.font.color.rgb = TEXT_MUTED
 
 # ==============================================================================
 # SLIDE 2: Problem Statement & Objectives
@@ -608,16 +629,17 @@ p2.font.color.rgb = CYAN_ACCENT
 
 p3 = tf.add_paragraph()
 p3.alignment = PP_ALIGN.CENTER
-p3.space_before = Pt(20)
-p3.text = "Try it live on any device:"
-p3.font.size = Pt(14)
-p3.font.color.rgb = TEXT_MUTED
+p3.space_before = Pt(14)
+p3.text = "👑 Team Lead: NISTALA SAI PHANEENDRA KUMAR\n✦ Team Members: KANASANI NEELAKANTA BALAJI | JAMMULA UDAY KIRAN"
+p3.font.size = Pt(11.5)
+p3.font.bold = True
+p3.font.color.rgb = CYAN_ACCENT
 
 p4 = tf.add_paragraph()
 p4.alignment = PP_ALIGN.CENTER
-p4.space_before = Pt(8)
-p4.text = "hospital-management-system-msz2.vercel.app"
-p4.font.size = Pt(15)
+p4.space_before = Pt(14)
+p4.text = "Live Demo: hospital-management-system-msz2.vercel.app"
+p4.font.size = Pt(14)
 p4.font.bold = True
 p4.font.color.rgb = GREEN_ACCENT
 

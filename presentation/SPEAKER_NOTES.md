@@ -19,7 +19,7 @@
 ## 📜 2. Slide-by-Slide Speaker Script
 
 ### Slide 1: Title & Hero Showcase
-> *"Good morning, Professor and classmates. Today, I am proud to present **MediCare HMS** — a comprehensive, client-side Hospital Management System engineered from scratch using modern frontend web technologies and deployed live on the Vercel Edge Network at `hospital-management-system-msz2.vercel.app`. As we walk through this deck, you will see how we built a full-featured medical portal without relying on heavy frameworks, proving the power and efficiency of modern Vanilla JavaScript, CSS Grid, and Semantic HTML5."*
+> *"Good morning, Professor and classmates. Today, on behalf of our project team — led by **NISTALA SAI PHANEENDRA KUMAR**, with team members **KANASANI NEELAKANTA BALAJI** and **JAMMULA UDAY KIRAN** — I am proud to present **MediCare HMS**. We engineered a comprehensive, production-deployed Hospital Management System from scratch using modern frontend web technologies and deployed live on the Vercel Edge Network at `hospital-management-system-msz2.vercel.app`. As we walk through this deck, you will see how we built a full-featured medical portal without relying on heavy frameworks, proving the power and efficiency of modern Vanilla JavaScript, CSS Grid, and Semantic HTML5."*
 
 ---
 
@@ -100,7 +100,7 @@
 ---
 
 ### Slide 14: Conclusion & Q&A
-> *"To conclude, this project taught us deep lessons in modular DOM manipulation, scalable CSS architecture, client-side state persistence, and production deployment. Thank you for your time and attention! I would now love to answer any questions or give a live demonstration of the website."*
+> *"To conclude, on behalf of our entire engineering team — Lead NISTALA SAI PHANEENDRA KUMAR, KANASANI NEELAKANTA BALAJI, and JAMMULA UDAY KIRAN — this project taught us deep lessons in modular DOM manipulation, scalable CSS architecture, client-side state persistence, and production deployment. Thank you for your time and attention! We would now love to answer any questions or give a live demonstration of the website."*
 
 ---
 
