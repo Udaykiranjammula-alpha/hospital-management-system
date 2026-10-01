@@ -6,7 +6,7 @@
     <title>MediCare HMS - Secure Glass Portal</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css?v=3.5">
+    <link rel="stylesheet" href="css/style.css?v=3.6">
 </head>
 <body class="login-page">
     <!-- Cinematic Live Movie Background Video (Real Hospital Walkthrough Footage) -->
@@ -88,6 +88,9 @@
                     <input type="password" class="form-control" id="password" placeholder="Enter password" value="password123" required style="padding-left: 40px;">
                     <i class="fas fa-lock" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
                 </div>
+                <div class="login-hint-badge">
+                    <i class="fas fa-key" style="color: #38bdf8;"></i> Default Demo: <code>admin</code> / <code>password123</code>
+                </div>
             </div>
 
             <button type="submit" class="btn btn-primary" onclick="handleLogin(event)" style="width: 100%; padding: 14px; margin-top: 10px; font-size: 1rem;">
@@ -95,12 +98,12 @@
             </button>
         </form>
 
-        <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--glass-border); text-align: center;">
-            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">Demo One-Click Autofill:</p>
+        <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--glass-border); text-align: center;">
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">One-Click Demo Roles Autofill:</p>
             <div style="display: flex; gap: 8px; justify-content: center;">
-                <button type="button" class="btn btn-sm btn-outline" onclick="autofill('admin', 'admin')">Admin</button>
-                <button type="button" class="btn btn-sm btn-outline" onclick="autofill('Dr. Sharma', 'doctor')">Doctor</button>
-                <button type="button" class="btn btn-sm btn-outline" onclick="autofill('Reception', 'receptionist')">Reception</button>
+                <button type="button" class="btn btn-sm btn-outline" onclick="autofill('admin', 'admin')"><i class="fas fa-shield-alt"></i> Admin</button>
+                <button type="button" class="btn btn-sm btn-outline" onclick="autofill('doctor', 'doctor')"><i class="fas fa-stethoscope"></i> Doctor</button>
+                <button type="button" class="btn btn-sm btn-outline" onclick="autofill('reception', 'receptionist')"><i class="fas fa-concierge-bell"></i> Reception</button>
             </div>
         </div>
 
@@ -129,15 +132,31 @@
         </div>
     </div>
 
+    <!-- Login Popup Modal (Interactive Authentication Feedback) -->
+    <div class="modal-overlay" id="loginModalOverlay" style="z-index: 1000000;">
+        <div class="login-popup-card" id="loginModalCard">
+            <div id="loginModalContent"></div>
+        </div>
+    </div>
+
     <div id="toast-container"></div>
-    <script src="js/app.js?v=3.5"></script>
-        <script>
+    <script src="js/app.js?v=3.6"></script>
+    <script>
         function autofill(user, role) {
-            document.getElementById('username').value = user;
-            document.getElementById('password').value = 'securepass';
+            const u = document.getElementById('username');
+            const p = document.getElementById('password');
+            if (u) {
+                u.value = user;
+                u.classList.remove('input-error');
+            }
+            if (p) {
+                p.value = 'password123';
+                p.classList.remove('input-error');
+            }
             document.querySelectorAll('.role-btn').forEach(btn => {
                 if (btn.getAttribute('data-role') === role) btn.click();
             });
+            if (typeof playSound === 'function') playSound('click');
         }
 
         function switchMovie(src, btn) {
@@ -167,27 +186,6 @@
             document.querySelectorAll('.scene-btn').forEach(b => b.classList.remove('active'));
             if (btn) btn.classList.add('active');
             if (typeof playSound === 'function') playSound('click');
-        }
-        
-        // Fallback handleLogin in case app.js is still caching
-        if (typeof handleLogin !== 'function') {
-            window.handleLogin = function(e) {
-                if (e && e.preventDefault) e.preventDefault();
-                var userInput = document.getElementById('username') ? document.getElementById('username').value : 'Admin';
-                var activeRoleBtn = document.querySelector('.role-btn.active');
-                var selectedRole = activeRoleBtn ? (activeRoleBtn.getAttribute('data-role') || 'admin') : 'admin';
-                var roleCap = selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1);
-                localStorage.setItem('hms_username', userInput);
-                localStorage.setItem('hms_user_role', roleCap);
-                if (typeof startHospitalWarpSequence === 'function') {
-                    startHospitalWarpSequence(function() {
-                        window.location.href = 'dashboard.html';
-                    });
-                } else {
-                    window.location.href = 'dashboard.html';
-                }
-                return false;
-            };
         }
     </script>
 </body>

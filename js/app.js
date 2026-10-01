@@ -171,6 +171,14 @@ function playSound(type = 'click') {
             gain.gain.exponentialRampToValueAtTime(0.001, now + 0.68);
             osc.start(now);
             osc.stop(now + 0.68);
+        } else if (type === 'error' || type === 'deny') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(220, now);
+            osc.frequency.setValueAtTime(140, now + 0.12);
+            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+            osc.start(now);
+            osc.stop(now + 0.32);
         }
     } catch (e) {
         // Audio API may be restricted until user gesture
@@ -1393,22 +1401,241 @@ function startHospitalWarpSequence(callback) {
     }, 680);
 }
 
+// Registered authorized personnel credentials with role mapping
+const VALID_CREDENTIALS = [
+    { username: 'admin', password: 'password123', role: 'Admin', displayName: 'Administrator', avatar: 'https://ui-avatars.com/api/?name=Admin&background=2563eb&color=fff' },
+    { username: 'admin', password: 'admin123', role: 'Admin', displayName: 'Administrator', avatar: 'https://ui-avatars.com/api/?name=Admin&background=2563eb&color=fff' },
+    { username: 'doctor', password: 'password123', role: 'Doctor', displayName: 'Dr. Priya Sharma', avatar: 'https://ui-avatars.com/api/?name=Dr+Sharma&background=0284c7&color=fff' },
+    { username: 'doctor', password: 'doctor123', role: 'Doctor', displayName: 'Dr. Priya Sharma', avatar: 'https://ui-avatars.com/api/?name=Dr+Sharma&background=0284c7&color=fff' },
+    { username: 'dr.sharma', password: 'password123', role: 'Doctor', displayName: 'Dr. Priya Sharma', avatar: 'https://ui-avatars.com/api/?name=Dr+Sharma&background=0284c7&color=fff' },
+    { username: 'dr sharma', password: 'password123', role: 'Doctor', displayName: 'Dr. Priya Sharma', avatar: 'https://ui-avatars.com/api/?name=Dr+Sharma&background=0284c7&color=fff' },
+    { username: 'reception', password: 'password123', role: 'Receptionist', displayName: 'Receptionist Desk', avatar: 'https://ui-avatars.com/api/?name=Reception&background=10b981&color=fff' },
+    { username: 'receptionist', password: 'password123', role: 'Receptionist', displayName: 'Receptionist Desk', avatar: 'https://ui-avatars.com/api/?name=Reception&background=10b981&color=fff' },
+    { username: 'reception', password: 'reception123', role: 'Receptionist', displayName: 'Receptionist Desk', avatar: 'https://ui-avatars.com/api/?name=Reception&background=10b981&color=fff' },
+    // Team Members
+    { username: 'phaneendra', password: 'password123', role: 'Admin', displayName: 'Phaneendra Kumar (Team Lead)', avatar: 'https://ui-avatars.com/api/?name=Phaneendra+Kumar&background=f59e0b&color=fff' },
+    { username: 'nistala', password: 'password123', role: 'Admin', displayName: 'Phaneendra Kumar (Team Lead)', avatar: 'https://ui-avatars.com/api/?name=Phaneendra+Kumar&background=f59e0b&color=fff' },
+    { username: 'balaji', password: 'password123', role: 'Doctor', displayName: 'Neelakanta Balaji (Team Member)', avatar: 'https://ui-avatars.com/api/?name=Balaji&background=10b981&color=fff' },
+    { username: 'neelakanta', password: 'password123', role: 'Doctor', displayName: 'Neelakanta Balaji (Team Member)', avatar: 'https://ui-avatars.com/api/?name=Balaji&background=10b981&color=fff' },
+    { username: 'uday', password: 'password123', role: 'Admin', displayName: 'Uday Kiran (Developer)', avatar: 'https://ui-avatars.com/api/?name=Uday+Kiran&background=8b5cf6&color=fff' },
+    { username: 'udaykiran', password: 'password123', role: 'Admin', displayName: 'Uday Kiran (Developer)', avatar: 'https://ui-avatars.com/api/?name=Uday+Kiran&background=8b5cf6&color=fff' }
+];
+
+function showLoginModal(htmlContent) {
+    let overlay = document.getElementById('loginModalOverlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'loginModalOverlay';
+        overlay.className = 'modal-overlay active';
+        overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;background:rgba(0,0,0,0.85);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);display:flex;align-items:center;justify-content:center;z-index:999999;padding:20px;box-sizing:border-box;';
+        overlay.innerHTML = `<div class="login-popup-card" id="loginModalCard"><div id="loginModalContent"></div></div>`;
+        document.body.appendChild(overlay);
+    }
+    const content = document.getElementById('loginModalContent');
+    if (content) content.innerHTML = htmlContent;
+    overlay.classList.add('active');
+    overlay.style.display = 'flex';
+}
+
+function closeLoginModal() {
+    const overlay = document.getElementById('loginModalOverlay');
+    if (overlay) {
+        overlay.classList.remove('active');
+        overlay.style.display = 'none';
+    }
+    const pwdInput = document.getElementById('password');
+    if (pwdInput) {
+        pwdInput.focus();
+        pwdInput.select();
+    }
+}
+
+function quickFillAndLogin(user, pass, role) {
+    closeLoginModal();
+    const uInput = document.getElementById('username');
+    const pInput = document.getElementById('password');
+    if (uInput) {
+        uInput.value = user;
+        uInput.classList.remove('input-error');
+    }
+    if (pInput) {
+        pInput.value = pass;
+        pInput.classList.remove('input-error');
+    }
+    document.querySelectorAll('.role-btn').forEach(btn => {
+        if (btn.getAttribute('data-role') === role) btn.click();
+    });
+    showToast(`Autofilled demo credentials for ${role.toUpperCase()}`, 'info');
+    setTimeout(() => {
+        handleLogin();
+    }, 250);
+}
+
 function handleLogin(e) {
     if (e && e.preventDefault) e.preventDefault();
-    
-    const userInput = document.getElementById('username')?.value.trim() || 'Admin';
-    const activeRoleBtn = document.querySelector('.role-btn.active');
-    const selectedRole = activeRoleBtn ? (activeRoleBtn.getAttribute('data-role') || 'admin') : 'admin';
-    const roleCapitalized = selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1);
 
-    localStorage.setItem('hms_username', userInput);
-    localStorage.setItem('hms_user_role', roleCapitalized);
-    
-    showToast(`Entering Hospital Wing as ${roleCapitalized} ${userInput}...`, 'success');
-    
-    startHospitalWarpSequence(() => {
-        window.location.href = 'dashboard.html';
+    const userInputEl = document.getElementById('username');
+    const passwordInputEl = document.getElementById('password');
+    const loginContainer = document.querySelector('.login-container');
+
+    const userInput = (userInputEl?.value || '').trim();
+    const passwordInput = (passwordInputEl?.value || '').trim();
+
+    // Reset error styling
+    userInputEl?.classList.remove('input-error');
+    passwordInputEl?.classList.remove('input-error');
+    loginContainer?.classList.remove('shake-error');
+
+    // 1. Check if empty
+    if (!userInput || !passwordInput) {
+        playSound('error');
+        if (!userInput) userInputEl?.classList.add('input-error');
+        if (!passwordInput) passwordInputEl?.classList.add('input-error');
+
+        loginContainer?.classList.add('shake-error');
+        setTimeout(() => loginContainer?.classList.remove('shake-error'), 600);
+
+        showLoginModal(`
+            <div style="text-align: center; padding: 8px 0;">
+                <div style="width: 70px; height: 70px; margin: 0 auto 16px; border-radius: 50%; background: rgba(245, 158, 11, 0.16); border: 2px solid #f59e0b; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 25px rgba(245, 158, 11, 0.45);">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 32px; color: #f59e0b;"></i>
+                </div>
+                <div style="display: inline-block; padding: 3px 12px; background: rgba(245, 158, 11, 0.2); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 20px; color: #fbbf24; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">
+                    <i class="fas fa-shield-exclamation"></i> Incomplete Credentials
+                </div>
+                <h3 style="color: #fbbf24; font-size: 1.25rem; font-weight: 700; margin-bottom: 8px;">Missing Login Information</h3>
+                <p style="color: #cbd5e1; font-size: 0.9rem; line-height: 1.5; margin-bottom: 18px;">
+                    Please enter both your <strong>Username</strong> and <strong>Security Password</strong> to authenticate into MediCare HMS.
+                </p>
+                <button class="btn btn-primary" onclick="closeLoginModal()" style="width: 100%; padding: 12px; font-weight: 600;">
+                    <i class="fas fa-arrow-left"></i> Enter Credentials
+                </button>
+            </div>
+        `);
+        showToast('Please enter both username and password!', 'warning');
+        return false;
+    }
+
+    // 2. Validate against authorized list
+    const matchedAccount = VALID_CREDENTIALS.find(c => 
+        c.username.toLowerCase() === userInput.toLowerCase() && c.password === passwordInput
+    );
+
+    if (!matchedAccount) {
+        // AUTHENTICATION FAILED!
+        playSound('error');
+        userInputEl?.classList.add('input-error');
+        passwordInputEl?.classList.add('input-error');
+
+        loginContainer?.classList.add('shake-error');
+        setTimeout(() => loginContainer?.classList.remove('shake-error'), 600);
+
+        const safeUser = userInput.replace(/[&<>"']/g, function(m) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+        });
+
+        showLoginModal(`
+            <div style="text-align: center; padding: 6px 0;">
+                <div style="width: 72px; height: 72px; margin: 0 auto 16px; border-radius: 50%; background: rgba(239, 68, 68, 0.16); border: 2px solid #ef4444; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 25px rgba(239, 68, 68, 0.45);">
+                    <i class="fas fa-shield-virus" style="font-size: 32px; color: #ef4444;"></i>
+                </div>
+                <div style="display: inline-block; padding: 3px 12px; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 20px; color: #f87171; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+                    <i class="fas fa-ban"></i> Access Denied
+                </div>
+                <h3 style="color: #f87171; font-size: 1.25rem; font-weight: 700; margin-bottom: 8px;">Invalid Username or Password!</h3>
+                <p style="color: #cbd5e1; font-size: 0.88rem; line-height: 1.5; margin-bottom: 16px;">
+                    The credentials for <span style="color: #fca5a5; font-family: monospace; background: rgba(239, 68, 68, 0.2); padding: 2px 6px; border-radius: 4px;">"${safeUser}"</span> do not match any verified clinical account.
+                </p>
+                
+                <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px; padding: 12px 14px; margin-bottom: 16px; text-align: left;">
+                    <div style="font-size: 0.76rem; font-weight: 700; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+                        <span><i class="fas fa-key"></i> Authorized Demo Accounts:</span>
+                        <span style="color: #94a3b8; font-weight: 400; font-size: 0.72rem;">Click to Autofill</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.82rem;">
+                        <div onclick="quickFillAndLogin('admin', 'password123', 'admin')" style="cursor: pointer; padding: 6px 10px; background: rgba(37, 99, 235, 0.15); border: 1px solid rgba(37, 99, 235, 0.3); border-radius: 6px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;">
+                            <span>👑 <strong>Admin:</strong> <code style="color: #93c5fd;">admin</code> / <code style="color: #93c5fd;">password123</code></span>
+                            <span style="color: #38bdf8; font-size: 0.75rem;"><i class="fas fa-arrow-right"></i></span>
+                        </div>
+                        <div onclick="quickFillAndLogin('doctor', 'password123', 'doctor')" style="cursor: pointer; padding: 6px 10px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;">
+                            <span>🩺 <strong>Doctor:</strong> <code style="color: #6ee7b7;">doctor</code> / <code style="color: #6ee7b7;">password123</code></span>
+                            <span style="color: #34d399; font-size: 0.75rem;"><i class="fas fa-arrow-right"></i></span>
+                        </div>
+                        <div onclick="quickFillAndLogin('reception', 'password123', 'receptionist')" style="cursor: pointer; padding: 6px 10px; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 6px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;">
+                            <span>📋 <strong>Reception:</strong> <code style="color: #fde68a;">reception</code> / <code style="color: #fde68a;">password123</code></span>
+                            <span style="color: #fbbf24; font-size: 0.75rem;"><i class="fas fa-arrow-right"></i></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-outline" onclick="closeLoginModal()" style="flex: 1; padding: 11px;">
+                        <i class="fas fa-rotate-left"></i> Re-enter
+                    </button>
+                    <button class="btn btn-primary" onclick="quickFillAndLogin('admin', 'password123', 'admin')" style="flex: 1.2; padding: 11px;">
+                        <i class="fas fa-bolt"></i> Auto Login Admin
+                    </button>
+                </div>
+            </div>
+        `);
+        showToast('❌ Access Denied: Invalid username or password!', 'error');
+        return false;
+    }
+
+    // 3. AUTHENTICATION SUCCESSFUL!
+    playSound('success');
+
+    // Save session in localStorage
+    localStorage.setItem('hms_username', matchedAccount.displayName);
+    localStorage.setItem('hms_user_role', matchedAccount.role);
+    localStorage.setItem('hms_user_avatar', matchedAccount.avatar);
+    localStorage.setItem('hms_authenticated', 'true');
+
+    // Sync role button
+    document.querySelectorAll('.role-btn').forEach(b => {
+        b.classList.toggle('active', b.getAttribute('data-role') === matchedAccount.role.toLowerCase() || (matchedAccount.role === 'Receptionist' && b.getAttribute('data-role') === 'receptionist'));
     });
+
+    // Display Success Hologram Popup
+    showLoginModal(`
+        <div style="text-align: center; padding: 10px 0;">
+            <div style="width: 76px; height: 76px; margin: 0 auto 16px; border-radius: 50%; background: rgba(16, 185, 129, 0.16); border: 2px solid #10b981; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(16, 185, 129, 0.5); animation: pulseGlow 1.5s infinite;">
+                <i class="fas fa-shield-check" style="font-size: 36px; color: #10b981;"></i>
+            </div>
+            <div style="display: inline-block; padding: 3px 12px; background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 20px; color: #34d399; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+                <i class="fas fa-badge-check"></i> Biometric & Credentials Verified
+            </div>
+            <h3 style="color: #ffffff; font-size: 1.35rem; font-weight: 700; margin-bottom: 6px;">Welcome Back!</h3>
+            <p style="color: #93c5fd; font-size: 1.05rem; font-weight: 600; margin-bottom: 6px;">${matchedAccount.displayName}</p>
+            <div style="margin-bottom: 16px; display: flex; gap: 8px; justify-content: center;">
+                <span class="badge badge-info" style="font-size: 0.8rem; padding: 4px 12px;">Role: ${matchedAccount.role}</span>
+                <span class="badge badge-success" style="font-size: 0.8rem; padding: 4px 12px;">Security: 256-bit AES</span>
+            </div>
+            
+            <div style="width: 100%; background: rgba(255, 255, 255, 0.08); height: 6px; border-radius: 6px; overflow: hidden; margin: 16px 0 10px; position: relative;">
+                <div id="loginProgressBar" style="width: 15%; height: 100%; background: linear-gradient(90deg, #10b981, #38bdf8); border-radius: 6px; transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px #38bdf8;"></div>
+            </div>
+            <p style="color: #94a3b8; font-size: 0.82rem; margin: 0;">
+                <i class="fas fa-circle-notch fa-spin" style="margin-right: 6px; color: #38bdf8;"></i> Launching Hospital Command Hub...
+            </p>
+        </div>
+    `);
+
+    showToast(`Access Verified! Welcome ${matchedAccount.displayName}`, 'success');
+
+    // Smooth progress bar fill
+    setTimeout(() => {
+        const bar = document.getElementById('loginProgressBar');
+        if (bar) bar.style.width = '100%';
+    }, 100);
+
+    // Warp sequence and redirect
+    setTimeout(() => {
+        startHospitalWarpSequence(() => {
+            window.location.href = 'dashboard.html';
+        });
+    }, 750);
+
     return false;
 }
 

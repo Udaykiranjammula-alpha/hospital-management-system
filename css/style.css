@@ -3024,3 +3024,56 @@ textarea {
     }
 }
 
+/* ==========================================================================
+   Interactive Login Validation & Holographic Popup Modals
+   ========================================================================== */
+@keyframes cardShake {
+    0%, 100% { transform: translateX(0); }
+    15%, 45%, 75% { transform: translateX(-9px); }
+    30%, 60%, 90% { transform: translateX(9px); }
+}
+
+.shake-error {
+    animation: cardShake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both !important;
+}
+
+.form-control.input-error {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 16px rgba(239, 68, 68, 0.45) !important;
+    background: rgba(239, 68, 68, 0.08) !important;
+    animation: pulseError 1.5s infinite alternate ease-in-out;
+}
+
+@keyframes pulseError {
+    0% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.3); }
+    100% { box-shadow: 0 0 18px rgba(239, 68, 68, 0.6); }
+}
+
+.login-popup-card {
+    background: rgba(15, 23, 42, 0.96) !important;
+    border: 1px solid rgba(56, 189, 248, 0.4) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 40px rgba(37, 99, 235, 0.35) !important;
+    padding: 26px !important;
+    max-width: 460px !important;
+    width: 92% !important;
+    margin: auto !important;
+    animation: scaleUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.login-hint-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: rgba(56, 189, 248, 0.1);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    border-radius: 8px;
+    font-size: 0.78rem;
+    color: #93c5fd;
+    margin-top: 10px;
+    width: 100%;
+    justify-content: center;
+}
+
+
