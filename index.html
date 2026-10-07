@@ -57,28 +57,43 @@
 
         <form class="login-form" id="loginForm" onsubmit="return handleLogin(event);">
             <div class="form-group">
-                <label class="form-label">Select System Role</label>
-                <div class="role-selector" style="grid-template-columns: repeat(3, 1fr); gap: 6px;">
-                    <button type="button" class="role-btn active" data-role="admin">
-                        <i class="fas fa-user-shield"></i>
-                        <span>Admin</span>
+                <label class="form-label" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span>Select Login Category</span>
+                    <span style="font-size: 0.74rem; color: var(--primary); font-weight: 600;"><i class="fas fa-shield-halved"></i> 3 Core Login Types</span>
+                </label>
+                <!-- 3 Main Login Categories -->
+                <div class="login-category-selector">
+                    <button type="button" class="login-cat-btn active" data-cat="admin" onclick="selectLoginCategory('admin', this)">
+                        <i class="fas fa-user-shield" style="color: #38bdf8;"></i>
+                        <strong>1. ADMIN</strong>
+                        <span>Full Hospital System</span>
                     </button>
-                    <button type="button" class="role-btn" data-role="doctor">
-                        <i class="fas fa-user-md"></i>
-                        <span>Doctor</span>
+                    <button type="button" class="login-cat-btn" data-cat="doctor" onclick="selectLoginCategory('doctor', this)">
+                        <i class="fas fa-user-md" style="color: #10b981;"></i>
+                        <strong>2. DOCTOR</strong>
+                        <span>Clinical Cockpit</span>
                     </button>
-                    <button type="button" class="role-btn" data-role="receptionist">
-                        <i class="fas fa-user-nurse"></i>
-                        <span>Reception</span>
+                    <button type="button" class="login-cat-btn" data-cat="staff" onclick="selectLoginCategory('staff', this)">
+                        <i class="fas fa-users-gear" style="color: #f59e0b;"></i>
+                        <strong>3. STAFF</strong>
+                        <span>Operations Desk</span>
                     </button>
-                    <button type="button" class="role-btn" data-role="pharmacist">
-                        <i class="fas fa-pills"></i>
-                        <span>Pharmacy</span>
-                    </button>
-                    <button type="button" class="role-btn" data-role="lab_tech">
-                        <i class="fas fa-flask"></i>
-                        <span>Lab Tech</span>
-                    </button>
+                </div>
+
+                <!-- Operations Staff Sub-Role Selector (visible when STAFF category is selected) -->
+                <div id="staffSubRoleSelector" class="staff-sub-selector" style="display: none;">
+                    <span class="sub-label"><i class="fas fa-arrow-turn-down"></i> Select Operational Staff Role:</span>
+                    <div class="sub-btn-group">
+                        <button type="button" class="staff-sub-btn active" data-sub="receptionist" onclick="selectStaffSubRole('receptionist', this)">
+                            <i class="fas fa-concierge-bell"></i> Receptionist
+                        </button>
+                        <button type="button" class="staff-sub-btn" data-sub="pharmacist" onclick="selectStaffSubRole('pharmacist', this)">
+                            <i class="fas fa-pills"></i> Pharmacy
+                        </button>
+                        <button type="button" class="staff-sub-btn" data-sub="lab_tech" onclick="selectStaffSubRole('lab_tech', this)">
+                            <i class="fas fa-flask"></i> Lab Tech
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -107,14 +122,14 @@
         </form>
 
         <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--glass-border); text-align: center;">
-            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">One-Click Demo Roles Autofill:</p>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">1-Click Role Login Demo Autofill:</p>
             <div style="display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;">
-                <button type="button" class="btn btn-sm btn-outline" onclick="autofill('admin', 'admin')"><i class="fas fa-shield-alt"></i> Admin</button>
-                <button type="button" class="btn btn-sm btn-outline" onclick="autofill('dr.sharma', 'doctor')"><i class="fas fa-stethoscope"></i> Dr. Sharma</button>
-                <button type="button" class="btn btn-sm btn-outline" onclick="autofill('dr.verma', 'doctor')"><i class="fas fa-bone"></i> Dr. Verma</button>
-                <button type="button" class="btn btn-sm btn-outline" onclick="autofill('reception', 'receptionist')"><i class="fas fa-concierge-bell"></i> Reception</button>
-                <button type="button" class="btn btn-sm btn-outline" onclick="autofill('pharmacist', 'pharmacist')"><i class="fas fa-pills"></i> Pharmacy</button>
-                <button type="button" class="btn btn-sm btn-outline" onclick="autofill('pathologist', 'lab_tech')"><i class="fas fa-microscope"></i> Lab Tech</button>
+                <button type="button" class="btn btn-sm btn-outline" onclick="autofill('admin', 'admin')"><i class="fas fa-shield-alt" style="color:#38bdf8;"></i> 1. Admin</button>
+                <button type="button" class="btn btn-sm btn-outline" onclick="autofill('dr.sharma', 'doctor')"><i class="fas fa-stethoscope" style="color:#10b981;"></i> 2. Dr. Sharma (Cardio)</button>
+                <button type="button" class="btn btn-sm btn-outline" onclick="autofill('dr.verma', 'doctor')"><i class="fas fa-bone" style="color:#f59e0b;"></i> Dr. Verma (Ortho)</button>
+                <button type="button" class="btn btn-sm btn-outline" onclick="autofill('reception', 'receptionist')"><i class="fas fa-concierge-bell" style="color:#a855f7;"></i> 3a. Receptionist</button>
+                <button type="button" class="btn btn-sm btn-outline" onclick="autofill('pharmacist', 'pharmacist')"><i class="fas fa-pills" style="color:#ec4899;"></i> 3b. Pharmacist</button>
+                <button type="button" class="btn btn-sm btn-outline" onclick="autofill('pathologist', 'lab_tech')"><i class="fas fa-microscope" style="color:#06b6d4;"></i> 3c. Lab Tech</button>
             </div>
         </div>
 
@@ -153,6 +168,48 @@
     <div id="toast-container"></div>
     <script src="js/app.js?v=3.6"></script>
     <script>
+        function selectLoginCategory(cat, btn) {
+            document.querySelectorAll('.login-cat-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            const sub = document.getElementById('staffSubRoleSelector');
+            const u = document.getElementById('username');
+            const p = document.getElementById('password');
+
+            if (cat === 'admin') {
+                if (sub) sub.style.display = 'none';
+                if (u) u.value = 'admin';
+                if (p) p.value = 'password123';
+            } else if (cat === 'doctor') {
+                if (sub) sub.style.display = 'none';
+                if (u) u.value = 'dr.sharma';
+                if (p) p.value = 'password123';
+            } else if (cat === 'staff') {
+                if (sub) sub.style.display = 'block';
+                selectStaffSubRole('receptionist');
+            }
+            if (typeof playSound === 'function') playSound('click');
+        }
+
+        function selectStaffSubRole(roleKey, btn) {
+            document.querySelectorAll('.staff-sub-btn').forEach(b => b.classList.remove('active'));
+            if (btn) {
+                btn.classList.add('active');
+            } else {
+                const target = document.querySelector(`.staff-sub-btn[data-sub="${roleKey}"]`);
+                if (target) target.classList.add('active');
+            }
+
+            const u = document.getElementById('username');
+            const p = document.getElementById('password');
+            if (p) p.value = 'password123';
+
+            if (roleKey === 'receptionist' && u) u.value = 'reception';
+            else if (roleKey === 'pharmacist' && u) u.value = 'pharmacist';
+            else if (roleKey === 'lab_tech' && u) u.value = 'pathologist';
+
+            if (typeof playSound === 'function') playSound('click');
+        }
+
         function autofill(user, role) {
             const u = document.getElementById('username');
             const p = document.getElementById('password');
@@ -164,9 +221,20 @@
                 p.value = 'password123';
                 p.classList.remove('input-error');
             }
-            document.querySelectorAll('.role-btn').forEach(btn => {
-                if (btn.getAttribute('data-role') === role) btn.click();
-            });
+
+            if (role === 'admin') {
+                const b = document.querySelector('.login-cat-btn[data-cat="admin"]');
+                if (b) selectLoginCategory('admin', b);
+            } else if (role === 'doctor') {
+                const b = document.querySelector('.login-cat-btn[data-cat="doctor"]');
+                if (b) selectLoginCategory('doctor', b);
+                if (u) u.value = user;
+            } else {
+                const b = document.querySelector('.login-cat-btn[data-cat="staff"]');
+                if (b) selectLoginCategory('staff', b);
+                selectStaffSubRole(role);
+                if (u) u.value = user;
+            }
             if (typeof playSound === 'function') playSound('click');
         }
 

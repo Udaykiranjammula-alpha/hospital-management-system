@@ -222,23 +222,368 @@ function formatDate(dateStr) {
 // ==========================================
 
 // ==========================================
-// 2b. ROLE-BASED ACCESS CONTROL (RBAC) HELPERS
+// 2b. CENTRALIZED ROLE-BASED ACCESS CONTROL (RBAC)
 // ==========================================
 window.doctorScopeOverride = false;
 
+const ROLES = {
+    ADMIN: {
+        id: 'Admin',
+        category: 'ADMIN',
+        title: 'Master Administrator',
+        allowedPages: ['dashboard.html', 'patients.html', 'doctors.html', 'appointments.html', 'prescriptions.html', 'billing.html', 'admin.html', 'laboratory.html', 'pharmacy.html', 'emergency.html', 'patient-portal.html', 'slides.html'],
+        navItems: [
+            { href: 'dashboard.html', icon: 'fa-chart-pie', label: 'Admin Dashboard' },
+            { href: 'patients.html', icon: 'fa-user-injured', label: 'Patients' },
+            { href: 'doctors.html', icon: 'fa-user-md', label: 'Doctors' },
+            { href: 'appointments.html', icon: 'fa-calendar-check', label: 'Appointments' },
+            { href: 'prescriptions.html', icon: 'fa-prescription', label: 'Prescriptions' },
+            { href: 'laboratory.html', icon: 'fa-flask', label: 'Laboratory' },
+            { href: 'pharmacy.html', icon: 'fa-pills', label: 'Pharmacy' },
+            { href: 'emergency.html', icon: 'fa-truck-medical', label: 'Emergency & ICU' },
+            { href: 'billing.html', icon: 'fa-file-invoice-dollar', label: 'Billing' },
+            { href: 'admin.html', icon: 'fa-shield-halved', label: 'Administration' },
+            { href: '/slides', icon: 'fa-file-powerpoint', label: 'Presentation' }
+        ],
+        permissions: {
+            canManageDoctors: true,
+            canAddDoctor: true,
+            canEditDoctor: true,
+            canDeleteDoctor: true,
+            canManageStaff: true,
+            canManagePharmacy: true,
+            canManageLab: true,
+            canAccessAdminSettings: true,
+            canAccessFinancialReports: true,
+            canManagePatients: true,
+            canRegisterPatients: true,
+            canManageAppointments: true,
+            canPrescribe: true,
+            canDispenseMedicine: true,
+            canEnterLabResults: true,
+            canViewAllData: true
+        }
+    },
+    DOCTOR: {
+        id: 'Doctor',
+        category: 'DOCTOR',
+        title: 'Physician / Consultant',
+        allowedPages: ['dashboard.html', 'patients.html', 'appointments.html', 'prescriptions.html', 'emergency.html', 'patient-portal.html', 'slides.html'],
+        navItems: [
+            { href: 'dashboard.html', icon: 'fa-stethoscope', label: 'Doctor Cockpit' },
+            { href: 'patients.html', icon: 'fa-user-injured', label: 'My Patients' },
+            { href: 'appointments.html', icon: 'fa-calendar-check', label: 'My Appointments' },
+            { href: 'prescriptions.html', icon: 'fa-prescription', label: 'Prescriptions' },
+            { href: 'emergency.html', icon: 'fa-heart-pulse', label: 'ICU Telemetry' },
+            { href: '/slides', icon: 'fa-file-powerpoint', label: 'Presentation' }
+        ],
+        permissions: {
+            canManageDoctors: false,
+            canAddDoctor: false,
+            canEditDoctor: false,
+            canDeleteDoctor: false,
+            canManageStaff: false,
+            canManagePharmacy: false,
+            canManageLab: false,
+            canAccessAdminSettings: false,
+            canAccessFinancialReports: false,
+            canManagePatients: false,
+            canRegisterPatients: false,
+            canManageAppointments: true,
+            canPrescribe: true,
+            canDispenseMedicine: false,
+            canEnterLabResults: false,
+            canViewAllData: false
+        }
+    },
+    RECEPTIONIST: {
+        id: 'Receptionist',
+        category: 'STAFF',
+        title: 'Front Desk & Admissions',
+        allowedPages: ['dashboard.html', 'patients.html', 'appointments.html', 'billing.html', 'patient-portal.html', 'slides.html'],
+        navItems: [
+            { href: 'dashboard.html', icon: 'fa-concierge-bell', label: 'Reception Desk' },
+            { href: 'patients.html', icon: 'fa-user-plus', label: 'Patient Registration' },
+            { href: 'appointments.html', icon: 'fa-calendar-plus', label: 'Appointments' },
+            { href: 'billing.html', icon: 'fa-receipt', label: 'Billing Counter' },
+            { href: '/slides', icon: 'fa-file-powerpoint', label: 'Presentation' }
+        ],
+        permissions: {
+            canManageDoctors: false,
+            canAddDoctor: false,
+            canEditDoctor: false,
+            canDeleteDoctor: false,
+            canManageStaff: false,
+            canManagePharmacy: false,
+            canManageLab: false,
+            canAccessAdminSettings: false,
+            canAccessFinancialReports: false,
+            canRegisterPatients: true,
+            canManagePatients: true,
+            canManageAppointments: true,
+            canPrescribe: false,
+            canDispenseMedicine: false,
+            canEnterLabResults: false,
+            canViewAllData: false
+        }
+    },
+    PHARMACIST: {
+        id: 'Pharmacist',
+        category: 'STAFF',
+        title: 'Pharmacy Operations',
+        allowedPages: ['dashboard.html', 'pharmacy.html', 'prescriptions.html', 'billing.html', 'patient-portal.html', 'slides.html'],
+        navItems: [
+            { href: 'dashboard.html', icon: 'fa-laptop-medical', label: 'Pharmacy Dashboard' },
+            { href: 'pharmacy.html', icon: 'fa-pills', label: 'Medicines & Stock' },
+            { href: 'prescriptions.html', icon: 'fa-file-prescription', label: 'Prescriptions Received' },
+            { href: 'billing.html', icon: 'fa-receipt', label: 'Pharmacy Billing' },
+            { href: '/slides', icon: 'fa-file-powerpoint', label: 'Presentation' }
+        ],
+        permissions: {
+            canManageDoctors: false,
+            canAddDoctor: false,
+            canEditDoctor: false,
+            canDeleteDoctor: false,
+            canManageStaff: false,
+            canManagePharmacy: true,
+            canDispenseMedicine: true,
+            canManageLab: false,
+            canAccessAdminSettings: false,
+            canAccessFinancialReports: false,
+            canPrescribe: false,
+            canEnterLabResults: false,
+            canViewAllData: false
+        }
+    },
+    LABTECHNICIAN: {
+        id: 'LabTechnician',
+        category: 'STAFF',
+        title: 'Diagnostic Pathology & Lab',
+        allowedPages: ['dashboard.html', 'laboratory.html', 'patient-portal.html', 'slides.html'],
+        navItems: [
+            { href: 'dashboard.html', icon: 'fa-flask-vial', label: 'Laboratory Dashboard' },
+            { href: 'laboratory.html', icon: 'fa-microscope', label: 'Diagnostic Tests' },
+            { href: '/slides', icon: 'fa-file-powerpoint', label: 'Presentation' }
+        ],
+        permissions: {
+            canManageDoctors: false,
+            canAddDoctor: false,
+            canEditDoctor: false,
+            canDeleteDoctor: false,
+            canManageStaff: false,
+            canManagePharmacy: false,
+            canManageLab: true,
+            canEnterLabResults: true,
+            canAccessAdminSettings: false,
+            canAccessFinancialReports: false,
+            canPrescribe: false,
+            canDispenseMedicine: false,
+            canViewAllData: false
+        }
+    }
+};
+
+window.ROLES = ROLES;
+
+function getRoleConfig(role) {
+    const raw = String(role || 'Admin').toUpperCase().replace(/[^A-Z]/g, '');
+    if (raw.includes('DOCTOR')) return ROLES.DOCTOR;
+    if (raw.includes('RECEPTION')) return ROLES.RECEPTIONIST;
+    if (raw.includes('PHARMAC')) return ROLES.PHARMACIST;
+    if (raw.includes('LAB') || raw.includes('PATHO')) return ROLES.LABTECHNICIAN;
+    return ROLES.ADMIN;
+}
+
 function getCurrentUser() {
     const role = localStorage.getItem('hms_user_role') || 'Admin';
+    const loginCategory = localStorage.getItem('hms_login_category') || (role === 'Doctor' ? 'DOCTOR' : (role === 'Admin' ? 'ADMIN' : 'STAFF'));
     const username = localStorage.getItem('hms_username') || 'Administrator';
     const doctorId = localStorage.getItem('hms_doctor_id') || (role === 'Doctor' ? 'D001' : '');
     const department = localStorage.getItem('hms_department') || (role === 'Doctor' ? 'Cardiology' : 'Hospital Operations');
     const avatar = localStorage.getItem('hms_user_avatar') || `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=0284c7&color=fff`;
-    return { role, username, displayName: username, doctorId, department, avatar };
+    return { loginCategory, role, username, displayName: username, doctorId, department, avatar };
+}
+
+function checkActionPermission(permName, actionDesc) {
+    const user = getCurrentUser();
+    const cfg = getRoleConfig(user.role);
+    if (!cfg.permissions[permName]) {
+        if (typeof playSound === 'function') playSound('error');
+        showAccessDeniedModal(actionDesc || 'Action Restricted', `Your active persona (${user.displayName} - ${user.role}) does not have administrative authorization to execute this operation.`);
+        if (typeof showToast === 'function') showToast(`Access Denied: ${actionDesc || 'Unauthorized action'}`, 'error');
+        return false;
+    }
+    return true;
+}
+
+function showAccessDeniedModal(title, msg) {
+    let overlay = document.getElementById('accessDeniedModal');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'accessDeniedModal';
+        overlay.className = 'modal-overlay active';
+        overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:center;z-index:999999;padding:20px;';
+        document.body.appendChild(overlay);
+    }
+    const user = getCurrentUser();
+    overlay.innerHTML = `
+        <div style="background:rgba(15,23,42,0.92); border:1px solid rgba(239,68,68,0.45); border-radius:24px; padding:36px; max-width:500px; width:100%; text-align:center; box-shadow:0 30px 70px rgba(0,0,0,0.8), 0 0 40px rgba(239,68,68,0.25);">
+            <div style="width:76px; height:76px; margin:0 auto 18px; border-radius:50%; background:rgba(239,68,68,0.16); border:2px solid #ef4444; display:flex; align-items:center; justify-content:center; box-shadow:0 0 28px rgba(239,68,68,0.45);">
+                <i class="fas fa-shield-halved" style="font-size:34px; color:#ef4444;"></i>
+            </div>
+            <div style="display:inline-block; padding:4px 14px; background:rgba(239,68,68,0.18); border:1px solid rgba(239,68,68,0.4); border-radius:20px; color:#f87171; font-size:0.76rem; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; margin-bottom:10px;">
+                <i class="fas fa-ban"></i> 403 Forbidden • Action Blocked
+            </div>
+            <h3 style="color:#ffffff; font-size:1.35rem; font-weight:700; margin-bottom:8px;">${title}</h3>
+            <p style="color:#cbd5e1; font-size:0.9rem; line-height:1.55; margin-bottom:20px;">${msg}</p>
+            <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:10px 14px; margin-bottom:20px; text-align:left; font-size:0.82rem; color:#94a3b8;">
+                <div>Active Persona: <strong style="color:#38bdf8;">${user.displayName}</strong></div>
+                <div>Role Authority: <span class="badge badge-warning" style="font-size:0.72rem; padding:2px 8px;">${user.role}</span></div>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-primary" onclick="closeAccessDeniedModal()" style="flex:1; padding:12px;">
+                    <i class="fas fa-check"></i> Understood
+                </button>
+                <button class="btn btn-outline" onclick="closeAccessDeniedModal(); switchUserRole('admin');" style="flex:1; padding:12px;">
+                    <i class="fas fa-user-shield"></i> Switch to Admin
+                </button>
+            </div>
+        </div>
+    `;
+    overlay.style.display = 'flex';
+}
+
+function closeAccessDeniedModal() {
+    const el = document.getElementById('accessDeniedModal');
+    if (el) {
+        el.style.display = 'none';
+        el.remove();
+    }
+}
+
+function renderDynamicSidebar() {
+    const nav = document.querySelector('.sidebar-nav');
+    if (!nav) return;
+
+    const user = getCurrentUser();
+    const config = getRoleConfig(user.role);
+    const rawPath = (window.location.pathname.replace(/\\/g, '/').split('/').pop() || 'dashboard.html').toLowerCase();
+    const currentPath = rawPath === '' ? 'dashboard.html' : rawPath;
+
+    nav.innerHTML = config.navItems.map(item => {
+        const itemHref = item.href.toLowerCase();
+        const isActive = (itemHref === currentPath) || (currentPath === 'dashboard.html' && itemHref === 'dashboard.html');
+        return `
+            <a href="${item.href}" class="nav-item ${isActive ? 'active' : ''}">
+                <i class="fas ${item.icon}"></i>
+                <span>${item.label}</span>
+            </a>
+        `;
+    }).join('');
+
+    // Update user info in sidebar if present
+    const sbUser = document.querySelector('.sidebar .user-info, .sidebar-footer .user-profile');
+    if (sbUser) {
+        sbUser.innerHTML = `
+            <img src="${user.avatar}" alt="${user.displayName}" class="avatar" style="width:34px;height:34px;border-radius:50%;">
+            <div>
+                <strong style="font-size:0.84rem; display:block; color:#fff;">${user.displayName}</strong>
+                <span class="badge badge-info" style="font-size:0.68rem; padding:1px 6px;">${user.role}</span>
+            </div>
+        `;
+    }
+}
+
+function applyRoleUIControls() {
+    const user = getCurrentUser();
+    const rawPath = (window.location.pathname.replace(/\\/g, '/').split('/').pop() || '').toLowerCase();
+
+    // 1. Patients Page
+    if (rawPath === 'patients.html') {
+        if (user.role === 'Doctor') {
+            document.querySelectorAll('button[onclick*="PatientModal"], a[href*="action=new"]').forEach(b => b.style.display = 'none');
+        }
+        if (user.role === 'Doctor' || user.role === 'Receptionist') {
+            document.querySelectorAll('.btn-delete-patient, button[onclick*="deletePatient"]').forEach(b => b.style.display = 'none');
+        }
+    }
+
+    // 2. Prescriptions Page
+    if (rawPath === 'prescriptions.html') {
+        if (user.role === 'Pharmacist') {
+            document.querySelectorAll('button[onclick*="showCreatePrescriptionModal"], button[onclick*="addPrescription"]').forEach(b => b.style.display = 'none');
+        }
+    }
+
+    // 3. Doctors Page
+    if (rawPath === 'doctors.html' && user.role !== 'Admin') {
+        document.querySelectorAll('button[onclick*="addDoctor"], button[onclick*="DoctorModal"]').forEach(b => b.style.display = 'none');
+    }
+}
+
+function applyPageGuard() {
+    const rawPath = (window.location.pathname.replace(/\\/g, '/').split('/').pop() || 'index.html').toLowerCase();
+    const currentPath = rawPath === '' ? 'index.html' : rawPath;
+
+    // Public pages
+    if (currentPath === 'index.html' || currentPath === 'slides.html') {
+        return true;
+    }
+
+    // Check authentication
+    const isAuth = localStorage.getItem('hms_authenticated') === 'true';
+    if (!isAuth) {
+        window.location.href = 'index.html';
+        return false;
+    }
+
+    const user = getCurrentUser();
+    const config = getRoleConfig(user.role);
+
+    if (!config.allowedPages.includes(currentPath)) {
+        if (typeof playSound === 'function') playSound('error');
+
+        const contentWrapper = document.querySelector('.content-wrapper') || document.querySelector('.main-content') || document.querySelector('main');
+        if (contentWrapper) {
+            contentWrapper.innerHTML = `
+                <div class="access-restricted-container" style="min-height:75vh; display:flex; align-items:center; justify-content:center; padding:40px 20px;">
+                    <div class="access-restricted-card" style="background:rgba(15,23,42,0.88); border:1px solid rgba(239,68,68,0.45); border-radius:24px; padding:42px; text-align:center; max-width:540px; width:100%; box-shadow:0 25px 60px rgba(0,0,0,0.8), 0 0 40px rgba(239,68,68,0.25); backdrop-filter:blur(24px);">
+                        <div class="access-restricted-icon" style="width:84px; height:84px; margin:0 auto 20px; border-radius:50%; background:rgba(239,68,68,0.16); border:2px solid #ef4444; display:flex; align-items:center; justify-content:center; box-shadow:0 0 30px rgba(239,68,68,0.45);">
+                            <i class="fas fa-shield-halved" style="font-size:38px; color:#ef4444;"></i>
+                        </div>
+                        <div style="display:inline-block; padding:4px 14px; background:rgba(239,68,68,0.18); border:1px solid rgba(239,68,68,0.4); border-radius:20px; color:#f87171; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:12px;">
+                            <i class="fas fa-lock"></i> 403 Forbidden • Access Denied
+                        </div>
+                        <h2 style="font-size:1.6rem; font-weight:800; color:#ffffff; margin-bottom:10px;">Restricted Clearance Required</h2>
+                        <p style="color:#94a3b8; font-size:0.94rem; line-height:1.6; margin-bottom:20px;">
+                            The route <code style="color:#f87171; background:rgba(239,68,68,0.15); padding:2px 6px; border-radius:4px; font-weight:600;">${currentPath}</code> is strictly restricted.
+                            You are logged in as <strong style="color:#38bdf8;">${user.displayName}</strong> (<span class="badge badge-warning">${user.role}</span>).
+                        </p>
+                        <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:16px; margin-bottom:24px; text-align:left; font-size:0.85rem; color:#cbd5e1;">
+                            <div style="font-weight:700; color:#38bdf8; margin-bottom:8px;"><i class="fas fa-route"></i> Authorized Modules for Your Role:</div>
+                            <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                                ${config.navItems.map(n => `<span style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); padding:4px 9px; border-radius:6px; font-size:0.78rem;"><i class="fas ${n.icon}"></i> ${n.label}</span>`).join('')}
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+                            <a href="dashboard.html" class="btn btn-primary" style="padding:12px 24px;"><i class="fas fa-arrow-left"></i> Return to My Dashboard</a>
+                            <button class="btn btn-outline" onclick="switchUserRole('admin')" style="padding:12px 20px;"><i class="fas fa-shield-alt"></i> Switch to Admin</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        return false;
+    }
+
+    return true;
 }
 
 function switchUserRole(username) {
     const account = VALID_CREDENTIALS.find(c => c.username.toLowerCase() === username.toLowerCase()) || VALID_CREDENTIALS[0];
     localStorage.setItem('hms_username', account.displayName);
     localStorage.setItem('hms_user_role', account.role);
+    localStorage.setItem('hms_login_category', account.category);
     localStorage.setItem('hms_doctor_id', account.doctorId || '');
     localStorage.setItem('hms_department', account.department || '');
     localStorage.setItem('hms_user_avatar', account.avatar);
@@ -270,6 +615,7 @@ document.addEventListener('click', (e) => {
 function logout() {
     localStorage.removeItem('hms_authenticated');
     localStorage.removeItem('hms_user_role');
+    localStorage.removeItem('hms_login_category');
     localStorage.removeItem('hms_username');
     localStorage.removeItem('hms_doctor_id');
     localStorage.removeItem('hms_department');
@@ -368,47 +714,6 @@ function renderDoctorScopeNotice(pageContext, user) {
             `;
         }
     }
-}
-
-function applyPageGuard() {
-    const user = getCurrentUser();
-    const path = (window.location.pathname.replace(/\\/g, '/').split('/').pop() || '').toLowerCase();
-
-    // Lock administration for non-admins
-    if (path === 'admin.html' && user.role !== 'Admin') {
-        const contentWrapper = document.querySelector('.content-wrapper') || document.querySelector('main');
-        if (contentWrapper) {
-            contentWrapper.innerHTML = `
-                <div class="access-restricted-container">
-                    <div class="access-restricted-card">
-                        <div class="access-restricted-icon">
-                            <i class="fas fa-lock"></i>
-                        </div>
-                        <h2 style="font-size:1.45rem; font-weight:800; color:#ef4444; margin-bottom:12px;">Administrative Clearance Required</h2>
-                        <p style="color:var(--text-secondary); font-size:0.92rem; line-height:1.6; margin-bottom:20px;">
-                            The Administration Hub is restricted to Master System Administrators.
-                            You are logged in as <strong style="color:var(--primary);">${user.displayName}</strong> (<span class="badge badge-info">${user.role}</span>).
-                        </p>
-                        <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
-                            <a href="dashboard.html" class="btn btn-primary"><i class="fas fa-arrow-left"></i> Return to Dashboard</a>
-                            <button class="btn btn-outline" onclick="switchUserRole('admin')"><i class="fas fa-shield-alt"></i> Switch to Admin Persona</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-    }
-
-    // Decorate sidebar with lock icons for restricted routes
-    document.querySelectorAll('.sidebar-nav .nav-item').forEach(item => {
-        const href = (item.getAttribute('href') || '').toLowerCase();
-        if (href === 'admin.html' && user.role !== 'Admin') {
-            item.classList.add('locked');
-            item.setAttribute('title', 'Admin Clearance Required');
-        } else {
-            item.classList.remove('locked');
-        }
-    });
 }
 
 // 3. SOUND SYNTHESIZER (Web Audio API)
@@ -1596,7 +1901,16 @@ function closeModal(id) {
 // 7. GLOBAL INITIALIZATION (DOMContentLoaded)
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Theme Engine & Live Ambient Canvas
+    // 0. Enforce Centralized Route & Role Access Guard
+    if (!applyPageGuard()) {
+        return; // Halt initializing unauthorized pages
+    }
+
+    // 1. Dynamic Role Sidebar Navigation & Scoped UI Controls
+    renderDynamicSidebar();
+    applyRoleUIControls();
+
+    // 2. Theme Engine & Live Ambient Canvas
     initThemeEngine();
     updateSoundButtonIcon();
     updateWallpaperHUD();
@@ -1701,30 +2015,40 @@ function startHospitalWarpSequence(callback) {
 
 // Registered authorized personnel credentials with role mapping
 const VALID_CREDENTIALS = [
-    { username: 'admin', password: 'password123', role: 'Admin', displayName: 'Administrator', department: 'Executive Operations', avatar: 'https://ui-avatars.com/api/?name=Admin&background=2563eb&color=fff' },
-    { username: 'admin', password: 'admin123', role: 'Admin', displayName: 'Administrator', department: 'Executive Operations', avatar: 'https://ui-avatars.com/api/?name=Admin&background=2563eb&color=fff' },
-    { username: 'doctor', password: 'password123', role: 'Doctor', doctorId: 'D001', displayName: 'Dr. Priya Sharma', department: 'Cardiology', avatar: 'https://ui-avatars.com/api/?name=Dr+Sharma&background=0284c7&color=fff' },
-    { username: 'doctor', password: 'doctor123', role: 'Doctor', doctorId: 'D001', displayName: 'Dr. Priya Sharma', department: 'Cardiology', avatar: 'https://ui-avatars.com/api/?name=Dr+Sharma&background=0284c7&color=fff' },
-    { username: 'dr.sharma', password: 'password123', role: 'Doctor', doctorId: 'D001', displayName: 'Dr. Priya Sharma', department: 'Cardiology', avatar: 'https://ui-avatars.com/api/?name=Dr+Sharma&background=0284c7&color=fff' },
-    { username: 'dr sharma', password: 'password123', role: 'Doctor', doctorId: 'D001', displayName: 'Dr. Priya Sharma', department: 'Cardiology', avatar: 'https://ui-avatars.com/api/?name=Dr+Sharma&background=0284c7&color=fff' },
-    { username: 'dr.verma', password: 'password123', role: 'Doctor', doctorId: 'D002', displayName: 'Dr. Rahul Verma', department: 'Orthopedics', avatar: 'https://ui-avatars.com/api/?name=Rahul+Verma&background=f59e0b&color=fff' },
-    { username: 'dr.desai', password: 'password123', role: 'Doctor', doctorId: 'D003', displayName: 'Dr. Sneha Desai', department: 'Neurology', avatar: 'https://ui-avatars.com/api/?name=Sneha+Desai&background=8b5cf6&color=fff' },
-    { username: 'dr.iyer', password: 'password123', role: 'Doctor', doctorId: 'D005', displayName: 'Dr. Meera Iyer', department: 'General Medicine', avatar: 'https://ui-avatars.com/api/?name=Meera+Iyer&background=ec4899&color=fff' },
-    { username: 'reception', password: 'password123', role: 'Receptionist', displayName: 'Receptionist Desk', department: 'Patient Intake & Billing', avatar: 'https://ui-avatars.com/api/?name=Reception&background=10b981&color=fff' },
-    { username: 'receptionist', password: 'password123', role: 'Receptionist', displayName: 'Receptionist Desk', department: 'Patient Intake & Billing', avatar: 'https://ui-avatars.com/api/?name=Reception&background=10b981&color=fff' },
-    { username: 'reception', password: 'reception123', role: 'Receptionist', displayName: 'Receptionist Desk', department: 'Patient Intake & Billing', avatar: 'https://ui-avatars.com/api/?name=Reception&background=10b981&color=fff' },
-    { username: 'pharmacist', password: 'password123', role: 'Pharmacist', displayName: 'Sushma Singh', department: 'Pharmacy & Dispensary', avatar: 'https://ui-avatars.com/api/?name=Pharmacist&background=ec4899&color=fff' },
-    { username: 'pharmacy', password: 'password123', role: 'Pharmacist', displayName: 'Sushma Singh', department: 'Pharmacy & Dispensary', avatar: 'https://ui-avatars.com/api/?name=Pharmacist&background=ec4899&color=fff' },
-    { username: 'pathologist', password: 'password123', role: 'LabTechnician', displayName: 'Ravi Kumar', department: 'Pathology Diagnostics', avatar: 'https://ui-avatars.com/api/?name=Pathologist&background=06b6d4&color=fff' },
-    { username: 'lab', password: 'password123', role: 'LabTechnician', displayName: 'Ravi Kumar', department: 'Pathology Diagnostics', avatar: 'https://ui-avatars.com/api/?name=Pathologist&background=06b6d4&color=fff' },
-    // Team Members
-    { username: 'phaneendra', password: 'password123', role: 'Admin', displayName: 'Phaneendra Kumar (Team Lead)', department: 'System Architecture', avatar: 'https://ui-avatars.com/api/?name=Phaneendra+Kumar&background=f59e0b&color=fff' },
-    { username: 'nistala', password: 'password123', role: 'Admin', displayName: 'Phaneendra Kumar (Team Lead)', department: 'System Architecture', avatar: 'https://ui-avatars.com/api/?name=Phaneendra+Kumar&background=f59e0b&color=fff' },
-    { username: 'balaji', password: 'password123', role: 'Doctor', doctorId: 'D001', displayName: 'Neelakanta Balaji (Physician)', department: 'Cardiology', avatar: 'https://ui-avatars.com/api/?name=Balaji&background=10b981&color=fff' },
-    { username: 'neelakanta', password: 'password123', role: 'Doctor', doctorId: 'D001', displayName: 'Neelakanta Balaji (Physician)', department: 'Cardiology', avatar: 'https://ui-avatars.com/api/?name=Balaji&background=10b981&color=fff' },
-    { username: 'uday', password: 'password123', role: 'Admin', displayName: 'Uday Kiran (Developer)', department: 'Full Stack Engineering', avatar: 'https://ui-avatars.com/api/?name=Uday+Kiran&background=8b5cf6&color=fff' },
-    { username: 'udaykiran', password: 'password123', role: 'Admin', displayName: 'Uday Kiran (Developer)', department: 'Full Stack Engineering', avatar: 'https://ui-avatars.com/api/?name=Uday+Kiran&background=8b5cf6&color=fff' }
+    // 1. ADMIN CATEGORY (Full System Control)
+    { username: 'admin', password: 'password123', category: 'ADMIN', role: 'Admin', displayName: 'System Administrator', department: 'Executive Operations', avatar: 'https://ui-avatars.com/api/?name=Admin&background=2563eb&color=fff' },
+    { username: 'admin', password: 'admin123', category: 'ADMIN', role: 'Admin', displayName: 'System Administrator', department: 'Executive Operations', avatar: 'https://ui-avatars.com/api/?name=Admin&background=2563eb&color=fff' },
+    { username: 'phaneendra', password: 'password123', category: 'ADMIN', role: 'Admin', displayName: 'Phaneendra Kumar (Team Lead)', department: 'System Architecture', avatar: 'https://ui-avatars.com/api/?name=Phaneendra+Kumar&background=f59e0b&color=fff' },
+    { username: 'nistala', password: 'password123', category: 'ADMIN', role: 'Admin', displayName: 'Phaneendra Kumar (Team Lead)', department: 'System Architecture', avatar: 'https://ui-avatars.com/api/?name=Phaneendra+Kumar&background=f59e0b&color=fff' },
+    { username: 'uday', password: 'password123', category: 'ADMIN', role: 'Admin', displayName: 'Uday Kiran (Developer)', department: 'Full Stack Engineering', avatar: 'https://ui-avatars.com/api/?name=Uday+Kiran&background=8b5cf6&color=fff' },
+    { username: 'udaykiran', password: 'password123', category: 'ADMIN', role: 'Admin', displayName: 'Uday Kiran (Developer)', department: 'Full Stack Engineering', avatar: 'https://ui-avatars.com/api/?name=Uday+Kiran&background=8b5cf6&color=fff' },
+
+    // 2. DOCTOR CATEGORY (Clinical Practice Cockpit)
+    { username: 'doctor', password: 'password123', category: 'DOCTOR', role: 'Doctor', doctorId: 'D001', displayName: 'Dr. Priya Sharma', department: 'Cardiology', avatar: 'https://ui-avatars.com/api/?name=Dr+Sharma&background=0284c7&color=fff' },
+    { username: 'doctor', password: 'doctor123', category: 'DOCTOR', role: 'Doctor', doctorId: 'D001', displayName: 'Dr. Priya Sharma', department: 'Cardiology', avatar: 'https://ui-avatars.com/api/?name=Dr+Sharma&background=0284c7&color=fff' },
+    { username: 'dr.sharma', password: 'password123', category: 'DOCTOR', role: 'Doctor', doctorId: 'D001', displayName: 'Dr. Priya Sharma', department: 'Cardiology', avatar: 'https://ui-avatars.com/api/?name=Dr+Sharma&background=0284c7&color=fff' },
+    { username: 'dr sharma', password: 'password123', category: 'DOCTOR', role: 'Doctor', doctorId: 'D001', displayName: 'Dr. Priya Sharma', department: 'Cardiology', avatar: 'https://ui-avatars.com/api/?name=Dr+Sharma&background=0284c7&color=fff' },
+    { username: 'dr.verma', password: 'password123', category: 'DOCTOR', role: 'Doctor', doctorId: 'D002', displayName: 'Dr. Rahul Verma', department: 'Orthopedics', avatar: 'https://ui-avatars.com/api/?name=Rahul+Verma&background=f59e0b&color=fff' },
+    { username: 'dr.desai', password: 'password123', category: 'DOCTOR', role: 'Doctor', doctorId: 'D003', displayName: 'Dr. Sneha Desai', department: 'Neurology', avatar: 'https://ui-avatars.com/api/?name=Sneha+Desai&background=8b5cf6&color=fff' },
+    { username: 'dr.iyer', password: 'password123', category: 'DOCTOR', role: 'Doctor', doctorId: 'D005', displayName: 'Dr. Meera Iyer', department: 'General Medicine', avatar: 'https://ui-avatars.com/api/?name=Meera+Iyer&background=ec4899&color=fff' },
+    { username: 'balaji', password: 'password123', category: 'DOCTOR', role: 'Doctor', doctorId: 'D001', displayName: 'Neelakanta Balaji (Physician)', department: 'Cardiology', avatar: 'https://ui-avatars.com/api/?name=Balaji&background=10b981&color=fff' },
+    { username: 'neelakanta', password: 'password123', category: 'DOCTOR', role: 'Doctor', doctorId: 'D001', displayName: 'Neelakanta Balaji (Physician)', department: 'Cardiology', avatar: 'https://ui-avatars.com/api/?name=Balaji&background=10b981&color=fff' },
+
+    // 3. STAFF / OPERATIONS CATEGORY
+    // Receptionist
+    { username: 'reception', password: 'password123', category: 'STAFF', role: 'Receptionist', displayName: 'Ananya Desai (Receptionist)', department: 'Front Desk & Patient Admissions', avatar: 'https://ui-avatars.com/api/?name=Reception&background=10b981&color=fff' },
+    { username: 'receptionist', password: 'password123', category: 'STAFF', role: 'Receptionist', displayName: 'Ananya Desai (Receptionist)', department: 'Front Desk & Patient Admissions', avatar: 'https://ui-avatars.com/api/?name=Reception&background=10b981&color=fff' },
+    { username: 'reception', password: 'reception123', category: 'STAFF', role: 'Receptionist', displayName: 'Ananya Desai (Receptionist)', department: 'Front Desk & Patient Admissions', avatar: 'https://ui-avatars.com/api/?name=Reception&background=10b981&color=fff' },
+    // Pharmacy
+    { username: 'pharmacist', password: 'password123', category: 'STAFF', role: 'Pharmacist', displayName: 'Sushma Singh (Pharmacist)', department: 'Pharmacy & Drug Dispensary', avatar: 'https://ui-avatars.com/api/?name=Pharmacist&background=ec4899&color=fff' },
+    { username: 'pharmacy', password: 'password123', category: 'STAFF', role: 'Pharmacist', displayName: 'Sushma Singh (Pharmacist)', department: 'Pharmacy & Drug Dispensary', avatar: 'https://ui-avatars.com/api/?name=Pharmacist&background=ec4899&color=fff' },
+    // Lab Technician
+    { username: 'pathologist', password: 'password123', category: 'STAFF', role: 'LabTechnician', displayName: 'Ravi Kumar (Lab Technologist)', department: 'Pathology Diagnostics', avatar: 'https://ui-avatars.com/api/?name=Pathologist&background=06b6d4&color=fff' },
+    { username: 'lab', password: 'password123', category: 'STAFF', role: 'LabTechnician', displayName: 'Ravi Kumar (Lab Technologist)', department: 'Pathology Diagnostics', avatar: 'https://ui-avatars.com/api/?name=Pathologist&background=06b6d4&color=fff' },
+    { username: 'labtech', password: 'password123', category: 'STAFF', role: 'LabTechnician', displayName: 'Ravi Kumar (Lab Technologist)', department: 'Pathology Diagnostics', avatar: 'https://ui-avatars.com/api/?name=Pathologist&background=06b6d4&color=fff' }
 ];
+
+window.VALID_CREDENTIALS = VALID_CREDENTIALS;
 
 function showLoginModal(htmlContent) {
     let overlay = document.getElementById('loginModalOverlay');
@@ -1893,6 +2217,7 @@ function handleLogin(e) {
     // Save session in localStorage
     localStorage.setItem('hms_username', matchedAccount.displayName);
     localStorage.setItem('hms_user_role', matchedAccount.role);
+    localStorage.setItem('hms_login_category', matchedAccount.category || 'STAFF');
     localStorage.setItem('hms_user_avatar', matchedAccount.avatar);
     localStorage.setItem('hms_doctor_id', matchedAccount.doctorId || '');
     localStorage.setItem('hms_department', matchedAccount.department || '');
@@ -1967,104 +2292,58 @@ function initLoginPage() {
 // ==========================================
 function initDashboardPage() {
     const user = getCurrentUser();
+    if (user.role === 'Doctor') {
+        renderDoctorDashboard(user);
+    } else if (user.role === 'Receptionist') {
+        renderReceptionistDashboard(user);
+    } else if (user.role === 'Pharmacist') {
+        renderPharmacyDashboard(user);
+    } else if (user.role === 'LabTechnician') {
+        renderLabTechnicianDashboard(user);
+    } else {
+        renderAdminDashboard();
+    }
+}
+
+function renderAdminDashboard() {
     const patients = loadData('hms_patients', defaultPatients);
     const appointments = loadData('hms_appointments', defaultAppointments);
     const bills = loadData('hms_bills', defaultBills);
     const resources = loadData('hms_resources', defaultResources);
-    const rxs = loadData('hms_prescriptions', defaultPrescriptions);
-    const labTests = loadData('hms_lab_tests', defaultLabTests);
 
-    if (user.role === 'Doctor') {
-        // --- DOCTOR PERSONA CLINICAL PRACTICE COCKPIT ---
-        const myAppts = appointments.filter(a => a.doctorId === user.doctorId || (a.doctorName && a.doctorName.toLowerCase().includes(user.username.toLowerCase())) || (user.doctorId === 'D001' && a.doctorId === 'D001'));
-        const myRxs = rxs.filter(r => r.doctorId === user.doctorId || (r.doctorName && r.doctorName.toLowerCase().includes(user.username.toLowerCase())) || (user.doctorId === 'D001' && r.doctorId === 'D001'));
-        const myPatientIds = new Set([...myAppts.map(a => a.patientId), ...myRxs.map(r => r.patientId)]);
-        const myPatients = patients.filter(p => myPatientIds.has(p.id) || p.doctorId === user.doctorId);
-        const myLabTests = labTests.filter(t => t.doctorId === user.doctorId || myPatientIds.has(t.patientId));
+    const totalPatients = patients.length;
+    const todayStr = new Date().toISOString().split('T')[0];
+    const todayAppts = appointments.filter(a => a.date === todayStr || a.date === '2026-09-17').length;
+    const totalRev = bills.filter(b => b.status === 'Paid').reduce((acc, b) => acc + b.total, 0);
 
-        const myTotalPatients = myPatients.length;
-        const todayStr = new Date().toISOString().split('T')[0];
-        const myTodayAppts = myAppts.filter(a => a.date === todayStr || a.date === '2026-09-17').length;
-        const myTotalRxs = myRxs.length;
-        const pendingLabs = myLabTests.filter(t => t.status !== 'Completed').length;
+    let freeBeds = 0;
+    resources.filter(r => r.category.includes('Beds') || r.category === 'Beds').forEach(r => {
+        freeBeds += (r.total - r.occupied);
+    });
 
-        // KPI 1: My Patients
-        animateNumber('totalPatients', myTotalPatients);
-        animateNumber('total-patients-count', myTotalPatients);
-        const p1 = document.querySelector('#totalPatients ~ .stat-label, #total-patients-count ~ .stat-label');
-        if (p1) p1.innerText = `My Active Patients (${user.department || 'Clinical'})`;
+    animateNumber('totalPatients', totalPatients);
+    animateNumber('total-patients-count', totalPatients);
+    animateNumber('todayAppointments', todayAppts || appointments.length);
+    animateNumber('today-appointments-count', todayAppts || appointments.length);
+    
+    const revEl = document.getElementById('totalRevenue') || document.getElementById('total-revenue-count');
+    if (revEl) revEl.innerText = formatCurrency(totalRev);
 
-        // KPI 2: Today's Consultations
-        animateNumber('todayAppointments', myTodayAppts || myAppts.length);
-        animateNumber('today-appointments-count', myTodayAppts || myAppts.length);
-        const p2 = document.querySelector('#todayAppointments ~ .stat-label, #today-appointments-count ~ .stat-label');
-        if (p2) p2.innerText = "My Today's Consultations";
+    animateNumber('availableBeds', freeBeds);
+    animateNumber('available-beds-count', freeBeds);
 
-        // KPI 3: Prescriptions Issued
-        const revEl = document.getElementById('totalRevenue') || document.getElementById('total-revenue-count');
-        if (revEl) {
-            revEl.innerText = `${myTotalRxs} Active`;
-            const p3 = revEl.nextElementSibling;
-            if (p3) p3.innerText = "My Prescriptions Issued";
-        }
-
-        // KPI 4: Pending Diagnostic Lab Reports
-        animateNumber('availableBeds', pendingLabs || myLabTests.length);
-        animateNumber('available-beds-count', pendingLabs || myLabTests.length);
-        const p4 = document.querySelector('#availableBeds ~ .stat-label, #available-beds-count ~ .stat-label');
-        if (p4) p4.innerText = "My Patients' Lab Reports";
-
-        // Recent Appointments (Only Doctor's Queue)
-        const recentBody = document.getElementById('recentAppointments') || document.getElementById('recent-appointments-body');
-        if (recentBody) {
-            recentBody.innerHTML = myAppts.slice(0, 5).map(a => `
-                <tr>
-                    <td><strong>${a.patientName}</strong></td>
-                    <td><span class="badge badge-success"><i class="fas fa-stethoscope"></i> ${a.doctorName}</span></td>
-                    <td>${formatDate(a.date)}</td>
-                    <td><span class="badge badge-info"><i class="fas fa-clock"></i> ${a.time}</span></td>
-                    <td><span class="badge badge-${a.status.toLowerCase()}">${a.status}</span></td>
-                </tr>
-            `).join('');
-        }
-
-        injectDoctorPracticeBanner(user, myPatients.length, myAppts.length);
-    } else {
-        // --- MASTER ADMIN / RECEPTIONIST FULL HOSPITAL VIEW ---
-        const totalPatients = patients.length;
-        const todayStr = new Date().toISOString().split('T')[0];
-        const todayAppts = appointments.filter(a => a.date === todayStr || a.date === '2026-09-17').length;
-        const totalRev = bills.filter(b => b.status === 'Paid').reduce((acc, b) => acc + b.total, 0);
-
-        let freeBeds = 0;
-        resources.filter(r => r.category.includes('Beds') || r.category === 'Beds').forEach(r => {
-            freeBeds += (r.total - r.occupied);
-        });
-
-        animateNumber('totalPatients', totalPatients);
-        animateNumber('total-patients-count', totalPatients);
-        animateNumber('todayAppointments', todayAppts || appointments.length);
-        animateNumber('today-appointments-count', todayAppts || appointments.length);
-        
-        const revEl = document.getElementById('totalRevenue') || document.getElementById('total-revenue-count');
-        if (revEl) revEl.innerText = formatCurrency(totalRev);
-
-        animateNumber('availableBeds', freeBeds);
-        animateNumber('available-beds-count', freeBeds);
-
-        const recentBody = document.getElementById('recentAppointments') || document.getElementById('recent-appointments-body');
-        if (recentBody) {
-            const list = appointments.slice().reverse().slice(0, 5);
-            recentBody.innerHTML = list.map(a => `
-                <tr>
-                    <td><strong>${a.patientName}</strong></td>
-                    <td>${a.doctorName}</td>
-                    <td>${formatDate(a.date)}</td>
-                    <td><span class="badge badge-info"><i class="fas fa-clock"></i> ${a.time}</span></td>
-                    <td><span class="badge badge-${a.status.toLowerCase()}">${a.status}</span></td>
-                </tr>
-            `).join('');
-        }
+    const recentBody = document.getElementById('recentAppointments') || document.getElementById('recent-appointments-body');
+    if (recentBody) {
+        const list = appointments.slice().reverse().slice(0, 5);
+        recentBody.innerHTML = list.map(a => `
+            <tr>
+                <td><strong>${a.patientName}</strong></td>
+                <td><span class="badge badge-success"><i class="fas fa-stethoscope"></i> ${a.doctorName}</span></td>
+                <td>${formatDate(a.date)}</td>
+                <td><span class="badge badge-info"><i class="fas fa-clock"></i> ${a.time}</span></td>
+                <td><span class="badge badge-${a.status.toLowerCase()}">${a.status}</span></td>
+            </tr>
+        `).join('');
     }
 
     // Department Breakdown Bars
@@ -2098,6 +2377,384 @@ function initDashboardPage() {
     initDashboardCharts();
 }
 
+function renderDoctorDashboard(user) {
+    const patients = loadData('hms_patients', defaultPatients);
+    const appointments = loadData('hms_appointments', defaultAppointments);
+    const rxs = loadData('hms_prescriptions', defaultPrescriptions);
+    const labTests = loadData('hms_lab_tests', defaultLabTests);
+
+    const myAppts = getScopedAppointments();
+    const myRxs = getScopedPrescriptions();
+    const myPatients = getScopedPatients();
+    const myLabTests = getScopedLabTests();
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    const myTodayAppts = myAppts.filter(a => a.date === todayStr || a.date === '2026-09-17').length;
+
+    // KPI 1: My Patients
+    animateNumber('totalPatients', myPatients.length);
+    animateNumber('total-patients-count', myPatients.length);
+    const p1 = document.querySelector('#totalPatients ~ .stat-label, #total-patients-count ~ .stat-label');
+    if (p1) p1.innerText = `My Assigned Patients (${user.department || 'Cardiology'})`;
+
+    // KPI 2: Today's Consultations
+    animateNumber('todayAppointments', myTodayAppts || myAppts.length);
+    animateNumber('today-appointments-count', myTodayAppts || myAppts.length);
+    const p2 = document.querySelector('#todayAppointments ~ .stat-label, #today-appointments-count ~ .stat-label');
+    if (p2) p2.innerText = "My Consultations Scheduled";
+
+    // KPI 3: Prescriptions Issued
+    const revEl = document.getElementById('totalRevenue') || document.getElementById('total-revenue-count');
+    if (revEl) {
+        revEl.innerText = `${myRxs.length} Active`;
+        const p3 = revEl.nextElementSibling;
+        if (p3) p3.innerText = "My Issued Prescriptions";
+    }
+
+    // KPI 4: My Patients' Diagnostic Lab Tests
+    animateNumber('availableBeds', myLabTests.length);
+    animateNumber('available-beds-count', myLabTests.length);
+    const p4 = document.querySelector('#availableBeds ~ .stat-label, #available-beds-count ~ .stat-label');
+    if (p4) p4.innerText = "My Patients' Lab Orders";
+
+    // Recent Appointments Table (Doctor's Consultation Queue)
+    const recentBody = document.getElementById('recentAppointments') || document.getElementById('recent-appointments-body');
+    if (recentBody) {
+        if (myAppts.length === 0) {
+            recentBody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--text-muted);">No consultations assigned for today yet.</td></tr>`;
+        } else {
+            recentBody.innerHTML = myAppts.map(a => `
+                <tr>
+                    <td><strong>${a.patientName}</strong></td>
+                    <td><span class="badge badge-success"><i class="fas fa-user-md"></i> ${a.doctorName}</span></td>
+                    <td>${formatDate(a.date)}</td>
+                    <td><span class="badge badge-info"><i class="fas fa-clock"></i> ${a.time}</span></td>
+                    <td><span class="badge badge-${a.status.toLowerCase()}">${a.status}</span></td>
+                </tr>
+            `).join('');
+        }
+    }
+
+    // Replace Department Stats with Doctor Weekly Consultation Schedule & Inpatients
+    const deptStatsEl = document.getElementById('departmentStats') || document.getElementById('department-chart');
+    if (deptStatsEl) {
+        deptStatsEl.innerHTML = `
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:12px;">
+                    <div style="font-size:0.78rem; font-weight:700; color:#38bdf8; text-transform:uppercase; margin-bottom:6px;">
+                        <i class="fas fa-calendar-week"></i> Consultation Hours (${user.department})
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.84rem; padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
+                        <span>Mon - Fri (OPD Clinic):</span>
+                        <strong style="color:#10b981;">09:00 AM - 05:00 PM</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.84rem; padding:4px 0;">
+                        <span>Saturday (Grand Rounds):</span>
+                        <strong style="color:#f59e0b;">10:00 AM - 02:00 PM</strong>
+                    </div>
+                </div>
+
+                <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:12px;">
+                    <div style="font-size:0.78rem; font-weight:700; color:#10b981; text-transform:uppercase; margin-bottom:6px;">
+                        <i class="fas fa-bed-pulse"></i> Admitted Inpatients Under My Care
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:6px;">
+                        ${myPatients.filter(p => p.status === 'Admitted').slice(0, 3).map(p => `
+                            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.82rem; background:rgba(15,23,42,0.6); padding:6px 10px; border-radius:8px;">
+                                <div><strong>${p.name}</strong> <small style="color:var(--text-muted);">(${p.condition})</small></div>
+                                <span class="badge badge-danger">Inpatient</span>
+                            </div>
+                        `).join('') || '<div style="color:var(--text-muted); font-size:0.8rem;">No active admitted patients.</div>'}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    injectDoctorPracticeBanner(user, myPatients.length, myAppts.length);
+    initDashboardCharts();
+}
+
+function renderReceptionistDashboard(user) {
+    const patients = loadData('hms_patients', defaultPatients);
+    const appointments = loadData('hms_appointments', defaultAppointments);
+    const resources = loadData('hms_resources', defaultResources);
+
+    const totalCheckins = appointments.length;
+    const admittedCount = patients.filter(p => p.status === 'Admitted').length;
+    const outpatientCount = patients.filter(p => p.status === 'Outpatient').length;
+
+    let freeBeds = 0;
+    resources.filter(r => r.category.includes('Beds') || r.category === 'Beds').forEach(r => {
+        freeBeds += (r.total - r.occupied);
+    });
+
+    // KPI 1: Today's Check-ins
+    animateNumber('totalPatients', totalCheckins);
+    animateNumber('total-patients-count', totalCheckins);
+    const p1 = document.querySelector('#totalPatients ~ .stat-label, #total-patients-count ~ .stat-label');
+    if (p1) p1.innerText = "Today's Patient Check-ins";
+
+    // KPI 2: Admitted Inpatients
+    animateNumber('todayAppointments', admittedCount);
+    animateNumber('today-appointments-count', admittedCount);
+    const p2 = document.querySelector('#todayAppointments ~ .stat-label, #today-appointments-count ~ .stat-label');
+    if (p2) p2.innerText = "Admitted Inpatients in Wards";
+
+    // KPI 3: Available Ward Beds
+    const revEl = document.getElementById('totalRevenue') || document.getElementById('total-revenue-count');
+    if (revEl) {
+        revEl.innerText = `${freeBeds} Free`;
+        const p3 = revEl.nextElementSibling;
+        if (p3) p3.innerText = "Available Ward & ICU Beds";
+    }
+
+    // KPI 4: Outpatients & Walk-ins
+    animateNumber('availableBeds', outpatientCount);
+    animateNumber('available-beds-count', outpatientCount);
+    const p4 = document.querySelector('#availableBeds ~ .stat-label, #available-beds-count ~ .stat-label');
+    if (p4) p4.innerText = "Registered Outpatients";
+
+    // Header banner
+    injectStaffBanner('Reception & Admissions Command', 'fa-concierge-bell', '#10b981', 'Front desk check-ins, appointment scheduling, and inpatient room admissions.');
+
+    // Appointments Intake Queue
+    const recentBody = document.getElementById('recentAppointments') || document.getElementById('recent-appointments-body');
+    if (recentBody) {
+        recentBody.innerHTML = appointments.slice(0, 6).map(a => `
+            <tr>
+                <td><strong>${a.patientName}</strong></td>
+                <td><span class="badge badge-info"><i class="fas fa-user-md"></i> ${a.doctorName}</span></td>
+                <td>${formatDate(a.date)}</td>
+                <td><span class="badge badge-info"><i class="fas fa-clock"></i> ${a.time}</span></td>
+                <td>
+                    <button class="btn btn-sm ${a.status === 'Completed' ? 'btn-outline' : 'btn-primary'}" onclick="showToast('Patient marked Checked-in!', 'success')">
+                        <i class="fas ${a.status === 'Completed' ? 'fa-check' : 'fa-clipboard-check'}"></i> ${a.status}
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    // Real-Time Hospital Ward Bed Availability Gauge
+    const deptStatsEl = document.getElementById('departmentStats') || document.getElementById('department-chart');
+    if (deptStatsEl) {
+        deptStatsEl.innerHTML = `
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                ${resources.filter(r => r.category === 'Beds' || r.category === 'OT').map(r => {
+                    const free = r.total - r.occupied;
+                    const pct = Math.round((r.occupied / r.total) * 100);
+                    return `
+                        <div class="dept-bar-item">
+                            <div class="dept-bar-label">
+                                <span><i class="fas fa-bed" style="color:var(--primary); margin-right:6px;"></i> ${r.name}</span>
+                                <strong style="color:${free < 5 ? '#ef4444' : '#10b981'}; font-family:'JetBrains Mono';">${free} Free / ${r.total}</strong>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-fill ${free < 5 ? 'red' : 'green'}" style="width:${pct}%;"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+    }
+
+    initDashboardCharts();
+}
+
+function renderPharmacyDashboard(user) {
+    const drugs = loadData('hms_pharmacy_drugs', defaultPharmacyDrugs);
+    const rxs = loadData('hms_prescriptions', defaultPrescriptions);
+
+    const pendingDispense = rxs.filter(r => !r.dispensed).length;
+    const lowStockCount = drugs.filter(d => d.stock <= d.minStock).length;
+    const expiringCount = drugs.filter(d => new Date(d.expiry) < new Date(Date.now() + 60*86400000)).length;
+
+    // KPI 1: Prescriptions Awaiting Dispensing
+    animateNumber('totalPatients', pendingDispense || rxs.length);
+    animateNumber('total-patients-count', pendingDispense || rxs.length);
+    const p1 = document.querySelector('#totalPatients ~ .stat-label, #total-patients-count ~ .stat-label');
+    if (p1) p1.innerText = "Prescriptions Awaiting Dispensing";
+
+    // KPI 2: Active Drug Formulary SKUs
+    animateNumber('todayAppointments', drugs.length);
+    animateNumber('today-appointments-count', drugs.length);
+    const p2 = document.querySelector('#todayAppointments ~ .stat-label, #today-appointments-count ~ .stat-label');
+    if (p2) p2.innerText = "Formulary Medicines in Stock";
+
+    // KPI 3: Critical Low Stock Items
+    const revEl = document.getElementById('totalRevenue') || document.getElementById('total-revenue-count');
+    if (revEl) {
+        revEl.innerText = `${lowStockCount} Items`;
+        const p3 = revEl.nextElementSibling;
+        if (p3) p3.innerText = "Critical Low Stock Alerts (<15)";
+    }
+
+    // KPI 4: Batches Expiring in <60 Days
+    animateNumber('availableBeds', expiringCount);
+    animateNumber('available-beds-count', expiringCount);
+    const p4 = document.querySelector('#availableBeds ~ .stat-label, #available-beds-count ~ .stat-label');
+    if (p4) p4.innerText = "Expiring Batches (<60 Days)";
+
+    // Header banner
+    injectStaffBanner('Pharmacy & Drug Dispensary Operations', 'fa-pills', '#ec4899', 'Drug formulary stock management, batch expiry tracking, and prescription dispensary fulfillment.');
+
+    // Prescriptions Dispensary Queue
+    const recentBody = document.getElementById('recentAppointments') || document.getElementById('recent-appointments-body');
+    if (recentBody) {
+        recentBody.innerHTML = rxs.map(r => `
+            <tr>
+                <td><strong>${r.patientName}</strong> <br><small style="color:var(--text-muted);">${r.id}</small></td>
+                <td><span class="badge badge-success"><i class="fas fa-user-md"></i> ${r.doctorName}</span></td>
+                <td>${formatDate(r.date)}</td>
+                <td><span style="font-size:0.8rem; color:#38bdf8;">${(r.medicines || []).map(m => m.name).join(', ') || 'Standard Formulation'}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-success" onclick="showToast('Prescription ${r.id} Dispensed successfully!', 'success')">
+                        <i class="fas fa-pills"></i> Dispense Now
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    // Critical Low Stock & Expiry Alert Center
+    const deptStatsEl = document.getElementById('departmentStats') || document.getElementById('department-chart');
+    if (deptStatsEl) {
+        deptStatsEl.innerHTML = `
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <div style="font-size:0.78rem; font-weight:700; color:#ef4444; text-transform:uppercase; margin-bottom:4px;">
+                    <i class="fas fa-triangle-exclamation"></i> Low Stock Reorder Triggers
+                </div>
+                ${drugs.slice(0, 5).map(d => `
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(15,23,42,0.6); padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.06);">
+                        <div>
+                            <strong style="font-size:0.84rem; display:block;">${d.name} (${d.dosage})</strong>
+                            <small style="color:var(--text-muted);">Stock: <span style="color:${d.stock < d.minStock ? '#ef4444' : '#10b981'}; font-weight:700;">${d.stock}</span> / Min: ${d.minStock}</small>
+                        </div>
+                        <a href="pharmacy.html" class="btn btn-sm btn-outline"><i class="fas fa-plus"></i> Restock</a>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    initDashboardCharts();
+}
+
+function renderLabTechnicianDashboard(user) {
+    const labTests = loadData('hms_lab_tests', defaultLabTests);
+    const pendingTests = labTests.filter(t => t.status !== 'Completed').length;
+    const statTests = labTests.filter(t => t.priority === 'STAT' || t.priority === 'Urgent').length;
+    const completedToday = labTests.filter(t => t.status === 'Completed').length;
+
+    // KPI 1: Pending Diagnostic Requests
+    animateNumber('totalPatients', pendingTests);
+    animateNumber('total-patients-count', pendingTests);
+    const p1 = document.querySelector('#totalPatients ~ .stat-label, #total-patients-count ~ .stat-label');
+    if (p1) p1.innerText = "Pending Lab Test Requests";
+
+    // KPI 2: STAT & Urgent Priority Specimen
+    animateNumber('todayAppointments', statTests);
+    animateNumber('today-appointments-count', statTests);
+    const p2 = document.querySelector('#todayAppointments ~ .stat-label, #today-appointments-count ~ .stat-label');
+    if (p2) p2.innerText = "STAT & Urgent Specimen Queue";
+
+    // KPI 3: Tests Completed Today
+    const revEl = document.getElementById('totalRevenue') || document.getElementById('total-revenue-count');
+    if (revEl) {
+        revEl.innerText = `${completedToday} Done`;
+        const p3 = revEl.nextElementSibling;
+        if (p3) p3.innerText = "Tests Completed & Verified";
+    }
+
+    // KPI 4: Total Laboratory Tests
+    animateNumber('availableBeds', labTests.length);
+    animateNumber('available-beds-count', labTests.length);
+    const p4 = document.querySelector('#availableBeds ~ .stat-label, #available-beds-count ~ .stat-label');
+    if (p4) p4.innerText = "Total Laboratory Specimen Tests";
+
+    // Header banner
+    injectStaffBanner('Diagnostic Pathology & Imaging Laboratory', 'fa-flask', '#06b6d4', 'Specimen intake, blood serum processing, and verified diagnostic test reports.');
+
+    // Urgent & STAT Diagnostic Queue
+    const recentBody = document.getElementById('recentAppointments') || document.getElementById('recent-appointments-body');
+    if (recentBody) {
+        recentBody.innerHTML = labTests.map(t => `
+            <tr>
+                <td><strong>${t.patientName}</strong> <br><small style="color:var(--text-muted);">${t.id}</small></td>
+                <td><span style="font-weight:600; color:#38bdf8;">${t.testName}</span></td>
+                <td><span class="badge ${t.priority === 'STAT' ? 'badge-danger' : (t.priority === 'Urgent' ? 'badge-warning' : 'badge-info')}">${t.priority}</span></td>
+                <td><span class="badge badge-success">${t.status}</span></td>
+                <td>
+                    <a href="laboratory.html" class="btn btn-sm btn-primary">
+                        <i class="fas fa-edit"></i> Results
+                    </a>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    // Specimen Pipeline Tracking
+    const deptStatsEl = document.getElementById('departmentStats') || document.getElementById('department-chart');
+    if (deptStatsEl) {
+        deptStatsEl.innerHTML = `
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <div style="font-size:0.78rem; font-weight:700; color:#06b6d4; text-transform:uppercase; margin-bottom:4px;">
+                    <i class="fas fa-vial"></i> Specimen Pipeline Tracking
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:0.84rem; padding:6px 8px; background:rgba(15,23,42,0.6); border-radius:6px;">
+                    <span><i class="fas fa-tint" style="color:#ef4444;"></i> Venous Whole Blood (EDTA)</span>
+                    <strong style="color:#10b981;">14 Tubes • In Analysis</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:0.84rem; padding:6px 8px; background:rgba(15,23,42,0.6); border-radius:6px;">
+                    <span><i class="fas fa-droplet" style="color:#f59e0b;"></i> Clotted Blood Serum</span>
+                    <strong style="color:#38bdf8;">8 Samples • Centrifuged</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:0.84rem; padding:6px 8px; background:rgba(15,23,42,0.6); border-radius:6px;">
+                    <span><i class="fas fa-x-ray" style="color:#a855f7;"></i> Digital Radiography (X-Ray)</span>
+                    <strong style="color:#10b981;">5 Scans • Completed</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:0.84rem; padding:6px 8px; background:rgba(15,23,42,0.6); border-radius:6px;">
+                    <span><i class="fas fa-brain" style="color:#ec4899;"></i> 3T MRI Scans</span>
+                    <strong style="color:#f59e0b;">2 Scans • In Queue</strong>
+                </div>
+            </div>
+        `;
+    }
+
+    initDashboardCharts();
+}
+
+function injectStaffBanner(title, icon, color, desc) {
+    let banner = document.getElementById('staffDashboardBanner');
+    if (!banner) {
+        const statsGrid = document.querySelector('.stats-grid');
+        if (statsGrid) {
+            banner = document.createElement('div');
+            banner.id = 'staffDashboardBanner';
+            banner.className = 'role-scope-banner';
+            banner.style.cssText = `background: rgba(15, 23, 42, 0.7); border: 1px solid ${color}55; margin-bottom: 20px; box-shadow: 0 4px 20px ${color}22;`;
+            statsGrid.parentNode.insertBefore(banner, statsGrid);
+        }
+    }
+    if (banner) {
+        const user = getCurrentUser();
+        banner.innerHTML = `
+            <div class="scope-left">
+                <i class="fas ${icon}" style="color:${color}; font-size:1.35rem;"></i>
+                <div>
+                    <strong style="color:#ffffff; font-size:0.95rem;">${title}: ${user.displayName}</strong>
+                    <div style="font-size:0.76rem; color:var(--text-muted); font-family:'JetBrains Mono';">${desc}</div>
+                </div>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <span class="badge badge-info" style="font-size:0.75rem; padding:4px 10px;">Role: ${user.role}</span>
+            </div>
+        `;
+    }
+}
+
 function injectDoctorPracticeBanner(user, patientCount, apptCount) {
     let banner = document.getElementById('doctorDashboardBanner');
     if (!banner) {
@@ -2106,7 +2763,7 @@ function injectDoctorPracticeBanner(user, patientCount, apptCount) {
             banner = document.createElement('div');
             banner.id = 'doctorDashboardBanner';
             banner.className = 'role-scope-banner';
-            banner.style.cssText = 'background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); margin-bottom: 20px;';
+            banner.style.cssText = 'background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); margin-bottom: 20px; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.15);';
             statsGrid.parentNode.insertBefore(banner, statsGrid);
         }
     }
@@ -2115,12 +2772,12 @@ function injectDoctorPracticeBanner(user, patientCount, apptCount) {
             <div class="scope-left">
                 <i class="fas fa-user-doctor" style="color:#10b981; font-size:1.3rem;"></i>
                 <div>
-                    <strong>Doctor Clinical Cockpit: ${user.displayName}</strong>
-                    <div style="font-size:0.76rem; color:var(--text-muted); font-family:'JetBrains Mono';">Department: ${user.department || 'Specialty'} • Clearance: Clinical Staff</div>
+                    <strong>Doctor Clinical Practice Cockpit: ${user.displayName}</strong>
+                    <div style="font-size:0.76rem; color:var(--text-muted); font-family:'JetBrains Mono';">Department: ${user.department || 'Cardiology'} • Clearances: Clinical Consultations, Prescribing, EHR Access</div>
                 </div>
             </div>
             <div style="display:flex; gap:8px;">
-                <button class="btn btn-sm btn-outline" onclick="bookAppointment()"><i class="fas fa-calendar-plus"></i> New Consult</button>
+                <button class="btn btn-sm btn-outline" onclick="bookAppointment()"><i class="fas fa-calendar-plus"></i> Schedule Consult</button>
                 <button class="btn btn-sm btn-primary" onclick="addPrescription()"><i class="fas fa-prescription"></i> Write Rx</button>
             </div>
         `;
@@ -2301,6 +2958,7 @@ function savePatient() {
 }
 
 function deletePatient(id) {
+    if (!checkActionPermission('canManagePatients', 'Delete Patient Record')) return;
     if (confirm('Are you sure you want to remove this patient record?')) {
         let patients = loadData('hms_patients', []);
         patients = patients.filter(p => p.id !== id);
@@ -2606,6 +3264,7 @@ function editDoctor(id) {
 }
 
 function saveDoctor() {
+    if (!checkActionPermission('canManageDoctors', 'Save Doctor Profile')) return;
     const getVal = (id1, id2) => {
         const el = document.getElementById(id1) || document.getElementById(id2);
         return el ? el.value.trim() : '';
@@ -2655,6 +3314,7 @@ function saveDoctor() {
 }
 
 function deleteDoctor(id) {
+    if (!checkActionPermission('canDeleteDoctor', 'Delete Doctor Record')) return;
     if (confirm('Are you sure you want to remove this physician?')) {
         let doctors = loadData('hms_doctors', []);
         doctors = doctors.filter(d => d.id !== id);
@@ -3332,6 +3992,7 @@ function showCreatePrescriptionModal() {
 }
 
 function savePrescription() {
+    if (!checkActionPermission('canPrescribe', 'Issue Prescription')) return;
     const patients = loadData('hms_patients', defaultPatients);
     const doctors = loadData('hms_doctors', defaultDoctors);
 
@@ -4635,7 +5296,7 @@ function initGlobalHUD() {
 }
 
 // ==========================================
-// 22. MEDICARE AI HEALTH ASSISTANT ENGINE
+// 22. MEDICARE AI HEALTH ASSISTANT ENGINE (DRAGGABLE & PERSISTENT)
 // ==========================================
 let isAIOpen = false;
 let isAITyping = false;
@@ -4648,10 +5309,11 @@ function initAIChatbot() {
     container.id = 'aiChatbotContainer';
     container.className = 'ai-chatbot-container';
     container.innerHTML = `
-        <button class="ai-chatbot-trigger" id="aiChatTrigger" onclick="toggleAIChatbot()" title="MediCare AI Assistant">
+        <button class="ai-chatbot-trigger" id="aiChatTrigger" title="Drag to move • Click to open MediCare Assistant">
             <span class="ai-chatbot-pulse"></span>
             <i class="fas fa-robot"></i>
             <span>Ask AI Assistant</span>
+            <span class="ai-chatbot-tooltip"><i class="fas fa-arrows-up-down-left-right"></i> Drag anywhere • Click to chat</span>
         </button>
 
         <div class="ai-chatbot-window" id="aiChatWindow">
@@ -4710,11 +5372,158 @@ function initAIChatbot() {
     `;
 
     document.body.appendChild(container);
+    setupDraggableAIChatbot(container);
+}
+
+function setupDraggableAIChatbot(container) {
+    const trigger = container.querySelector('.ai-chatbot-trigger');
+    if (!trigger) return;
+
+    let isDragging = false;
+    let justDragged = false;
+    let startX = 0, startY = 0;
+    let origLeft = 0, origTop = 0;
+
+    function clampAndSetPosition(x, y) {
+        const pad = 12;
+        const w = container.offsetWidth || 185;
+        const h = container.offsetHeight || 52;
+        const maxW = Math.max(10, window.innerWidth - w - pad);
+        const maxH = Math.max(10, window.innerHeight - h - pad);
+
+        const clampedX = Math.max(pad, Math.min(maxW, x));
+        const clampedY = Math.max(pad, Math.min(maxH, y));
+
+        container.style.left = `${clampedX}px`;
+        container.style.top = `${clampedY}px`;
+        container.style.bottom = 'auto';
+        container.style.right = 'auto';
+
+        adjustChatWindowPlacement(clampedX, clampedY);
+        return { clampedX, clampedY };
+    }
+
+    // Restore saved position or default safely above the wallpaper pill (bottom: 92px, right: 24px)
+    const savedX = localStorage.getItem('hms_ai_pos_x');
+    const savedY = localStorage.getItem('hms_ai_pos_y');
+
+    if (savedX !== null && savedY !== null && !isNaN(Number(savedX)) && !isNaN(Number(savedY))) {
+        clampAndSetPosition(Number(savedX), Number(savedY));
+    } else {
+        const defaultX = Math.max(12, window.innerWidth - 195 - 24);
+        const defaultY = Math.max(12, window.innerHeight - 52 - 92);
+        clampAndSetPosition(defaultX, defaultY);
+    }
+
+    function onPointerDown(e) {
+        if (e.button !== undefined && e.button !== 0) return;
+        if (e.target.closest('.ai-chatbot-window')) return;
+
+        const rect = container.getBoundingClientRect();
+        startX = e.clientX;
+        startY = e.clientY;
+        origLeft = rect.left;
+        origTop = rect.top;
+        isDragging = false;
+
+        if (trigger.setPointerCapture && e.pointerId !== undefined) {
+            try { trigger.setPointerCapture(e.pointerId); } catch (_) {}
+        }
+
+        window.addEventListener('pointermove', onPointerMove, { passive: false });
+        window.addEventListener('pointerup', onPointerUp);
+        window.addEventListener('pointercancel', onPointerUp);
+    }
+
+    function onPointerMove(e) {
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+
+        if (!isDragging && Math.hypot(dx, dy) > 5) {
+            isDragging = true;
+            container.classList.add('is-dragging');
+        }
+
+        if (isDragging) {
+            if (e.cancelable) e.preventDefault();
+            clampAndSetPosition(origLeft + dx, origTop + dy);
+        }
+    }
+
+    function onPointerUp(e) {
+        window.removeEventListener('pointermove', onPointerMove);
+        window.removeEventListener('pointerup', onPointerUp);
+        window.removeEventListener('pointercancel', onPointerUp);
+
+        if (trigger.releasePointerCapture && e.pointerId !== undefined) {
+            try { trigger.releasePointerCapture(e.pointerId); } catch (_) {}
+        }
+
+        if (isDragging) {
+            container.classList.remove('is-dragging');
+            justDragged = true;
+            setTimeout(() => { justDragged = false; }, 220);
+
+            const rect = container.getBoundingClientRect();
+            localStorage.setItem('hms_ai_pos_x', Math.round(rect.left));
+            localStorage.setItem('hms_ai_pos_y', Math.round(rect.top));
+            isDragging = false;
+        }
+    }
+
+    trigger.addEventListener('pointerdown', onPointerDown);
+
+    // Filter clicks so drag release does not trigger chat window toggle
+    trigger.addEventListener('click', (e) => {
+        if (justDragged) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        toggleAIChatbot();
+    }, true);
+
+    // Keep widget inside viewport on window resize
+    window.addEventListener('resize', () => {
+        const rect = container.getBoundingClientRect();
+        clampAndSetPosition(rect.left, rect.top);
+    });
+}
+
+function adjustChatWindowPlacement(btnLeft, btnTop) {
+    const win = document.getElementById('aiChatWindow');
+    if (!win) return;
+
+    // Vertical placement
+    if (btnTop < 420) {
+        win.style.top = '62px';
+        win.style.bottom = 'auto';
+        win.style.transformOrigin = 'top right';
+    } else {
+        win.style.bottom = '64px';
+        win.style.top = 'auto';
+        win.style.transformOrigin = 'bottom right';
+    }
+
+    // Horizontal placement
+    if (btnLeft < 420) {
+        win.style.left = '0';
+        win.style.right = 'auto';
+        win.style.transformOrigin = btnTop < 420 ? 'top left' : 'bottom left';
+    } else {
+        win.style.right = '0';
+        win.style.left = 'auto';
+    }
 }
 
 function toggleAIChatbot(forceState) {
     const windowEl = document.getElementById('aiChatWindow');
-    if (!windowEl) return;
+    const container = document.getElementById('aiChatbotContainer');
+    if (!windowEl || !container) return;
+
+    const rect = container.getBoundingClientRect();
+    adjustChatWindowPlacement(rect.left, rect.top);
+
     isAIOpen = (typeof forceState === 'boolean') ? forceState : !isAIOpen;
     if (isAIOpen) {
         windowEl.classList.add('open');
@@ -5313,6 +6122,7 @@ function addLabParamRow(param = '', val = '', unit = '', range = '', flag = 'Nor
 }
 
 function saveLabResults() {
+    if (!checkActionPermission('canEnterLabResults', 'Enter Lab Diagnostic Results')) return;
     if (!editingLabTestId) return;
 
     const container = document.getElementById('labParamsContainer');
@@ -5645,6 +6455,7 @@ function renderDispensaryQueue() {
 }
 
 function dispensePrescriptionFromPharmacy(rxId) {
+    if (!checkActionPermission('canDispenseMedicine', 'Dispense Medication')) return;
     let rxs = loadData('hms_prescriptions', defaultPrescriptions);
     const idx = rxs.findIndex(r => r.id === rxId);
     if (idx > -1) {
