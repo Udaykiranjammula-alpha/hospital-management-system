@@ -65,6 +65,113 @@ const defaultStaff = [
     { id: 'S008', name: 'Sneha Reddy', role: 'Pediatric Care Nurse', department: 'Pediatrics', shift: 'Evening', phone: '9876543108', status: 'On Leave' }
 ];
 
+
+const defaultLabTests = [
+    {
+        id: 'LAB-101',
+        patientId: 'P001',
+        patientName: 'Rajesh Kumar',
+        doctorId: 'D001',
+        doctorName: 'Dr. Priya Sharma',
+        testName: 'HbA1c & Fasting Blood Sugar',
+        category: 'Biochemistry',
+        priority: 'Routine',
+        specimen: 'Venous Blood',
+        orderedDate: '2026-09-17',
+        status: 'Completed',
+        results: [
+            { parameter: 'HbA1c (Glycated Hb)', value: '7.8', unit: '%', range: '4.0 - 5.6', flag: 'High' },
+            { parameter: 'Fasting Blood Glucose', value: '142', unit: 'mg/dL', range: '70 - 99', flag: 'High' }
+        ],
+        technician: 'Ravi Kumar',
+        notes: 'Consistent with poorly controlled Type 2 Diabetes. Recommend insulin titration.'
+    },
+    {
+        id: 'LAB-102',
+        patientId: 'P006',
+        patientName: 'Neha Gupta',
+        doctorId: 'D005',
+        doctorName: 'Dr. Meera Iyer',
+        testName: 'Dengue Serology & Complete Blood Count (CBC)',
+        category: 'Hematology',
+        priority: 'STAT',
+        specimen: 'Whole Blood (EDTA)',
+        orderedDate: '2026-09-17',
+        status: 'In Progress',
+        results: [
+            { parameter: 'Platelet Count', value: '54,000', unit: '/μL', range: '150,000 - 450,000', flag: 'Critical Low' },
+            { parameter: 'Hematocrit (PCV)', value: '44', unit: '%', range: '36 - 46', flag: 'Normal' },
+            { parameter: 'Dengue NS1 Antigen', value: 'Positive', unit: '', range: 'Negative', flag: 'Abnormal' }
+        ],
+        technician: 'Ravi Kumar',
+        notes: 'Thrombocytopenia alert triggered. Critical platelet count notification dispatched.'
+    },
+    {
+        id: 'LAB-103',
+        patientId: 'P004',
+        patientName: 'Priya Singh',
+        doctorId: 'D001',
+        doctorName: 'Dr. Priya Sharma',
+        testName: 'Cardiac Troponin I & Lipid Panel',
+        category: 'Cardiology Diagnostics',
+        priority: 'Urgent',
+        specimen: 'Serum',
+        orderedDate: '2026-09-16',
+        status: 'Completed',
+        results: [
+            { parameter: 'High-Sensitivity Troponin I', value: '0.012', unit: 'ng/mL', range: '< 0.014', flag: 'Normal' },
+            { parameter: 'Total Cholesterol', value: '215', unit: 'mg/dL', range: '< 200', flag: 'Borderline' },
+            { parameter: 'LDL Cholesterol', value: '138', unit: 'mg/dL', range: '< 100', flag: 'High' },
+            { parameter: 'HDL Cholesterol', value: '46', unit: 'mg/dL', range: '> 50', flag: 'Low' }
+        ],
+        technician: 'Ravi Kumar',
+        notes: 'Post-angioplasty troponin normalizing. Continue aggressive lipid-lowering therapy.'
+    },
+    {
+        id: 'LAB-104',
+        patientId: 'P003',
+        patientName: 'Amit Patel',
+        doctorId: 'D002',
+        doctorName: 'Dr. Rahul Verma',
+        testName: 'Digital X-Ray Right Tibia / Fibula (AP & Lateral)',
+        category: 'Radiology',
+        priority: 'Routine',
+        specimen: 'Radiographic Scan',
+        orderedDate: '2026-09-18',
+        status: 'Ordered',
+        results: [],
+        technician: 'Pending Assignment',
+        notes: 'Post-ORIF screw and plate alignment evaluation.'
+    },
+    {
+        id: 'LAB-105',
+        patientId: 'P008',
+        patientName: 'Kavita Joshi',
+        doctorId: 'D003',
+        doctorName: 'Dr. Sneha Desai',
+        testName: '3T MRI Brain with Contrast',
+        category: 'Neuro Radiology',
+        priority: 'Routine',
+        specimen: 'MRI Scan',
+        orderedDate: '2026-09-20',
+        status: 'Ordered',
+        results: [],
+        technician: 'Pending Assignment',
+        notes: 'Investigation for intractable chronic migraine with aura.'
+    }
+];
+
+const defaultPharmacyDrugs = [
+    { id: 'DRUG-001', name: 'Metformin ER', dosage: '1000mg', category: 'Antidiabetic', form: 'Tablet', stock: 450, minStock: 100, unitPrice: 8.50, batchNo: 'MET-26-88', expiry: '2027-04-30', supplier: 'Sun Pharma Lab' },
+    { id: 'DRUG-002', name: 'Telmisartan + Amlodipine', dosage: '40mg/5mg', category: 'Cardiovascular', form: 'Tablet', stock: 320, minStock: 80, unitPrice: 14.00, batchNo: 'TEL-26-12', expiry: '2027-02-15', supplier: 'Cipla Healthcare' },
+    { id: 'DRUG-003', name: 'Cefuroxime Axetil', dosage: '500mg', category: 'Antibiotic', form: 'Tablet', stock: 180, minStock: 50, unitPrice: 32.00, batchNo: 'CEF-26-09', expiry: '2026-11-20', supplier: 'Lupin Med' },
+    { id: 'DRUG-004', name: 'Paracetamol IV Infusion', dosage: '1000mg / 100ml', category: 'Analgesic', form: 'IV Infusion', stock: 28, minStock: 50, unitPrice: 75.00, batchNo: 'PCM-26-04', expiry: '2026-10-15', supplier: 'Dr. Reddy Labs' },
+    { id: 'DRUG-005', name: 'Atorvastatin', dosage: '20mg', category: 'Cardiovascular', form: 'Tablet', stock: 520, minStock: 100, unitPrice: 18.50, batchNo: 'ATO-26-44', expiry: '2027-08-30', supplier: 'Sun Pharma Lab' },
+    { id: 'DRUG-006', name: 'Insulin Glargine (Lantus)', dosage: '100 IU/ml Solostar', category: 'Antidiabetic', form: 'Injection / Vial', stock: 15, minStock: 30, unitPrice: 650.00, batchNo: 'INS-26-77', expiry: '2026-12-10', supplier: 'Sanofi Healthcare' },
+    { id: 'DRUG-007', name: 'Tramadol HCl', dosage: '50mg', category: 'Analgesic', form: 'Capsule', stock: 240, minStock: 60, unitPrice: 12.00, batchNo: 'TRA-26-31', expiry: '2027-05-18', supplier: 'Torrent Pharma' },
+    { id: 'DRUG-008', name: 'Normal Saline (0.9% NaCl)', dosage: '500ml', category: 'IV Fluids', form: 'IV Infusion', stock: 600, minStock: 150, unitPrice: 45.00, batchNo: 'NS-26-90', expiry: '2028-01-01', supplier: 'Baxter Infusions' }
+];
+
 const defaultResources = [
     { id: 'R001', name: 'ICU Ventilator Beds', total: 24, occupied: 18, category: 'Beds' },
     { id: 'R002', name: 'General Inpatient Beds', total: 120, occupied: 82, category: 'Beds' },
@@ -113,6 +220,197 @@ function formatDate(dateStr) {
 }
 
 // ==========================================
+
+// ==========================================
+// 2b. ROLE-BASED ACCESS CONTROL (RBAC) HELPERS
+// ==========================================
+window.doctorScopeOverride = false;
+
+function getCurrentUser() {
+    const role = localStorage.getItem('hms_user_role') || 'Admin';
+    const username = localStorage.getItem('hms_username') || 'Administrator';
+    const doctorId = localStorage.getItem('hms_doctor_id') || (role === 'Doctor' ? 'D001' : '');
+    const department = localStorage.getItem('hms_department') || (role === 'Doctor' ? 'Cardiology' : 'Hospital Operations');
+    const avatar = localStorage.getItem('hms_user_avatar') || `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=0284c7&color=fff`;
+    return { role, username, displayName: username, doctorId, department, avatar };
+}
+
+function switchUserRole(username) {
+    const account = VALID_CREDENTIALS.find(c => c.username.toLowerCase() === username.toLowerCase()) || VALID_CREDENTIALS[0];
+    localStorage.setItem('hms_username', account.displayName);
+    localStorage.setItem('hms_user_role', account.role);
+    localStorage.setItem('hms_doctor_id', account.doctorId || '');
+    localStorage.setItem('hms_department', account.department || '');
+    localStorage.setItem('hms_user_avatar', account.avatar);
+    localStorage.setItem('hms_authenticated', 'true');
+    window.doctorScopeOverride = false;
+    if (typeof playSound === 'function') playSound('success');
+    showToast(`Switched persona: ${account.displayName} (${account.role})`, 'info');
+    setTimeout(() => {
+        window.location.reload();
+    }, 280);
+}
+
+function toggleRoleSwitchDropdown(e) {
+    if (e) e.stopPropagation();
+    const dd = document.getElementById('roleSwitchDropdown');
+    if (dd) {
+        dd.classList.toggle('active');
+        if (typeof playSound === 'function') playSound('click');
+    }
+}
+
+document.addEventListener('click', (e) => {
+    const dd = document.getElementById('roleSwitchDropdown');
+    if (dd && !e.target.closest('.role-switch-wrapper')) {
+        dd.classList.remove('active');
+    }
+});
+
+function logout() {
+    localStorage.removeItem('hms_authenticated');
+    localStorage.removeItem('hms_user_role');
+    localStorage.removeItem('hms_username');
+    localStorage.removeItem('hms_doctor_id');
+    localStorage.removeItem('hms_department');
+    window.location.href = 'index.html';
+}
+
+function getScopedAppointments() {
+    const all = loadData('hms_appointments', defaultAppointments);
+    const user = getCurrentUser();
+    if (user.role === 'Doctor' && !window.doctorScopeOverride) {
+        return all.filter(a => a.doctorId === user.doctorId || (a.doctorName && a.doctorName.toLowerCase().includes(user.username.toLowerCase())) || (user.doctorId === 'D001' && a.doctorId === 'D001'));
+    }
+    return all;
+}
+
+function getScopedPrescriptions() {
+    const all = loadData('hms_prescriptions', defaultPrescriptions);
+    const user = getCurrentUser();
+    if (user.role === 'Doctor' && !window.doctorScopeOverride) {
+        return all.filter(p => p.doctorId === user.doctorId || (p.doctorName && p.doctorName.toLowerCase().includes(user.username.toLowerCase())) || (user.doctorId === 'D001' && p.doctorId === 'D001'));
+    }
+    return all;
+}
+
+function getScopedPatients() {
+    const all = loadData('hms_patients', defaultPatients);
+    const user = getCurrentUser();
+    if (user.role === 'Doctor' && !window.doctorScopeOverride) {
+        const appts = getScopedAppointments();
+        const rxs = getScopedPrescriptions();
+        const myPatientIds = new Set([...appts.map(a => a.patientId), ...rxs.map(r => r.patientId)]);
+        return all.filter(p => myPatientIds.has(p.id) || p.doctorId === user.doctorId);
+    }
+    return all;
+}
+
+function getScopedLabTests() {
+    const all = loadData('hms_lab_tests', defaultLabTests);
+    const user = getCurrentUser();
+    if (user.role === 'Doctor' && !window.doctorScopeOverride) {
+        return all.filter(t => t.doctorId === user.doctorId || (t.doctorName && t.doctorName.toLowerCase().includes(user.username.toLowerCase())));
+    }
+    return all;
+}
+
+function getScopedBills() {
+    const all = loadData('hms_bills', defaultBills);
+    const user = getCurrentUser();
+    if (user.role === 'Doctor' && !window.doctorScopeOverride) {
+        const myPatients = getScopedPatients();
+        const pIds = new Set(myPatients.map(p => p.id));
+        return all.filter(b => pIds.has(b.patientId));
+    }
+    return all;
+}
+
+function toggleDoctorScopeOverride() {
+    window.doctorScopeOverride = !window.doctorScopeOverride;
+    if (typeof playSound === 'function') playSound('click');
+    showToast(window.doctorScopeOverride ? 'Viewing all hospital records (Override Active)' : 'Restored scoped persona view', 'info');
+    const path = (window.location.pathname.replace(/\\/g, '/').split('/').pop() || '').toLowerCase();
+    if (path === 'appointments.html') initAppointmentsPage();
+    else if (path === 'prescriptions.html') initPrescriptionsPage();
+    else if (path === 'patients.html') initPatientsPage();
+    else if (path === 'billing.html') initBillingPage();
+    else if (path === 'laboratory.html') initLaboratoryPage();
+}
+
+function renderDoctorScopeNotice(pageContext, user) {
+    let container = document.getElementById('doctorScopeBanner');
+    if (!container) {
+        const actionsBar = document.querySelector('.actions-bar');
+        if (actionsBar) {
+            container = document.createElement('div');
+            container.id = 'doctorScopeBanner';
+            container.className = 'role-scope-banner';
+            actionsBar.parentNode.insertBefore(container, actionsBar);
+        }
+    }
+    if (container) {
+        if (window.doctorScopeOverride) {
+            container.innerHTML = `
+                <div class="scope-left">
+                    <i class="fas fa-unlock" style="color:var(--warning);"></i>
+                    <span><strong>Cross-Department Override Active:</strong> Displaying all hospital ${pageContext}.</span>
+                </div>
+                <button class="btn btn-sm btn-outline" onclick="toggleDoctorScopeOverride()"><i class="fas fa-filter"></i> Switch to My Scoped View</button>
+            `;
+        } else {
+            container.innerHTML = `
+                <div class="scope-left">
+                    <i class="fas fa-user-md" style="color:var(--primary);"></i>
+                    <span><strong>Doctor Clinical Scope:</strong> Displaying ${pageContext} designated for <strong>${user.displayName}</strong> (${user.department || 'Specialty'}).</span>
+                </div>
+                <button class="btn btn-sm btn-outline" onclick="toggleDoctorScopeOverride()"><i class="fas fa-globe"></i> View All Department ${pageContext}</button>
+            `;
+        }
+    }
+}
+
+function applyPageGuard() {
+    const user = getCurrentUser();
+    const path = (window.location.pathname.replace(/\\/g, '/').split('/').pop() || '').toLowerCase();
+
+    // Lock administration for non-admins
+    if (path === 'admin.html' && user.role !== 'Admin') {
+        const contentWrapper = document.querySelector('.content-wrapper') || document.querySelector('main');
+        if (contentWrapper) {
+            contentWrapper.innerHTML = `
+                <div class="access-restricted-container">
+                    <div class="access-restricted-card">
+                        <div class="access-restricted-icon">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <h2 style="font-size:1.45rem; font-weight:800; color:#ef4444; margin-bottom:12px;">Administrative Clearance Required</h2>
+                        <p style="color:var(--text-secondary); font-size:0.92rem; line-height:1.6; margin-bottom:20px;">
+                            The Administration Hub is restricted to Master System Administrators.
+                            You are logged in as <strong style="color:var(--primary);">${user.displayName}</strong> (<span class="badge badge-info">${user.role}</span>).
+                        </p>
+                        <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+                            <a href="dashboard.html" class="btn btn-primary"><i class="fas fa-arrow-left"></i> Return to Dashboard</a>
+                            <button class="btn btn-outline" onclick="switchUserRole('admin')"><i class="fas fa-shield-alt"></i> Switch to Admin Persona</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    // Decorate sidebar with lock icons for restricted routes
+    document.querySelectorAll('.sidebar-nav .nav-item').forEach(item => {
+        const href = (item.getAttribute('href') || '').toLowerCase();
+        if (href === 'admin.html' && user.role !== 'Admin') {
+            item.classList.add('locked');
+            item.setAttribute('title', 'Admin Clearance Required');
+        } else {
+            item.classList.remove('locked');
+        }
+    });
+}
+
 // 3. SOUND SYNTHESIZER (Web Audio API)
 // ==========================================
 let audioCtx = null;
@@ -1403,22 +1701,29 @@ function startHospitalWarpSequence(callback) {
 
 // Registered authorized personnel credentials with role mapping
 const VALID_CREDENTIALS = [
-    { username: 'admin', password: 'password123', role: 'Admin', displayName: 'Administrator', avatar: 'https://ui-avatars.com/api/?name=Admin&background=2563eb&color=fff' },
-    { username: 'admin', password: 'admin123', role: 'Admin', displayName: 'Administrator', avatar: 'https://ui-avatars.com/api/?name=Admin&background=2563eb&color=fff' },
-    { username: 'doctor', password: 'password123', role: 'Doctor', displayName: 'Dr. Priya Sharma', avatar: 'https://ui-avatars.com/api/?name=Dr+Sharma&background=0284c7&color=fff' },
-    { username: 'doctor', password: 'doctor123', role: 'Doctor', displayName: 'Dr. Priya Sharma', avatar: 'https://ui-avatars.com/api/?name=Dr+Sharma&background=0284c7&color=fff' },
-    { username: 'dr.sharma', password: 'password123', role: 'Doctor', displayName: 'Dr. Priya Sharma', avatar: 'https://ui-avatars.com/api/?name=Dr+Sharma&background=0284c7&color=fff' },
-    { username: 'dr sharma', password: 'password123', role: 'Doctor', displayName: 'Dr. Priya Sharma', avatar: 'https://ui-avatars.com/api/?name=Dr+Sharma&background=0284c7&color=fff' },
-    { username: 'reception', password: 'password123', role: 'Receptionist', displayName: 'Receptionist Desk', avatar: 'https://ui-avatars.com/api/?name=Reception&background=10b981&color=fff' },
-    { username: 'receptionist', password: 'password123', role: 'Receptionist', displayName: 'Receptionist Desk', avatar: 'https://ui-avatars.com/api/?name=Reception&background=10b981&color=fff' },
-    { username: 'reception', password: 'reception123', role: 'Receptionist', displayName: 'Receptionist Desk', avatar: 'https://ui-avatars.com/api/?name=Reception&background=10b981&color=fff' },
+    { username: 'admin', password: 'password123', role: 'Admin', displayName: 'Administrator', department: 'Executive Operations', avatar: 'https://ui-avatars.com/api/?name=Admin&background=2563eb&color=fff' },
+    { username: 'admin', password: 'admin123', role: 'Admin', displayName: 'Administrator', department: 'Executive Operations', avatar: 'https://ui-avatars.com/api/?name=Admin&background=2563eb&color=fff' },
+    { username: 'doctor', password: 'password123', role: 'Doctor', doctorId: 'D001', displayName: 'Dr. Priya Sharma', department: 'Cardiology', avatar: 'https://ui-avatars.com/api/?name=Dr+Sharma&background=0284c7&color=fff' },
+    { username: 'doctor', password: 'doctor123', role: 'Doctor', doctorId: 'D001', displayName: 'Dr. Priya Sharma', department: 'Cardiology', avatar: 'https://ui-avatars.com/api/?name=Dr+Sharma&background=0284c7&color=fff' },
+    { username: 'dr.sharma', password: 'password123', role: 'Doctor', doctorId: 'D001', displayName: 'Dr. Priya Sharma', department: 'Cardiology', avatar: 'https://ui-avatars.com/api/?name=Dr+Sharma&background=0284c7&color=fff' },
+    { username: 'dr sharma', password: 'password123', role: 'Doctor', doctorId: 'D001', displayName: 'Dr. Priya Sharma', department: 'Cardiology', avatar: 'https://ui-avatars.com/api/?name=Dr+Sharma&background=0284c7&color=fff' },
+    { username: 'dr.verma', password: 'password123', role: 'Doctor', doctorId: 'D002', displayName: 'Dr. Rahul Verma', department: 'Orthopedics', avatar: 'https://ui-avatars.com/api/?name=Rahul+Verma&background=f59e0b&color=fff' },
+    { username: 'dr.desai', password: 'password123', role: 'Doctor', doctorId: 'D003', displayName: 'Dr. Sneha Desai', department: 'Neurology', avatar: 'https://ui-avatars.com/api/?name=Sneha+Desai&background=8b5cf6&color=fff' },
+    { username: 'dr.iyer', password: 'password123', role: 'Doctor', doctorId: 'D005', displayName: 'Dr. Meera Iyer', department: 'General Medicine', avatar: 'https://ui-avatars.com/api/?name=Meera+Iyer&background=ec4899&color=fff' },
+    { username: 'reception', password: 'password123', role: 'Receptionist', displayName: 'Receptionist Desk', department: 'Patient Intake & Billing', avatar: 'https://ui-avatars.com/api/?name=Reception&background=10b981&color=fff' },
+    { username: 'receptionist', password: 'password123', role: 'Receptionist', displayName: 'Receptionist Desk', department: 'Patient Intake & Billing', avatar: 'https://ui-avatars.com/api/?name=Reception&background=10b981&color=fff' },
+    { username: 'reception', password: 'reception123', role: 'Receptionist', displayName: 'Receptionist Desk', department: 'Patient Intake & Billing', avatar: 'https://ui-avatars.com/api/?name=Reception&background=10b981&color=fff' },
+    { username: 'pharmacist', password: 'password123', role: 'Pharmacist', displayName: 'Sushma Singh', department: 'Pharmacy & Dispensary', avatar: 'https://ui-avatars.com/api/?name=Pharmacist&background=ec4899&color=fff' },
+    { username: 'pharmacy', password: 'password123', role: 'Pharmacist', displayName: 'Sushma Singh', department: 'Pharmacy & Dispensary', avatar: 'https://ui-avatars.com/api/?name=Pharmacist&background=ec4899&color=fff' },
+    { username: 'pathologist', password: 'password123', role: 'LabTechnician', displayName: 'Ravi Kumar', department: 'Pathology Diagnostics', avatar: 'https://ui-avatars.com/api/?name=Pathologist&background=06b6d4&color=fff' },
+    { username: 'lab', password: 'password123', role: 'LabTechnician', displayName: 'Ravi Kumar', department: 'Pathology Diagnostics', avatar: 'https://ui-avatars.com/api/?name=Pathologist&background=06b6d4&color=fff' },
     // Team Members
-    { username: 'phaneendra', password: 'password123', role: 'Admin', displayName: 'Phaneendra Kumar (Team Lead)', avatar: 'https://ui-avatars.com/api/?name=Phaneendra+Kumar&background=f59e0b&color=fff' },
-    { username: 'nistala', password: 'password123', role: 'Admin', displayName: 'Phaneendra Kumar (Team Lead)', avatar: 'https://ui-avatars.com/api/?name=Phaneendra+Kumar&background=f59e0b&color=fff' },
-    { username: 'balaji', password: 'password123', role: 'Doctor', displayName: 'Neelakanta Balaji (Team Member)', avatar: 'https://ui-avatars.com/api/?name=Balaji&background=10b981&color=fff' },
-    { username: 'neelakanta', password: 'password123', role: 'Doctor', displayName: 'Neelakanta Balaji (Team Member)', avatar: 'https://ui-avatars.com/api/?name=Balaji&background=10b981&color=fff' },
-    { username: 'uday', password: 'password123', role: 'Admin', displayName: 'Uday Kiran (Developer)', avatar: 'https://ui-avatars.com/api/?name=Uday+Kiran&background=8b5cf6&color=fff' },
-    { username: 'udaykiran', password: 'password123', role: 'Admin', displayName: 'Uday Kiran (Developer)', avatar: 'https://ui-avatars.com/api/?name=Uday+Kiran&background=8b5cf6&color=fff' }
+    { username: 'phaneendra', password: 'password123', role: 'Admin', displayName: 'Phaneendra Kumar (Team Lead)', department: 'System Architecture', avatar: 'https://ui-avatars.com/api/?name=Phaneendra+Kumar&background=f59e0b&color=fff' },
+    { username: 'nistala', password: 'password123', role: 'Admin', displayName: 'Phaneendra Kumar (Team Lead)', department: 'System Architecture', avatar: 'https://ui-avatars.com/api/?name=Phaneendra+Kumar&background=f59e0b&color=fff' },
+    { username: 'balaji', password: 'password123', role: 'Doctor', doctorId: 'D001', displayName: 'Neelakanta Balaji (Physician)', department: 'Cardiology', avatar: 'https://ui-avatars.com/api/?name=Balaji&background=10b981&color=fff' },
+    { username: 'neelakanta', password: 'password123', role: 'Doctor', doctorId: 'D001', displayName: 'Neelakanta Balaji (Physician)', department: 'Cardiology', avatar: 'https://ui-avatars.com/api/?name=Balaji&background=10b981&color=fff' },
+    { username: 'uday', password: 'password123', role: 'Admin', displayName: 'Uday Kiran (Developer)', department: 'Full Stack Engineering', avatar: 'https://ui-avatars.com/api/?name=Uday+Kiran&background=8b5cf6&color=fff' },
+    { username: 'udaykiran', password: 'password123', role: 'Admin', displayName: 'Uday Kiran (Developer)', department: 'Full Stack Engineering', avatar: 'https://ui-avatars.com/api/?name=Uday+Kiran&background=8b5cf6&color=fff' }
 ];
 
 function showLoginModal(htmlContent) {
@@ -1589,6 +1894,8 @@ function handleLogin(e) {
     localStorage.setItem('hms_username', matchedAccount.displayName);
     localStorage.setItem('hms_user_role', matchedAccount.role);
     localStorage.setItem('hms_user_avatar', matchedAccount.avatar);
+    localStorage.setItem('hms_doctor_id', matchedAccount.doctorId || '');
+    localStorage.setItem('hms_department', matchedAccount.department || '');
     localStorage.setItem('hms_authenticated', 'true');
 
     // Sync role button
@@ -1659,53 +1966,111 @@ function initLoginPage() {
 // 9. PAGE: DASHBOARD (dashboard.html)
 // ==========================================
 function initDashboardPage() {
-    const patients = loadData('hms_patients', []);
-    const appointments = loadData('hms_appointments', []);
-    const bills = loadData('hms_bills', []);
-    const resources = loadData('hms_resources', []);
+    const user = getCurrentUser();
+    const patients = loadData('hms_patients', defaultPatients);
+    const appointments = loadData('hms_appointments', defaultAppointments);
+    const bills = loadData('hms_bills', defaultBills);
+    const resources = loadData('hms_resources', defaultResources);
+    const rxs = loadData('hms_prescriptions', defaultPrescriptions);
+    const labTests = loadData('hms_lab_tests', defaultLabTests);
 
-    // 1. KPI Calculations
-    const totalPatients = patients.length;
-    const todayStr = new Date().toISOString().split('T')[0];
-    const todayAppts = appointments.filter(a => a.date === todayStr || a.date === '2026-09-17').length;
-    const totalRev = bills.filter(b => b.status === 'Paid').reduce((acc, b) => acc + b.total, 0);
+    if (user.role === 'Doctor') {
+        // --- DOCTOR PERSONA CLINICAL PRACTICE COCKPIT ---
+        const myAppts = appointments.filter(a => a.doctorId === user.doctorId || (a.doctorName && a.doctorName.toLowerCase().includes(user.username.toLowerCase())) || (user.doctorId === 'D001' && a.doctorId === 'D001'));
+        const myRxs = rxs.filter(r => r.doctorId === user.doctorId || (r.doctorName && r.doctorName.toLowerCase().includes(user.username.toLowerCase())) || (user.doctorId === 'D001' && r.doctorId === 'D001'));
+        const myPatientIds = new Set([...myAppts.map(a => a.patientId), ...myRxs.map(r => r.patientId)]);
+        const myPatients = patients.filter(p => myPatientIds.has(p.id) || p.doctorId === user.doctorId);
+        const myLabTests = labTests.filter(t => t.doctorId === user.doctorId || myPatientIds.has(t.patientId));
 
-    let freeBeds = 0;
-    resources.filter(r => r.category.includes('Beds') || r.category === 'Beds').forEach(r => {
-        freeBeds += (r.total - r.occupied);
-    });
+        const myTotalPatients = myPatients.length;
+        const todayStr = new Date().toISOString().split('T')[0];
+        const myTodayAppts = myAppts.filter(a => a.date === todayStr || a.date === '2026-09-17').length;
+        const myTotalRxs = myRxs.length;
+        const pendingLabs = myLabTests.filter(t => t.status !== 'Completed').length;
 
-    // 2. Animate Count Ups for Dashboard Numbers
-    animateNumber('totalPatients', totalPatients);
-    animateNumber('total-patients-count', totalPatients);
-    animateNumber('todayAppointments', todayAppts || appointments.length);
-    animateNumber('today-appointments-count', todayAppts || appointments.length);
-    
-    const revEl = document.getElementById('totalRevenue') || document.getElementById('total-revenue-count');
-    if (revEl) revEl.innerText = formatCurrency(totalRev);
+        // KPI 1: My Patients
+        animateNumber('totalPatients', myTotalPatients);
+        animateNumber('total-patients-count', myTotalPatients);
+        const p1 = document.querySelector('#totalPatients ~ .stat-label, #total-patients-count ~ .stat-label');
+        if (p1) p1.innerText = `My Active Patients (${user.department || 'Clinical'})`;
 
-    animateNumber('availableBeds', freeBeds);
-    animateNumber('available-beds-count', freeBeds);
+        // KPI 2: Today's Consultations
+        animateNumber('todayAppointments', myTodayAppts || myAppts.length);
+        animateNumber('today-appointments-count', myTodayAppts || myAppts.length);
+        const p2 = document.querySelector('#todayAppointments ~ .stat-label, #today-appointments-count ~ .stat-label');
+        if (p2) p2.innerText = "My Today's Consultations";
 
-    // 3. Recent Appointments Table
-    const recentBody = document.getElementById('recentAppointments') || document.getElementById('recent-appointments-body');
-    if (recentBody) {
-        const list = appointments.slice().reverse().slice(0, 5);
-        recentBody.innerHTML = list.map(a => `
-            <tr>
-                <td><strong>${a.patientName}</strong></td>
-                <td>${a.doctorName}</td>
-                <td>${formatDate(a.date)}</td>
-                <td><span class="badge badge-info"><i class="fas fa-clock"></i> ${a.time}</span></td>
-                <td><span class="badge badge-${a.status.toLowerCase()}">${a.status}</span></td>
-            </tr>
-        `).join('');
+        // KPI 3: Prescriptions Issued
+        const revEl = document.getElementById('totalRevenue') || document.getElementById('total-revenue-count');
+        if (revEl) {
+            revEl.innerText = `${myTotalRxs} Active`;
+            const p3 = revEl.nextElementSibling;
+            if (p3) p3.innerText = "My Prescriptions Issued";
+        }
+
+        // KPI 4: Pending Diagnostic Lab Reports
+        animateNumber('availableBeds', pendingLabs || myLabTests.length);
+        animateNumber('available-beds-count', pendingLabs || myLabTests.length);
+        const p4 = document.querySelector('#availableBeds ~ .stat-label, #available-beds-count ~ .stat-label');
+        if (p4) p4.innerText = "My Patients' Lab Reports";
+
+        // Recent Appointments (Only Doctor's Queue)
+        const recentBody = document.getElementById('recentAppointments') || document.getElementById('recent-appointments-body');
+        if (recentBody) {
+            recentBody.innerHTML = myAppts.slice(0, 5).map(a => `
+                <tr>
+                    <td><strong>${a.patientName}</strong></td>
+                    <td><span class="badge badge-success"><i class="fas fa-stethoscope"></i> ${a.doctorName}</span></td>
+                    <td>${formatDate(a.date)}</td>
+                    <td><span class="badge badge-info"><i class="fas fa-clock"></i> ${a.time}</span></td>
+                    <td><span class="badge badge-${a.status.toLowerCase()}">${a.status}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        injectDoctorPracticeBanner(user, myPatients.length, myAppts.length);
+    } else {
+        // --- MASTER ADMIN / RECEPTIONIST FULL HOSPITAL VIEW ---
+        const totalPatients = patients.length;
+        const todayStr = new Date().toISOString().split('T')[0];
+        const todayAppts = appointments.filter(a => a.date === todayStr || a.date === '2026-09-17').length;
+        const totalRev = bills.filter(b => b.status === 'Paid').reduce((acc, b) => acc + b.total, 0);
+
+        let freeBeds = 0;
+        resources.filter(r => r.category.includes('Beds') || r.category === 'Beds').forEach(r => {
+            freeBeds += (r.total - r.occupied);
+        });
+
+        animateNumber('totalPatients', totalPatients);
+        animateNumber('total-patients-count', totalPatients);
+        animateNumber('todayAppointments', todayAppts || appointments.length);
+        animateNumber('today-appointments-count', todayAppts || appointments.length);
+        
+        const revEl = document.getElementById('totalRevenue') || document.getElementById('total-revenue-count');
+        if (revEl) revEl.innerText = formatCurrency(totalRev);
+
+        animateNumber('availableBeds', freeBeds);
+        animateNumber('available-beds-count', freeBeds);
+
+        const recentBody = document.getElementById('recentAppointments') || document.getElementById('recent-appointments-body');
+        if (recentBody) {
+            const list = appointments.slice().reverse().slice(0, 5);
+            recentBody.innerHTML = list.map(a => `
+                <tr>
+                    <td><strong>${a.patientName}</strong></td>
+                    <td>${a.doctorName}</td>
+                    <td>${formatDate(a.date)}</td>
+                    <td><span class="badge badge-info"><i class="fas fa-clock"></i> ${a.time}</span></td>
+                    <td><span class="badge badge-${a.status.toLowerCase()}">${a.status}</span></td>
+                </tr>
+            `).join('');
+        }
     }
 
-    // 4. Department Doctor Breakdown Bars
+    // Department Breakdown Bars
     const deptStatsEl = document.getElementById('departmentStats') || document.getElementById('department-chart');
     if (deptStatsEl) {
-        const doctors = loadData('hms_doctors', []);
+        const doctors = loadData('hms_doctors', defaultDoctors);
         const deptCounts = {};
         doctors.forEach(d => {
             deptCounts[d.department] = (deptCounts[d.department] || 0) + 1;
@@ -1730,8 +2095,36 @@ function initDashboardPage() {
         deptStatsEl.innerHTML = barsHtml;
     }
 
-    // 5. Interactive Clinical Charts & Operations Feed
     initDashboardCharts();
+}
+
+function injectDoctorPracticeBanner(user, patientCount, apptCount) {
+    let banner = document.getElementById('doctorDashboardBanner');
+    if (!banner) {
+        const statsGrid = document.querySelector('.stats-grid');
+        if (statsGrid) {
+            banner = document.createElement('div');
+            banner.id = 'doctorDashboardBanner';
+            banner.className = 'role-scope-banner';
+            banner.style.cssText = 'background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); margin-bottom: 20px;';
+            statsGrid.parentNode.insertBefore(banner, statsGrid);
+        }
+    }
+    if (banner) {
+        banner.innerHTML = `
+            <div class="scope-left">
+                <i class="fas fa-user-doctor" style="color:#10b981; font-size:1.3rem;"></i>
+                <div>
+                    <strong>Doctor Clinical Cockpit: ${user.displayName}</strong>
+                    <div style="font-size:0.76rem; color:var(--text-muted); font-family:'JetBrains Mono';">Department: ${user.department || 'Specialty'} • Clearance: Clinical Staff</div>
+                </div>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <button class="btn btn-sm btn-outline" onclick="bookAppointment()"><i class="fas fa-calendar-plus"></i> New Consult</button>
+                <button class="btn btn-sm btn-primary" onclick="addPrescription()"><i class="fas fa-prescription"></i> Write Rx</button>
+            </div>
+        `;
+    }
 }
 
 function animateNumber(elementId, target) {
@@ -1767,7 +2160,11 @@ function addPrescription() {
 let editingPatientId = null;
 
 function initPatientsPage() {
-    const patients = loadData('hms_patients', []);
+    const user = getCurrentUser();
+    const patients = getScopedPatients();
+    if (user.role === 'Doctor') {
+        renderDoctorScopeNotice('Inpatient & Outpatient Records', user);
+    }
     renderPatients(patients);
 }
 
@@ -1954,6 +2351,9 @@ function viewPatient(id) {
         const allBills = loadData('hms_bills', []);
         const patientBills = allBills.filter(b => b.patientId === id || b.patientName === patient.name);
 
+        const allLabs = loadData('hms_lab_tests', defaultLabTests);
+        const patientLabs = allLabs.filter(l => l.patientId === id || l.patientName === patient.name);
+
         const historyList = patient.history && patient.history.length ? patient.history.map(h => `
             <li style="margin-bottom:10px; padding-left:12px; border-left:3px solid var(--primary); position:relative;">
                 <span style="font-size:0.75rem; font-family:'JetBrains Mono'; color:var(--text-muted); display:block;">${formatDate(h.date)}</span>
@@ -2033,6 +2433,7 @@ function viewPatient(id) {
                 <button type="button" class="ehr-tab-item active" onclick="switchEHRTab(this, 'ehr-timeline')"><i class="fas fa-notes-medical"></i> Medical Timeline</button>
                 <button type="button" class="ehr-tab-item" onclick="switchEHRTab(this, 'ehr-appts')"><i class="fas fa-calendar-check"></i> Consultations (${patientAppts.length})</button>
                 <button type="button" class="ehr-tab-item" onclick="switchEHRTab(this, 'ehr-rxs')"><i class="fas fa-prescription"></i> Prescriptions (${patientRxs.length})</button>
+                <button type="button" class="ehr-tab-item" onclick="switchEHRTab(this, 'ehr-labs')"><i class="fas fa-flask"></i> Diagnostic Labs (${patientLabs.length})</button>
                 <button type="button" class="ehr-tab-item" onclick="switchEHRTab(this, 'ehr-bills')"><i class="fas fa-file-invoice-dollar"></i> Invoices (${patientBills.length})</button>
             </div>
 
@@ -2044,6 +2445,20 @@ function viewPatient(id) {
             </div>
             <div id="ehr-rxs" class="ehr-tab-pane">
                 ${rxRows}
+            </div>
+            <div id="ehr-labs" class="ehr-tab-pane">
+                ${patientLabs.length ? patientLabs.map(l => `
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(15,23,42,0.5); padding:10px 14px; border-radius:8px; border:1px solid var(--glass-border); margin-bottom:6px;">
+                        <div>
+                            <strong>${l.testName}</strong> <span class="badge badge-info" style="font-size:0.75rem;">${l.category}</span>
+                            <div style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;">Requested by ${l.doctorName} on ${formatDate(l.orderedDate)} (${l.priority})</div>
+                        </div>
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <span class="badge badge-${l.status === 'Completed' ? 'success' : 'warning'}">${l.status}</span>
+                            <button class="btn btn-sm btn-info" onclick="closeModal('viewPatientModal'); viewLabReport('${l.id}');"><i class="fas fa-file-medical"></i> Report</button>
+                        </div>
+                    </div>
+                `).join('') : '<p style="color:var(--text-muted); padding:10px 0;">No diagnostic laboratory tests recorded for this patient.</p>'}
             </div>
             <div id="ehr-bills" class="ehr-tab-pane">
                 ${billRows}
@@ -2306,7 +2721,11 @@ let currentCalendarMonth = new Date().getMonth();
 let currentCalendarYear = new Date().getFullYear();
 
 function initAppointmentsPage() {
-    const appointments = loadData('hms_appointments', []);
+    const user = getCurrentUser();
+    const appointments = getScopedAppointments();
+    if (user.role === 'Doctor') {
+        renderDoctorScopeNotice('Consultation Appointments', user);
+    }
     renderAppointments(appointments);
     renderCalendarView(currentCalendarMonth, currentCalendarYear);
     populateAppointmentDropdowns();
@@ -2826,7 +3245,11 @@ function viewInvoice(id) {
 // 14. PAGE: PRESCRIPTIONS (prescriptions.html)
 // ==========================================
 function initPrescriptionsPage() {
-    const rxs = loadData('hms_prescriptions', []);
+    const user = getCurrentUser();
+    const rxs = getScopedPrescriptions();
+    if (user.role === 'Doctor') {
+        renderDoctorScopeNotice('Prescription Records', user);
+    }
     renderPrescriptions(rxs);
     populatePrescriptionDropdowns();
 
@@ -3642,7 +4065,9 @@ function searchCommandPalette(query) {
         { name: 'Appointments Schedule', desc: 'Consultation Calendar & Bookings', url: 'appointments.html', icon: 'fa-calendar-check', type: 'Navigation' },
         { name: 'Billing & Invoices', desc: 'Payments, Invoices & Revenue', url: 'billing.html', icon: 'fa-file-invoice-dollar', type: 'Navigation' },
         { name: 'Prescriptions (Rx)', desc: 'Digital Medication Orders', url: 'prescriptions.html', icon: 'fa-prescription', type: 'Navigation' },
-        { name: 'Administration', desc: 'Hospital Staff & Resource Units', url: 'admin.html', icon: 'fa-cogs', type: 'Navigation' }
+        { name: 'Administration', desc: 'Hospital Staff & Resource Units', url: 'admin.html', icon: 'fa-cogs', type: 'Navigation' },
+        { name: 'Laboratory & Diagnostics', desc: 'Pathology, Specimen Queue & Test Reports', url: 'laboratory.html', icon: 'fa-flask', type: 'Navigation' },
+        { name: 'Pharmacy & Formulary', desc: 'Drug Inventory, Stock Alerts & Dispensing', url: 'pharmacy.html', icon: 'fa-pills', type: 'Navigation' }
     ];
 
     navs.forEach(n => {
@@ -3667,7 +4092,15 @@ function searchCommandPalette(query) {
         { title: 'Switch Glass Theme', subtitle: 'Cycle Cyber Obsidian / Aurora / Crystal Frost', icon: 'fa-palette', action: () => { toggleTheme(); } },
         { title: 'Switch Live Wallpaper Mode', subtitle: '3D Corridor / Synapse / ECG / Aurora / Grid', icon: 'fa-magic', action: () => { cycleWallpaperMode(); } },
         { title: 'Toggle Audio Synthesizer', subtitle: 'Enable or mute UI audio feedback', icon: 'fa-volume-up', action: () => { toggleSound(); } },
-        { title: 'Export Full Database Backup', subtitle: 'Download JSON hospital state', icon: 'fa-download', action: () => { exportDatabaseBackup(); } }
+        { title: 'Export Full Database Backup', subtitle: 'Download JSON hospital state', icon: 'fa-download', action: () => { exportDatabaseBackup(); } },
+        { title: 'Order Diagnostic Lab Test', subtitle: 'Request pathology panel for patient', icon: 'fa-vial', action: () => { window.location.href = 'laboratory.html?action=new'; } },
+        { title: 'Add Medication to Pharmacy', subtitle: 'Add new formulary drug batch', icon: 'fa-plus-circle', action: () => { window.location.href = 'pharmacy.html?action=new'; } },
+        { title: 'Switch to Dr. Priya Sharma', subtitle: 'Doctor Persona (Cardiology)', icon: 'fa-user-md', action: () => { switchUserRole('dr.sharma'); } },
+        { title: 'Switch to Dr. Rahul Verma', subtitle: 'Doctor Persona (Orthopedics)', icon: 'fa-bone', action: () => { switchUserRole('dr.verma'); } },
+        { title: 'Switch to Master Administrator', subtitle: 'Admin Persona (Full Hospital View)', icon: 'fa-user-shield', action: () => { switchUserRole('admin'); } },
+        { title: 'Switch to Front Desk Reception', subtitle: 'Receptionist Persona (Admissions & Cashier)', icon: 'fa-user-nurse', action: () => { switchUserRole('reception'); } },
+        { title: 'Switch to Chief Pharmacist', subtitle: 'Pharmacist Persona (Formulary & Dispensary)', icon: 'fa-pills', action: () => { switchUserRole('pharmacist'); } },
+        { title: 'Switch to Lead Pathologist', subtitle: 'Lab Tech Persona (Diagnostic Testing)', icon: 'fa-flask', action: () => { switchUserRole('pathologist'); } }
     ];
 
     quickActions.forEach(qa => {
@@ -4072,10 +4505,100 @@ function initLiveOpsFeed() {
 // ==========================================
 // 21. UNIVERSAL HEADER HUD INJECTOR
 // ==========================================
+
+function updateGlobalUserHUD() {
+    const user = getCurrentUser();
+    const rightHeaders = document.querySelectorAll('.header .header-right');
+    rightHeaders.forEach(right => {
+        // 1. Role Switcher Pill
+        let switchWrapper = right.querySelector('.role-switch-wrapper');
+        if (!switchWrapper) {
+            switchWrapper = document.createElement('div');
+            switchWrapper.className = 'role-switch-wrapper';
+            const themeToggle = right.querySelector('.theme-toggle');
+            if (themeToggle) right.insertBefore(switchWrapper, themeToggle);
+            else right.appendChild(switchWrapper);
+        }
+
+        const roleIcon = user.role === 'Admin' ? 'fa-user-shield' : (user.role === 'Doctor' ? 'fa-user-md' : (user.role === 'Receptionist' ? 'fa-user-nurse' : (user.role === 'Pharmacist' ? 'fa-pills' : 'fa-flask')));
+        const badgeColor = user.role === 'Admin' ? 'badge-primary' : (user.role === 'Doctor' ? 'badge-success' : (user.role === 'Receptionist' ? 'badge-info' : 'badge-warning'));
+
+        switchWrapper.innerHTML = `
+            <button class="role-switch-trigger" onclick="toggleRoleSwitchDropdown(event)" title="Current Persona: Click to Switch Role">
+                <i class="fas ${roleIcon}"></i>
+                <span>${user.displayName}</span>
+                <span class="badge ${badgeColor}" style="font-size:0.68rem; padding:2px 7px;">${user.role}</span>
+                <i class="fas fa-chevron-down" style="font-size:0.65rem; opacity:0.7;"></i>
+            </button>
+            <div class="role-switch-dropdown" id="roleSwitchDropdown">
+                <div class="role-dropdown-header">
+                    <span>Role-Based Access Control</span>
+                    <i class="fas fa-fingerprint"></i>
+                </div>
+                <button class="role-switch-item ${user.role === 'Admin' ? 'active' : ''}" onclick="switchUserRole('admin')">
+                    <i class="fas fa-user-shield" style="color:#38bdf8;"></i>
+                    <div>
+                        <strong>Master Administrator</strong>
+                        <small style="display:block; color:var(--text-muted); font-size:10px;">Full hospital visibility & configs</small>
+                    </div>
+                </button>
+                <button class="role-switch-item ${user.displayName.includes('Priya') ? 'active' : ''}" onclick="switchUserRole('dr.sharma')">
+                    <i class="fas fa-stethoscope" style="color:#10b981;"></i>
+                    <div>
+                        <strong>Dr. Priya Sharma (Cardiology)</strong>
+                        <small style="display:block; color:var(--text-muted); font-size:10px;">Scoped to her cardiology patients & consults</small>
+                    </div>
+                </button>
+                <button class="role-switch-item ${user.displayName.includes('Verma') ? 'active' : ''}" onclick="switchUserRole('dr.verma')">
+                    <i class="fas fa-bone" style="color:#f59e0b;"></i>
+                    <div>
+                        <strong>Dr. Rahul Verma (Orthopedics)</strong>
+                        <small style="display:block; color:var(--text-muted); font-size:10px;">Scoped to his orthopedic patients & surgeries</small>
+                    </div>
+                </button>
+                <button class="role-switch-item ${user.role === 'Receptionist' ? 'active' : ''}" onclick="switchUserRole('reception')">
+                    <i class="fas fa-user-nurse" style="color:#a855f7;"></i>
+                    <div>
+                        <strong>Front Desk Receptionist</strong>
+                        <small style="display:block; color:var(--text-muted); font-size:10px;">Admissions, Appointments, Billing cashier</small>
+                    </div>
+                </button>
+                <button class="role-switch-item ${user.role === 'Pharmacist' ? 'active' : ''}" onclick="switchUserRole('pharmacist')">
+                    <i class="fas fa-pills" style="color:#ec4899;"></i>
+                    <div>
+                        <strong>Sushma Singh (Pharmacist)</strong>
+                        <small style="display:block; color:var(--text-muted); font-size:10px;">Drug formulary & prescription dispensing</small>
+                    </div>
+                </button>
+                <button class="role-switch-item ${user.role === 'LabTechnician' ? 'active' : ''}" onclick="switchUserRole('pathologist')">
+                    <i class="fas fa-flask" style="color:#06b6d4;"></i>
+                    <div>
+                        <strong>Ravi Kumar (Pathologist)</strong>
+                        <small style="display:block; color:var(--text-muted); font-size:10px;">Specimens, Diagnostic tests & Lab reports</small>
+                    </div>
+                </button>
+            </div>
+        `;
+
+        // 2. User Info Avatar Widget
+        const userInfo = right.querySelector('.user-info');
+        if (userInfo) {
+            userInfo.innerHTML = `
+                <img src="${user.avatar}" alt="${user.displayName}" class="avatar">
+                <div>
+                    <strong style="font-size: 0.88rem; display: block; line-height: 1.2;">${user.displayName}</strong>
+                    <span style="font-size: 0.72rem; color: var(--text-muted); font-family: 'JetBrains Mono';">${user.department || user.role}</span>
+                </div>
+            `;
+        }
+    });
+}
+
 function initGlobalHUD() {
     injectCommandPalette();
     injectNotificationDrawer();
     updateNotificationBadge();
+    updateGlobalUserHUD();
 
     // Ensure header has Search Pill and Notification Bell if not in static HTML
     document.querySelectorAll('.header .header-right').forEach(right => {
@@ -4491,3 +5014,1247 @@ function toggleAIVoiceInput() {
 }
 
 
+
+
+// ==========================================
+// 23. PAGE: LABORATORY & PATHOLOGY (laboratory.html)
+// ==========================================
+let editingLabTestId = null;
+
+function initLaboratoryPage() {
+    const user = getCurrentUser();
+    const tests = getScopedLabTests();
+    
+    // Role Banner
+    const banner = document.getElementById('labRoleBanner');
+    if (banner) {
+        if (user.role === 'Doctor') {
+            banner.style.display = 'flex';
+            banner.className = 'role-scope-banner';
+            banner.innerHTML = `
+                <div class="scope-left">
+                    <i class="fas fa-microscope" style="color:var(--primary);"></i>
+                    <span><strong>Doctor Diagnostics Scope:</strong> Displaying test orders and pathology results for <strong>${user.displayName}</strong>'s patients.</span>
+                </div>
+                <button class="btn btn-sm btn-outline" onclick="toggleDoctorScopeOverride()"><i class="fas fa-globe"></i> ${window.doctorScopeOverride ? 'Restore My Scope' : 'View All Hospital Labs'}</button>
+            `;
+        } else if (user.role === 'LabTechnician') {
+            banner.style.display = 'flex';
+            banner.className = 'role-scope-banner';
+            banner.style.borderColor = 'rgba(6, 182, 212, 0.4)';
+            banner.innerHTML = `
+                <div class="scope-left">
+                    <i class="fas fa-flask" style="color:#06b6d4;"></i>
+                    <span><strong>Pathology Diagnostic Console:</strong> Logged in as <strong>${user.displayName}</strong>. You have verification authorization for specimen analysis.</span>
+                </div>
+                <span class="badge badge-success"><i class="fas fa-check-double"></i> Verified Pathologist</span>
+            `;
+        } else {
+            banner.style.display = 'none';
+        }
+    }
+
+    updateLabKPIs(tests);
+    renderLabTests(tests);
+    populateLabDropdowns();
+}
+
+function updateLabKPIs(tests) {
+    const total = tests.length;
+    const pending = tests.filter(t => t.status !== 'Completed').length;
+    const critical = tests.filter(t => t.priority === 'STAT' || (t.results && t.results.some(r => r.flag && r.flag.toLowerCase().includes('critical')))).length;
+    const completed = tests.filter(t => t.status === 'Completed').length;
+
+    animateNumber('labTotalTests', total);
+    animateNumber('labPendingTests', pending);
+    animateNumber('labCriticalTests', critical);
+    animateNumber('labCompletedTests', completed);
+}
+
+function renderLabTests(data) {
+    const tbody = document.getElementById('labTestsTableBody');
+    const countBadge = document.getElementById('labOrdersCount');
+    const emptyState = document.getElementById('labEmptyState');
+
+    if (countBadge) countBadge.innerText = `${data.length} Tests`;
+    if (!tbody) return;
+
+    if (data.length === 0) {
+        tbody.innerHTML = '';
+        if (emptyState) emptyState.style.display = 'block';
+        return;
+    }
+
+    if (emptyState) emptyState.style.display = 'none';
+    tbody.innerHTML = data.map(t => {
+        let priorityBadge = '<span class="badge badge-info">Routine</span>';
+        if (t.priority === 'STAT') priorityBadge = '<span class="lab-flag lab-flag-critical"><i class="fas fa-bolt"></i> STAT</span>';
+        else if (t.priority === 'Urgent') priorityBadge = '<span class="badge badge-warning">Urgent</span>';
+
+        let statusBadge = '<span class="badge badge-info">Ordered</span>';
+        if (t.status === 'In Progress') statusBadge = '<span class="badge badge-warning"><i class="fas fa-spinner fa-spin"></i> In Progress</span>';
+        else if (t.status === 'Completed') statusBadge = '<span class="badge badge-success"><i class="fas fa-check"></i> Completed</span>';
+
+        return `
+            <tr>
+                <td><strong style="font-family:'JetBrains Mono'; color:var(--primary);">${t.id}</strong></td>
+                <td><strong>${t.patientName}</strong></td>
+                <td><span style="font-size:0.82rem; color:var(--text-secondary);"><i class="fas fa-user-md" style="color:var(--primary); margin-right:4px;"></i> ${t.doctorName}</span></td>
+                <td>
+                    <div><strong>${t.testName}</strong></div>
+                    <span style="font-size:0.72rem; color:var(--text-muted);">${t.category}</span>
+                </td>
+                <td><span class="badge badge-secondary" style="font-size:0.75rem;">${t.specimen || 'Specimen'}</span></td>
+                <td>${priorityBadge}</td>
+                <td>${formatDate(t.orderedDate)}</td>
+                <td>${statusBadge}</td>
+                <td>
+                    <div style="display:flex; gap:6px;">
+                        <button class="btn btn-sm btn-info" onclick="viewLabReport('${t.id}')" title="View Diagnostic Report"><i class="fas fa-file-medical"></i> Report</button>
+                        <button class="btn btn-sm btn-warning" onclick="showEnterLabResultsModal('${t.id}')" title="Enter / Edit Results"><i class="fas fa-microscope"></i></button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteLabTest('${t.id}')" title="Delete"><i class="fas fa-trash"></i></button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function filterLabTests() {
+    const q = (document.getElementById('labSearch')?.value || '').toLowerCase().trim();
+    const status = document.getElementById('labStatusFilter')?.value || '';
+    const priority = document.getElementById('labPriorityFilter')?.value || '';
+
+    const all = getScopedLabTests();
+    const filtered = all.filter(t => {
+        const matchQ = !q || t.patientName.toLowerCase().includes(q) || t.testName.toLowerCase().includes(q) || t.id.toLowerCase().includes(q) || (t.specimen && t.specimen.toLowerCase().includes(q));
+        const matchStatus = !status || t.status === status;
+        const matchPriority = !priority || t.priority === priority;
+        return matchQ && matchStatus && matchPriority;
+    });
+
+    renderLabTests(filtered);
+}
+
+function populateLabDropdowns() {
+    const pSelect = document.getElementById('labPatientSelect');
+    if (pSelect) {
+        const patients = loadData('hms_patients', defaultPatients);
+        pSelect.innerHTML = '<option value="">-- Choose Patient --</option>' + patients.map(p => `<option value="${p.id}">${p.name} (${p.id} - ${p.bloodGroup})</option>`).join('');
+    }
+
+    const dSelect = document.getElementById('labDoctorSelect');
+    if (dSelect) {
+        const doctors = loadData('hms_doctors', defaultDoctors);
+        const currentUser = getCurrentUser();
+        dSelect.innerHTML = '<option value="">-- Choose Doctor --</option>' + doctors.map(d => `<option value="${d.id}">${d.name} (${d.department})</option>`).join('');
+        if (currentUser.role === 'Doctor') {
+            const match = doctors.find(d => d.id === currentUser.doctorId || d.name.toLowerCase().includes(currentUser.username.toLowerCase()));
+            if (match) dSelect.value = match.id;
+        }
+    }
+}
+
+function handleTestTemplateSelect(val) {
+    const spec = document.getElementById('labSpecimen');
+    const cat = document.getElementById('labCategory');
+    if (val.includes('Blood') || val.includes('HbA1c') || val.includes('Lipid') || val.includes('Renal') || val.includes('Liver')) {
+        if (spec) spec.value = 'Venous Blood';
+        if (cat) cat.value = val.includes('Blood Count') ? 'Hematology' : 'Biochemistry';
+    } else if (val.includes('Troponin')) {
+        if (spec) spec.value = 'Serum';
+        if (cat) cat.value = 'Cardiology Diagnostics';
+    } else if (val.includes('Dengue')) {
+        if (spec) spec.value = 'Whole Blood (EDTA)';
+        if (cat) cat.value = 'Serology';
+    } else if (val.includes('X-Ray') || val.includes('MRI')) {
+        if (spec) spec.value = 'Radiographic Scan';
+        if (cat) cat.value = val.includes('MRI') ? 'Neuro Radiology' : 'Radiology';
+    }
+}
+
+function showOrderLabTestModal() {
+    populateLabDropdowns();
+    const form = document.getElementById('orderLabTestForm');
+    if (form) form.reset();
+    openModal('orderLabTestModal');
+}
+
+function saveLabTestOrder() {
+    const pId = document.getElementById('labPatientSelect')?.value;
+    const dId = document.getElementById('labDoctorSelect')?.value;
+    const testName = document.getElementById('labTestName')?.value;
+    const specimen = document.getElementById('labSpecimen')?.value || 'Venous Blood';
+    const priority = document.getElementById('labPriority')?.value || 'Routine';
+    const category = document.getElementById('labCategory')?.value || 'Clinical Pathology';
+    const notes = document.getElementById('labClinicalNotes')?.value || '';
+
+    if (!pId || !dId || !testName) {
+        showToast('Please select Patient, Doctor, and Test Panel.', 'error');
+        return;
+    }
+
+    const patients = loadData('hms_patients', defaultPatients);
+    const doctors = loadData('hms_doctors', defaultDoctors);
+    const patient = patients.find(p => p.id === pId);
+    const doctor = doctors.find(d => d.id === dId);
+
+    const tests = loadData('hms_lab_tests', defaultLabTests);
+    const newId = 'LAB-' + (tests.length + 101);
+
+    const newTest = {
+        id: newId,
+        patientId: pId,
+        patientName: patient ? patient.name : 'Unknown Patient',
+        doctorId: dId,
+        doctorName: doctor ? doctor.name : 'Attending Physician',
+        testName,
+        category,
+        priority,
+        specimen,
+        orderedDate: new Date().toISOString().split('T')[0],
+        status: 'Ordered',
+        results: [],
+        technician: 'Ravi Kumar',
+        notes
+    };
+
+    tests.unshift(newTest);
+    saveData('hms_lab_tests', tests);
+    closeModal('orderLabTestModal');
+    playSound('success');
+    showToast(`Diagnostic order ${newId} placed successfully!`, 'success');
+    initLaboratoryPage();
+}
+
+function showEnterLabResultsModal(testId) {
+    editingLabTestId = testId;
+    const tests = loadData('hms_lab_tests', defaultLabTests);
+    const test = tests.find(t => t.id === testId);
+    if (!test) return;
+
+    const header = document.getElementById('labResultOrderHeader');
+    if (header) {
+        header.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <strong style="color:var(--primary); font-family:'JetBrains Mono';">${test.id}</strong> — <strong>${test.testName}</strong>
+                    <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:2px;">Patient: <strong>${test.patientName}</strong> (${test.patientId}) | Dr. ${test.doctorName}</div>
+                </div>
+                <span class="badge badge-info">${test.priority}</span>
+            </div>
+        `;
+    }
+
+    const container = document.getElementById('labParamsContainer');
+    if (container) {
+        container.innerHTML = '';
+        const params = (test.results && test.results.length > 0) ? test.results : getDefaultParamsForTest(test.testName);
+        params.forEach(p => addLabParamRow(p.parameter, p.value, p.unit, p.range, p.flag));
+    }
+
+    const impEl = document.getElementById('labPathologistImpression');
+    if (impEl) impEl.value = test.notes || '';
+
+    const statEl = document.getElementById('labStatusUpdate');
+    if (statEl) statEl.value = test.status === 'Ordered' ? 'In Progress' : test.status;
+
+    openModal('enterLabResultsModal');
+}
+
+function getDefaultParamsForTest(name) {
+    if (name.includes('CBC') || name.includes('Blood Count')) {
+        return [
+            { parameter: 'Hemoglobin (Hb)', value: '14.2', unit: 'g/dL', range: '13.0 - 17.0', flag: 'Normal' },
+            { parameter: 'Total Leukocyte Count (WBC)', value: '7,400', unit: '/μL', range: '4,000 - 11,000', flag: 'Normal' },
+            { parameter: 'Platelet Count', value: '240,000', unit: '/μL', range: '150,000 - 450,000', flag: 'Normal' }
+        ];
+    } else if (name.includes('HbA1c')) {
+        return [
+            { parameter: 'HbA1c (Glycated Hb)', value: '7.8', unit: '%', range: '4.0 - 5.6', flag: 'High' },
+            { parameter: 'Fasting Blood Glucose', value: '142', unit: 'mg/dL', range: '70 - 99', flag: 'High' }
+        ];
+    } else if (name.includes('Lipid')) {
+        return [
+            { parameter: 'Total Cholesterol', value: '215', unit: 'mg/dL', range: '< 200', flag: 'Borderline' },
+            { parameter: 'Triglycerides', value: '160', unit: 'mg/dL', range: '< 150', flag: 'Borderline' },
+            { parameter: 'LDL Cholesterol', value: '138', unit: 'mg/dL', range: '< 100', flag: 'High' },
+            { parameter: 'HDL Cholesterol', value: '46', unit: 'mg/dL', range: '> 50', flag: 'Low' }
+        ];
+    }
+    return [
+        { parameter: 'Diagnostic Assessment', value: 'Completed within normal limits', unit: '', range: 'Normal', flag: 'Normal' }
+    ];
+}
+
+function addLabParamRow(param = '', val = '', unit = '', range = '', flag = 'Normal') {
+    const container = document.getElementById('labParamsContainer');
+    if (!container) return;
+
+    const row = document.createElement('div');
+    row.className = 'lab-param-input-row';
+    row.style.cssText = 'display:grid; grid-template-columns: 2fr 1.2fr 1fr 1.5fr 1.2fr 36px; gap:6px; align-items:center; background:rgba(255,255,255,0.03); padding:6px; border-radius:6px; border:1px solid rgba(255,255,255,0.06);';
+    row.innerHTML = `
+        <input type="text" class="form-control form-control-sm param-name" placeholder="Parameter (e.g. HbA1c)" value="${param}">
+        <input type="text" class="form-control form-control-sm param-val" placeholder="Value (e.g. 7.8)" value="${val}">
+        <input type="text" class="form-control form-control-sm param-unit" placeholder="Unit" value="${unit}">
+        <input type="text" class="form-control form-control-sm param-range" placeholder="Ref Range" value="${range}">
+        <select class="form-control form-control-sm param-flag">
+            <option value="Normal" ${flag === 'Normal' ? 'selected' : ''}>Normal</option>
+            <option value="Borderline" ${flag === 'Borderline' ? 'selected' : ''}>Borderline</option>
+            <option value="High" ${flag === 'High' ? 'selected' : ''}>High</option>
+            <option value="Low" ${flag === 'Low' ? 'selected' : ''}>Low</option>
+            <option value="Abnormal" ${flag === 'Abnormal' ? 'selected' : ''}>Abnormal</option>
+            <option value="Critical" ${flag.includes('Critical') ? 'selected' : ''}>Critical</option>
+        </select>
+        <button type="button" class="btn btn-sm btn-danger" style="padding:4px;" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+    `;
+    container.appendChild(row);
+}
+
+function saveLabResults() {
+    if (!editingLabTestId) return;
+
+    const container = document.getElementById('labParamsContainer');
+    const rows = container.querySelectorAll('.lab-param-input-row');
+    const results = [];
+
+    rows.forEach(r => {
+        const p = r.querySelector('.param-name')?.value.trim();
+        const v = r.querySelector('.param-val')?.value.trim();
+        const u = r.querySelector('.param-unit')?.value.trim();
+        const rng = r.querySelector('.param-range')?.value.trim();
+        const flg = r.querySelector('.param-flag')?.value;
+        if (p) {
+            results.push({ parameter: p, value: v, unit: u, range: rng, flag: flg });
+        }
+    });
+
+    const status = document.getElementById('labStatusUpdate')?.value || 'Completed';
+    const notes = document.getElementById('labPathologistImpression')?.value.trim() || '';
+
+    const tests = loadData('hms_lab_tests', defaultLabTests);
+    const idx = tests.findIndex(t => t.id === editingLabTestId);
+    if (idx > -1) {
+        tests[idx].results = results;
+        tests[idx].status = status;
+        tests[idx].notes = notes;
+        tests[idx].technician = getCurrentUser().displayName;
+        saveData('hms_lab_tests', tests);
+    }
+
+    closeModal('enterLabResultsModal');
+    playSound('success');
+    showToast(`Diagnostic results saved for ${editingLabTestId}!`, 'success');
+    initLaboratoryPage();
+}
+
+function viewLabReport(testId) {
+    const tests = loadData('hms_lab_tests', defaultLabTests);
+    const test = tests.find(t => t.id === testId);
+    if (!test) return;
+
+    const content = document.getElementById('printableLabReportContent');
+    if (!content) return;
+
+    const rowsHtml = (test.results || []).map(r => {
+        let flagClass = 'lab-flag-normal';
+        if (r.flag === 'Critical' || r.flag === 'Critical Low') flagClass = 'lab-flag-critical';
+        else if (r.flag === 'High' || r.flag === 'Abnormal') flagClass = 'lab-flag-high';
+
+        return `
+            <tr>
+                <td><strong>${r.parameter}</strong></td>
+                <td><strong style="font-family:'JetBrains Mono'; font-size:1rem; color:var(--primary);">${r.value}</strong></td>
+                <td>${r.unit || '—'}</td>
+                <td style="color:var(--text-secondary); font-family:'JetBrains Mono'; font-size:0.8rem;">${r.range || 'N/A'}</td>
+                <td><span class="lab-flag ${flagClass}">${r.flag}</span></td>
+            </tr>
+        `;
+    }).join('') || '<tr><td colspan="5" style="text-align:center; padding:16px;">Diagnostic examination pending specimen processing.</td></tr>';
+
+    content.innerHTML = `
+        <div class="lab-report-sheet">
+            <div class="lab-report-header">
+                <div>
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
+                        <i class="fas fa-hospital" style="font-size:1.8rem; color:var(--primary);"></i>
+                        <h2 style="font-size:1.45rem; font-weight:800; margin:0;">MEDICARE SUPER SPECIALTY HOSPITAL</h2>
+                    </div>
+                    <div style="font-size:0.75rem; color:var(--text-muted); font-family:'JetBrains Mono';">
+                        NABL & JCI ACCREDITED CENTRAL DIAGNOSTIC & PATHOLOGY INSTITUTE • NEW DELHI
+                    </div>
+                </div>
+                <div style="text-align:right;">
+                    <div class="badge badge-primary" style="font-size:0.75rem; padding:4px 10px;">REPORT # ${test.id}</div>
+                    <div style="font-size:0.72rem; color:var(--text-muted); margin-top:4px;">DATE: ${formatDate(test.orderedDate)}</div>
+                </div>
+            </div>
+
+            <div class="lab-meta-grid">
+                <div>
+                    <div><strong>Patient Name:</strong> ${test.patientName}</div>
+                    <div><strong>Patient ID:</strong> <span style="font-family:'JetBrains Mono'; color:var(--primary);">${test.patientId}</span></div>
+                    <div><strong>Referring Physician:</strong> ${test.doctorName}</div>
+                </div>
+                <div>
+                    <div><strong>Investigation:</strong> ${test.testName}</div>
+                    <div><strong>Category:</strong> ${test.category}</div>
+                    <div><strong>Specimen:</strong> ${test.specimen || 'Venous Blood'} (Barcode: #SP-${test.id.replace('LAB-','')})</div>
+                </div>
+            </div>
+
+            <table class="lab-results-table">
+                <thead>
+                    <tr>
+                        <th>Investigation Parameter</th>
+                        <th>Observed Value</th>
+                        <th>Unit</th>
+                        <th>Reference Interval</th>
+                        <th>Clinical Flag</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rowsHtml}
+                </tbody>
+            </table>
+
+            <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.07); border-radius:8px; padding:14px; margin-bottom:24px;">
+                <h4 style="font-size:0.82rem; text-transform:uppercase; color:var(--primary); margin-bottom:6px;"><i class="fas fa-comment-medical"></i> Clinical Pathologist Remarks</h4>
+                <p style="font-size:0.85rem; color:var(--text-secondary); margin:0; line-height:1.5;">${test.notes || 'Specimen processed using automated laser flow cytometry and spectrophotometry. Correlate clinically.'}</p>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; border-top:1px solid var(--glass-border); padding-top:16px;">
+                <div style="font-size:0.72rem; color:var(--text-muted); font-family:'JetBrains Mono';">
+                    <div>Technician: ${test.technician || 'Ravi Kumar (Senior Technologist)'}</div>
+                    <div>Digitally Signed & Validated • 256-Bit SHA Certificate</div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-family:'JetBrains Mono'; font-weight:700; color:#10b981; font-size:0.9rem;">Dr. R. K. Pathak, MD</div>
+                    <div style="font-size:0.72rem; color:var(--text-muted);">Senior Consultant Pathologist & Lab Director</div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    openModal('viewLabReportModal');
+}
+
+function printLabReport() {
+    window.print();
+}
+
+function deleteLabTest(id) {
+    if (!confirm(`Are you sure you want to delete Lab Test Order ${id}?`)) return;
+    let tests = loadData('hms_lab_tests', defaultLabTests);
+    tests = tests.filter(t => t.id !== id);
+    saveData('hms_lab_tests', tests);
+    playSound('delete');
+    showToast(`Lab order ${id} deleted!`, 'warning');
+    initLaboratoryPage();
+}
+
+function exportLabTestsToCSV() {
+    const tests = loadData('hms_lab_tests', defaultLabTests);
+    const headers = ['Order ID', 'Patient ID', 'Patient Name', 'Doctor', 'Test Name', 'Category', 'Priority', 'Specimen', 'Date', 'Status', 'Notes'];
+    const rows = tests.map(t => [t.id, t.patientId, t.patientName, t.doctorName, t.testName, t.category, t.priority, t.specimen, t.orderedDate, t.status, t.notes]);
+    downloadCSV('medicare-laboratory-records.csv', headers, rows);
+}
+
+
+// ==========================================
+// 24. PAGE: PHARMACY & INVENTORY (pharmacy.html)
+// ==========================================
+let editingDrugId = null;
+let restockingDrugId = null;
+
+function initPharmacyPage() {
+    const drugs = loadData('hms_pharmacy_drugs', defaultPharmacyDrugs);
+    updatePharmacyKPIs(drugs);
+    renderPharmacyDrugs(drugs);
+    renderDispensaryQueue();
+}
+
+function updatePharmacyKPIs(drugs) {
+    const total = drugs.length;
+    const lowStock = drugs.filter(d => d.stock <= d.minStock).length;
+    const expiringSoon = drugs.filter(d => {
+        if (!d.expiry) return false;
+        const exp = new Date(d.expiry);
+        const now = new Date();
+        const diffDays = (exp - now) / (1000 * 60 * 60 * 24);
+        return diffDays > 0 && diffDays <= 60;
+    }).length;
+    const rxs = loadData('hms_prescriptions', defaultPrescriptions);
+    const dispensedToday = rxs.filter(r => r.dispensed).length || 3;
+
+    animateNumber('pharmacyTotalDrugs', total);
+    animateNumber('pharmacyLowStock', lowStock);
+    animateNumber('pharmacyExpiringSoon', expiringSoon);
+    animateNumber('pharmacyDispensedToday', dispensedToday);
+}
+
+function renderPharmacyDrugs(data) {
+    const tbody = document.getElementById('drugsTableBody');
+    const countBadge = document.getElementById('pharmacyListCount');
+    const emptyState = document.getElementById('pharmacyEmptyState');
+
+    if (countBadge) countBadge.innerText = `${data.length} Formulary Drugs`;
+    if (!tbody) return;
+
+    if (data.length === 0) {
+        tbody.innerHTML = '';
+        if (emptyState) emptyState.style.display = 'block';
+        return;
+    }
+
+    if (emptyState) emptyState.style.display = 'none';
+    tbody.innerHTML = data.map(d => {
+        let statusBadge = '<span class="stock-badge stock-good"><i class="fas fa-check-circle"></i> In Stock</span>';
+        if (d.stock === 0) statusBadge = '<span class="stock-badge stock-critical"><i class="fas fa-circle-xmark"></i> Out of Stock</span>';
+        else if (d.stock <= d.minStock) statusBadge = '<span class="stock-badge stock-low"><i class="fas fa-triangle-exclamation"></i> Low Stock</span>';
+
+        return `
+            <tr>
+                <td><strong style="font-family:'JetBrains Mono'; color:var(--primary);">${d.id}</strong></td>
+                <td>
+                    <strong>${d.name}</strong>
+                    <div style="font-size:0.75rem; color:var(--text-muted);">${d.supplier || 'Generic'}</div>
+                </td>
+                <td><span class="badge badge-info">${d.dosage} • ${d.form}</span></td>
+                <td>${d.category}</td>
+                <td>
+                    <div style="font-weight:700; font-family:'JetBrains Mono'; color:${d.stock <= d.minStock ? '#f59e0b' : 'var(--text-primary)'};">${d.stock} Units</div>
+                    <div style="font-size:0.7rem; color:var(--text-muted);">Min: ${d.minStock}</div>
+                </td>
+                <td><strong style="font-family:'JetBrains Mono';">${formatCurrency(d.unitPrice)}</strong></td>
+                <td>
+                    <span style="font-family:'JetBrains Mono'; font-size:0.8rem;">${d.batchNo || 'BATCH-26'}</span>
+                    <div style="font-size:0.72rem; color:var(--text-muted);"><i class="fas fa-calendar"></i> Exp: ${formatDate(d.expiry)}</div>
+                </td>
+                <td>${statusBadge}</td>
+                <td>
+                    <div style="display:flex; gap:6px;">
+                        <button class="btn btn-sm btn-success" onclick="openRestockModal('${d.id}')" title="Quick Restock"><i class="fas fa-truck-loading"></i> Restock</button>
+                        <button class="btn btn-sm btn-warning" onclick="editDrug('${d.id}')" title="Edit Drug Details"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteDrug('${d.id}')" title="Delete"><i class="fas fa-trash"></i></button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function filterPharmacyDrugs() {
+    const q = (document.getElementById('drugSearch')?.value || '').toLowerCase().trim();
+    const cat = document.getElementById('drugCategoryFilter')?.value || '';
+    const stock = document.getElementById('drugStockFilter')?.value || '';
+
+    const all = loadData('hms_pharmacy_drugs', defaultPharmacyDrugs);
+    const filtered = all.filter(d => {
+        const matchQ = !q || d.name.toLowerCase().includes(q) || d.id.toLowerCase().includes(q) || d.category.toLowerCase().includes(q) || (d.supplier && d.supplier.toLowerCase().includes(q));
+        const matchCat = !cat || d.category.toLowerCase().includes(cat.toLowerCase());
+        let matchStock = true;
+        if (stock === 'low') matchStock = d.stock <= d.minStock;
+        else if (stock === 'good') matchStock = d.stock > d.minStock;
+        else if (stock === 'expiring') {
+            if (!d.expiry) matchStock = false;
+            else {
+                const diff = (new Date(d.expiry) - new Date()) / (1000 * 60 * 60 * 24);
+                matchStock = diff > 0 && diff <= 60;
+            }
+        }
+        return matchQ && matchCat && matchStock;
+    });
+
+    renderPharmacyDrugs(filtered);
+}
+
+function switchPharmacyView(view) {
+    playSound('click');
+    const invView = document.getElementById('pharmacyInventoryView');
+    const dispView = document.getElementById('pharmacyDispensaryView');
+    const tabInv = document.getElementById('tabInventoryBtn');
+    const tabDisp = document.getElementById('tabDispensaryBtn');
+
+    if (view === 'inventory') {
+        if (invView) invView.style.display = 'block';
+        if (dispView) dispView.style.display = 'none';
+        if (tabInv) { tabInv.className = 'btn btn-primary'; }
+        if (tabDisp) { tabDisp.className = 'btn btn-outline'; }
+    } else {
+        if (invView) invView.style.display = 'none';
+        if (dispView) dispView.style.display = 'block';
+        if (tabInv) { tabInv.className = 'btn btn-outline'; }
+        if (tabDisp) { tabDisp.className = 'btn btn-primary'; }
+        renderDispensaryQueue();
+    }
+}
+
+function renderDispensaryQueue() {
+    const container = document.getElementById('dispensaryQueueList');
+    const countBadge = document.getElementById('dispensaryQueueCount');
+    const pendingBadge = document.getElementById('pendingDispenseBadge');
+    if (!container) return;
+
+    const rxs = loadData('hms_prescriptions', defaultPrescriptions);
+    const pendingRxs = rxs.filter(r => !r.dispensed);
+
+    if (countBadge) countBadge.innerText = `${pendingRxs.length} Pending`;
+    if (pendingBadge) pendingBadge.innerText = pendingRxs.length;
+
+    if (pendingRxs.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center; padding:30px; color:var(--text-muted);">
+                <i class="fas fa-clipboard-check" style="font-size:2.5rem; color:#10b981; margin-bottom:10px; display:block;"></i>
+                <p>All current doctor prescriptions have been verified and dispensed!</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = pendingRxs.map(r => {
+        const medsList = (r.medicines || []).map(m => `
+            <div style="background:rgba(255,255,255,0.03); padding:8px 12px; border-radius:6px; margin-top:4px; display:flex; justify-content:space-between; font-size:0.84rem;">
+                <span><strong>${m.name}</strong> (${m.dosage})</span>
+                <span style="color:var(--text-muted);">${m.frequency} • ${m.duration}</span>
+            </div>
+        `).join('');
+
+        return `
+            <div class="pharmacy-dispense-card">
+                <div style="flex:1; padding-right:20px;">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                        <span class="badge badge-info" style="font-family:'JetBrains Mono';">${r.id}</span>
+                        <strong style="font-size:1rem;">${r.patientName}</strong>
+                        <span style="color:var(--text-muted); font-size:0.8rem;">| Prescribed by ${r.doctorName} on ${formatDate(r.date)}</span>
+                    </div>
+                    <div style="font-size:0.82rem; color:var(--text-secondary); margin-bottom:8px;">Diagnosis: <strong>${r.diagnosis}</strong></div>
+                    <div style="margin-top:6px;">
+                        ${medsList}
+                    </div>
+                </div>
+                <div>
+                    <button class="btn btn-success" onclick="dispensePrescriptionFromPharmacy('${r.id}')">
+                        <i class="fas fa-check-double"></i> Dispense Medication
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function dispensePrescriptionFromPharmacy(rxId) {
+    let rxs = loadData('hms_prescriptions', defaultPrescriptions);
+    const idx = rxs.findIndex(r => r.id === rxId);
+    if (idx > -1) {
+        rxs[idx].dispensed = true;
+        rxs[idx].dispensedAt = new Date().toISOString();
+        rxs[idx].dispensedBy = getCurrentUser().displayName;
+        saveData('hms_prescriptions', rxs);
+
+        // Deduct matching inventory
+        let drugs = loadData('hms_pharmacy_drugs', defaultPharmacyDrugs);
+        (rxs[idx].medicines || []).forEach(med => {
+            const medNameFirst = med.name.split(' ')[0].toLowerCase();
+            const drugIdx = drugs.findIndex(d => d.name.toLowerCase().includes(medNameFirst));
+            if (drugIdx > -1 && drugs[drugIdx].stock > 10) {
+                drugs[drugIdx].stock -= 10;
+            }
+        });
+        saveData('hms_pharmacy_drugs', drugs);
+
+        playSound('success');
+        showToast(`Rx #${rxId} dispensed! Stock updated in formulary.`, 'success');
+        initPharmacyPage();
+    }
+}
+
+function showAddDrugModal() {
+    editingDrugId = null;
+    const title = document.getElementById('drugModalTitle');
+    if (title) title.innerText = 'Add Formulary Medication';
+    const form = document.getElementById('drugForm');
+    if (form) form.reset();
+    openModal('drugModal');
+}
+
+function editDrug(id) {
+    const drugs = loadData('hms_pharmacy_drugs', defaultPharmacyDrugs);
+    const drug = drugs.find(d => d.id === id);
+    if (!drug) return;
+
+    editingDrugId = id;
+    const title = document.getElementById('drugModalTitle');
+    if (title) title.innerText = `Edit Medication: ${drug.name}`;
+
+    const setVal = (elId, val) => { const el = document.getElementById(elId); if (el) el.value = val || ''; };
+    setVal('drugName', drug.name);
+    setVal('drugDosage', drug.dosage);
+    setVal('drugCategory', drug.category);
+    setVal('drugFormType', drug.form);
+    setVal('drugStock', drug.stock);
+    setVal('drugMinStock', drug.minStock);
+    setVal('drugUnitPrice', drug.unitPrice);
+    setVal('drugBatchNo', drug.batchNo);
+    setVal('drugExpiry', drug.expiry);
+    setVal('drugSupplier', drug.supplier);
+
+    openModal('drugModal');
+}
+
+function saveDrugItem() {
+    const name = document.getElementById('drugName')?.value.trim();
+    const dosage = document.getElementById('drugDosage')?.value.trim();
+    const category = document.getElementById('drugCategory')?.value;
+    const form = document.getElementById('drugFormType')?.value;
+    const stock = parseInt(document.getElementById('drugStock')?.value) || 0;
+    const minStock = parseInt(document.getElementById('drugMinStock')?.value) || 50;
+    const unitPrice = parseFloat(document.getElementById('drugUnitPrice')?.value) || 10.0;
+    const batchNo = document.getElementById('drugBatchNo')?.value.trim() || 'BATCH-26';
+    const expiry = document.getElementById('drugExpiry')?.value;
+    const supplier = document.getElementById('drugSupplier')?.value.trim() || 'Sun Pharma';
+
+    if (!name || !dosage || !expiry) {
+        showToast('Please fill all required medication fields.', 'error');
+        return;
+    }
+
+    let drugs = loadData('hms_pharmacy_drugs', defaultPharmacyDrugs);
+
+    if (editingDrugId) {
+        const idx = drugs.findIndex(d => d.id === editingDrugId);
+        if (idx > -1) {
+            drugs[idx] = { ...drugs[idx], name, dosage, category, form, stock, minStock, unitPrice, batchNo, expiry, supplier };
+            showToast(`Medication ${drugs[idx].id} updated!`, 'success');
+        }
+    } else {
+        const newId = 'DRUG-0' + (drugs.length + 1);
+        drugs.push({ id: newId, name, dosage, category, form, stock, minStock, unitPrice, batchNo, expiry, supplier });
+        showToast(`New medication ${newId} added to formulary!`, 'success');
+    }
+
+    saveData('hms_pharmacy_drugs', drugs);
+    closeModal('drugModal');
+    playSound('success');
+    initPharmacyPage();
+}
+
+function openRestockModal(id) {
+    restockingDrugId = id;
+    const drugs = loadData('hms_pharmacy_drugs', defaultPharmacyDrugs);
+    const drug = drugs.find(d => d.id === id);
+    if (!drug) return;
+
+    const info = document.getElementById('restockDrugInfo');
+    if (info) info.innerText = `Restocking: ${drug.name} (${drug.dosage}) — Current Stock: ${drug.stock} Units`;
+
+    const units = document.getElementById('restockUnits');
+    if (units) units.value = 100;
+
+    openModal('restockDrugModal');
+}
+
+function confirmRestock() {
+    if (!restockingDrugId) return;
+    const qty = parseInt(document.getElementById('restockUnits')?.value) || 0;
+    if (qty <= 0) {
+        showToast('Please enter a valid restock quantity.', 'error');
+        return;
+    }
+
+    let drugs = loadData('hms_pharmacy_drugs', defaultPharmacyDrugs);
+    const idx = drugs.findIndex(d => d.id === restockingDrugId);
+    if (idx > -1) {
+        drugs[idx].stock += qty;
+        saveData('hms_pharmacy_drugs', drugs);
+        showToast(`Added +${qty} units to ${drugs[idx].name}! New Stock: ${drugs[idx].stock}`, 'success');
+    }
+
+    closeModal('restockDrugModal');
+    playSound('success');
+    initPharmacyPage();
+}
+
+function deleteDrug(id) {
+    if (!confirm(`Are you sure you want to remove medication ${id} from formulary?`)) return;
+    let drugs = loadData('hms_pharmacy_drugs', defaultPharmacyDrugs);
+    drugs = drugs.filter(d => d.id !== id);
+    saveData('hms_pharmacy_drugs', drugs);
+    playSound('delete');
+    showToast(`Medication ${id} removed from formulary!`, 'warning');
+    initPharmacyPage();
+}
+
+function exportPharmacyToCSV() {
+    const drugs = loadData('hms_pharmacy_drugs', defaultPharmacyDrugs);
+    const headers = ['Drug Code', 'Medication Name', 'Dosage', 'Category', 'Form', 'Stock', 'Min Reorder', 'Unit Price', 'Batch #', 'Expiry Date', 'Supplier'];
+    const rows = drugs.map(d => [d.id, d.name, d.dosage, d.category, d.form, d.stock, d.minStock, d.unitPrice, d.batchNo, d.expiry, d.supplier]);
+    downloadCSV('medicare-pharmacy-formulary.csv', headers, rows);
+}
+
+
+// ==========================================
+// 25. PAGE: EMERGENCY, ICU & AMBULANCE (emergency.html)
+// ==========================================
+let ecgAnimationId = null;
+let icuEcgOffset = 0;
+
+const defaultTriagePatients = [
+    { id: 'ER-801', name: 'Rohan Mehra', age: '42 / M', esi: 'ESI-1', complaint: 'Acute STEMI (Inferior Wall) • VFib Arrest', bay: 'Trauma Bay 1 (Red)', vitals: 'HR 134, BP 80/50, SpO2 88%', timeIn: '12m ago', doctor: 'Dr. Priya Sharma' },
+    { id: 'ER-802', name: 'Sunil Chawla', age: '29 / M', esi: 'ESI-2', complaint: 'High-Speed Bike Crash • Blunt Chest Trauma', bay: 'Trauma Bay 2 (Red)', vitals: 'HR 118, BP 100/65, SpO2 93%', timeIn: '24m ago', doctor: 'Dr. Rahul Verma' },
+    { id: 'ER-803', name: 'Ananya Roy', age: '8 / F', esi: 'ESI-2', complaint: 'Status Asthmaticus • Severe Retractions', bay: 'Resuscitation 3', vitals: 'HR 145, BP 95/60, SpO2 89%', timeIn: '35m ago', doctor: 'Dr. Anil Kumar' },
+    { id: 'ER-804', name: 'Vikram Reddy', age: '60 / M', esi: 'ESI-3', complaint: 'COPD Exacerbation with Hypercapnia', bay: 'ICU Bed 105', vitals: 'HR 98, BP 130/85, SpO2 91%', timeIn: '1h 10m ago', doctor: 'Dr. Meera Iyer' }
+];
+
+const defaultAmbulanceFleet = [
+    { unit: 'ALS-01 (Cardiac Unit)', status: 'Inbound • Emergency Run', eta: '3 Mins ETA', driver: 'Deepak Sharma', paramedic: 'Kiran Patel', location: 'MG Road Flyover', targetBay: 'Trauma Bay 1' },
+    { unit: 'ALS-02 (Trauma Rapid)', status: 'Stationed • Dock Bay 2', eta: 'On Standby', driver: 'Manoj Tiwari', paramedic: 'Anita Verma', location: 'ER Emergency Dock', targetBay: 'Available' },
+    { unit: 'ALS-03 (Neonatal ALS)', status: 'Dispatched • High Priority', eta: '11 Mins ETA', driver: 'Rajesh Negi', paramedic: 'Sneha Reddy', location: 'Sector 14 Ring Road', targetBay: 'NICU Dock' }
+];
+
+function initEmergencyPage() {
+    renderICUMonitors();
+    renderTriageTable();
+    renderAmbulanceFleet();
+    startECGWaveformLoop();
+}
+
+function renderICUMonitors() {
+    const grid = document.getElementById('icuMonitorsGrid');
+    if (!grid) return;
+
+    const monitors = [
+        { bed: 'ICU BED 101', patient: 'Rajesh Kumar (P001)', condition: 'Post-CABG Recovery', hr: 74, spo2: 99, bp: '122/80', rr: 16, doc: 'Dr. Priya Sharma' },
+        { bed: 'ICU BED 102', patient: 'Rohan Mehra (ER-801)', condition: 'Acute STEMI Resuscitation', hr: 128, spo2: 91, bp: '85/55', rr: 26, doc: 'Dr. Priya Sharma' },
+        { bed: 'ICU BED 103', patient: 'Sunil Chawla (ER-802)', condition: 'Poly-trauma Chest Tube', hr: 114, spo2: 94, bp: '105/70', rr: 22, doc: 'Dr. Rahul Verma' },
+        { bed: 'ICU BED 104', patient: 'Vikram Reddy (P005)', condition: 'Severe COPD on BiPAP', hr: 88, spo2: 92, bp: '135/88', rr: 20, doc: 'Dr. Meera Iyer' }
+    ];
+
+    grid.innerHTML = monitors.map((m, idx) => `
+        <div class="icu-monitor-card ${m.hr > 120 || m.spo2 < 92 ? 'code-blue-active' : ''}">
+            <div class="icu-monitor-header">
+                <div>
+                    <strong style="font-family:'JetBrains Mono'; color:#38bdf8;">${m.bed}</strong>
+                    <div style="font-size:0.85rem; font-weight:700; color:#ffffff; margin-top:2px;">${m.patient}</div>
+                </div>
+                <span class="badge ${m.hr > 120 ? 'badge-danger' : 'badge-success'}">${m.condition}</span>
+            </div>
+            <canvas class="icu-ecg-canvas" id="ecgCanvas_${idx}"></canvas>
+            <div class="icu-vitals-row">
+                <div class="icu-vital-item">
+                    <div class="icu-vital-val" style="color:${m.hr > 110 ? '#ef4444' : '#10b981'};">${m.hr}</div>
+                    <div class="icu-vital-label">HR (BPM)</div>
+                </div>
+                <div class="icu-vital-item">
+                    <div class="icu-vital-val" style="color:${m.spo2 < 93 ? '#f59e0b' : '#38bdf8'};">${m.spo2}%</div>
+                    <div class="icu-vital-label">SpO2</div>
+                </div>
+                <div class="icu-vital-item">
+                    <div class="icu-vital-val" style="color:#ffffff;">${m.bp}</div>
+                    <div class="icu-vital-label">NIBP</div>
+                </div>
+                <div class="icu-vital-item">
+                    <div class="icu-vital-val" style="color:#a855f7;">${m.rr}</div>
+                    <div class="icu-vital-label">RESP</div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function startECGWaveformLoop() {
+    if (ecgAnimationId) cancelAnimationFrame(ecgAnimationId);
+
+    function drawWaves() {
+        icuEcgOffset = (icuEcgOffset + 2.5) % 300;
+
+        for (let i = 0; i < 4; i++) {
+            const canvas = document.getElementById(`ecgCanvas_${i}`);
+            if (!canvas) continue;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width = canvas.clientWidth || 300;
+            const h = canvas.height = canvas.clientHeight || 70;
+
+            ctx.clearRect(0, 0, w, h);
+
+            // Grid background
+            ctx.strokeStyle = 'rgba(16, 185, 129, 0.08)';
+            ctx.lineWidth = 1;
+            for (let x = 0; x < w; x += 15) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+            }
+            for (let y = 0; y < h; y += 15) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+            }
+
+            // Waveform path
+            const strokeColor = i === 1 ? '#ef4444' : (i === 2 ? '#f59e0b' : '#10b981');
+            ctx.strokeStyle = strokeColor;
+            ctx.lineWidth = 2;
+            ctx.shadowColor = strokeColor;
+            ctx.shadowBlur = 6;
+            ctx.beginPath();
+
+            const centerY = h / 2;
+            for (let x = 0; x < w; x++) {
+                const phase = (x + icuEcgOffset) % 100;
+                let y = centerY;
+                // P-Q-R-S-T wave pulse simulation
+                if (phase > 30 && phase < 38) {
+                    y -= 6; // P wave
+                } else if (phase >= 40 && phase < 43) {
+                    y += 4; // Q wave
+                } else if (phase >= 43 && phase < 47) {
+                    y -= 26; // R spike
+                } else if (phase >= 47 && phase < 51) {
+                    y += 8; // S drop
+                } else if (phase >= 60 && phase < 72) {
+                    y -= 8; // T wave
+                }
+                if (x === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+        }
+
+        ecgAnimationId = requestAnimationFrame(drawWaves);
+    }
+
+    drawWaves();
+}
+
+function renderTriageTable() {
+    const tbody = document.getElementById('triageTableBody');
+    if (!tbody) return;
+
+    tbody.innerHTML = defaultTriagePatients.map(p => {
+        let esiClass = 'esi-1';
+        if (p.esi === 'ESI-2') esiClass = 'esi-2';
+        else if (p.esi === 'ESI-3') esiClass = 'esi-3';
+
+        return `
+            <tr>
+                <td><strong style="font-family:'JetBrains Mono'; color:#ef4444;">${p.id}</strong></td>
+                <td>
+                    <strong>${p.name}</strong>
+                    <div style="font-size:0.75rem; color:var(--text-muted);">${p.age}</div>
+                </td>
+                <td><span class="esi-badge ${esiClass}"><i class="fas fa-triangle-exclamation"></i> ${p.esi}</span></td>
+                <td><strong>${p.complaint}</strong></td>
+                <td><span class="badge badge-info">${p.bay}</span></td>
+                <td><span style="font-family:'JetBrains Mono'; font-size:0.8rem; color:#fca5a5;">${p.vitals}</span></td>
+                <td><span style="font-size:0.78rem; color:var(--text-muted);">${p.timeIn}</span></td>
+                <td><span style="font-size:0.82rem;"><i class="fas fa-user-md" style="color:var(--primary); margin-right:4px;"></i> ${p.doctor}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-outline" onclick="showToast('Trauma Protocol active for ${p.name}', 'info')"><i class="fas fa-stethoscope"></i> Manage</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function renderAmbulanceFleet() {
+    const grid = document.getElementById('ambulanceFleetGrid');
+    if (!grid) return;
+
+    grid.innerHTML = defaultAmbulanceFleet.map(a => `
+        <div class="ambulance-card">
+            <div>
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                    <i class="fas fa-ambulance" style="color:#ef4444; font-size:1.2rem;"></i>
+                    <strong style="font-size:0.95rem;">${a.unit}</strong>
+                </div>
+                <div style="font-size:0.8rem; color:#cbd5e1; margin-bottom:2px;"><i class="fas fa-location-dot" style="color:#38bdf8; margin-right:4px;"></i> Location: ${a.location}</div>
+                <div style="font-size:0.75rem; color:var(--text-muted);">Crew: ${a.driver} & ${a.paramedic}</div>
+            </div>
+            <div style="text-align:right;">
+                <span class="badge ${a.status.includes('Inbound') ? 'badge-danger' : 'badge-success'}">${a.status}</span>
+                <div style="font-family:'JetBrains Mono'; font-weight:800; color:#f59e0b; font-size:0.9rem; margin-top:4px;">${a.eta}</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function triggerCodeBlueAlarm() {
+    const banner = document.getElementById('emergencyBanner');
+    if (banner) {
+        banner.classList.toggle('code-blue-active');
+    }
+
+    // Play synthetic Emergency Siren
+    if (audioCtx) {
+        try {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.4);
+            osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.8);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.8);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.85);
+        } catch (e) {}
+    }
+
+    showToast('🚨 CODE BLUE ACTIVATED: Resuscitation Team Dispatched to Bay 1!', 'error');
+}
+
+function showEmergencyIntakeModal() {
+    openModal('emergencyIntakeModal');
+}
+
+function saveEmergencyPatient() {
+    const name = document.getElementById('erPatientName')?.value;
+    const age = document.getElementById('erPatientAge')?.value || '40 / M';
+    const esi = document.getElementById('erTriageLevel')?.value || 'ESI-1';
+    const bay = document.getElementById('erBayAlloc')?.value || 'Trauma Bay 1';
+    const complaint = document.getElementById('erChiefComplaint')?.value;
+    const bp = document.getElementById('erInitialBP')?.value || '110/70 mmHg';
+    const spo2 = document.getElementById('erInitialSpO2')?.value || '95%';
+    const doc = document.getElementById('erPhysician')?.value || 'Dr. Priya Sharma';
+
+    const newCase = {
+        id: 'ER-' + (defaultTriagePatients.length + 805),
+        name,
+        age,
+        esi,
+        complaint,
+        bay,
+        vitals: `BP ${bp}, SpO2 ${spo2}`,
+        timeIn: 'Just now',
+        doctor: doc
+    };
+
+    defaultTriagePatients.unshift(newCase);
+    closeModal('emergencyIntakeModal');
+    playSound('success');
+    showToast(`Emergency admission registered: ${name} (${esi}) admitted to ${bay}!`, 'success');
+    renderTriageTable();
+}
+
+
+// ==========================================
+// 26. PAGE: PATIENT SELF-SERVICE PORTAL (patient-portal.html)
+// ==========================================
+let portalCurrentPatientId = 'P001';
+
+function initPatientPortalPage() {
+    populatePortalPatientSelector();
+    renderPortalPatientData(portalCurrentPatientId);
+}
+
+function populatePortalPatientSelector() {
+    const sel = document.getElementById('portalPatientSelector');
+    if (!sel) return;
+
+    const patients = loadData('hms_patients', defaultPatients);
+    sel.innerHTML = patients.map(p => `
+        <option value="${p.id}" ${p.id === portalCurrentPatientId ? 'selected' : ''}>${p.name} (${p.id})</option>
+    `).join('');
+}
+
+function switchPortalPatient(id) {
+    portalCurrentPatientId = id;
+    playSound('click');
+    renderPortalPatientData(id);
+    showToast(`Switched view to patient ${id}`, 'info');
+}
+
+function renderPortalPatientData(id) {
+    const patients = loadData('hms_patients', defaultPatients);
+    const patient = patients.find(p => p.id === id) || patients[0];
+    if (!patient) return;
+
+    // 1. Digital ID Card
+    const card = document.getElementById('patientDigitalIdCard');
+    if (card) {
+        card.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
+                <div style="display:flex; align-items:center; gap:20px;">
+                    <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(patient.name)}&background=0284c7&color=fff&size=128" alt="${patient.name}" style="width:74px; height:74px; border-radius:18px; border:2px solid var(--primary); box-shadow:0 0 16px rgba(56,189,248,0.4);">
+                    <div>
+                        <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:#38bdf8; font-weight:700;"><i class="fas fa-shield-halved"></i> MediCare Digital Medical Passport</div>
+                        <h2 style="font-size:1.6rem; font-weight:800; color:#ffffff; margin:4px 0;">${patient.name}</h2>
+                        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; font-size:0.85rem; color:var(--text-secondary);">
+                            <span>ID: <strong style="font-family:'JetBrains Mono'; color:#38bdf8;">${patient.id}</strong></span>
+                            <span>•</span>
+                            <span>${patient.age} Yrs / ${patient.gender}</span>
+                            <span>•</span>
+                            <span>Blood: <strong style="color:#ef4444;">${patient.bloodGroup}</strong></span>
+                            <span>•</span>
+                            <span>Contact: ${patient.phone}</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="text-align:right;">
+                    <span class="badge badge-${patient.status.toLowerCase()}" style="font-size:0.88rem; padding:6px 14px;">${patient.status}</span>
+                    <div style="margin-top:8px; font-family:'JetBrains Mono'; font-size:0.75rem; color:var(--text-muted);">
+                        Admitted: ${formatDate(patient.admissionDate || '2026-08-15')}
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top:18px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                <div style="font-size:0.88rem;">
+                    <span style="color:var(--text-muted);">Clinical Diagnosis:</span> <strong style="color:#f59e0b;">${patient.condition}</strong>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn btn-sm btn-outline" onclick="window.print()"><i class="fas fa-print"></i> Print ID Card</button>
+                    <button class="btn btn-sm btn-primary" onclick="showToast('Medical Passport synchronized with Cloud EHR', 'success')"><i class="fas fa-sync-alt"></i> Sync Cloud</button>
+                </div>
+            </div>
+        `;
+    }
+
+    // 2. Prescriptions Tab
+    const rxs = loadData('hms_prescriptions', defaultPrescriptions).filter(r => r.patientId === id || r.patientName === patient.name);
+    const rxBox = document.getElementById('portalRxsContainer');
+    if (rxBox) {
+        rxBox.innerHTML = rxs.length ? rxs.map(r => `
+            <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:16px; margin-bottom:12px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <div>
+                        <strong style="color:var(--primary); font-family:'JetBrains Mono';">${r.id}</strong> — <strong>${r.diagnosis}</strong>
+                        <div style="font-size:0.8rem; color:var(--text-muted);">Prescribed by ${r.doctorName} on ${formatDate(r.date)}</div>
+                    </div>
+                    <button class="btn btn-sm btn-outline" onclick="showToast('Medication Refill Request sent to Pharmacy!', 'success')"><i class="fas fa-redo"></i> Request Refill</button>
+                </div>
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:8px;">
+                    ${(r.medicines || []).map(m => `
+                        <div style="background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.2); padding:8px 12px; border-radius:8px; font-size:0.85rem;">
+                            <strong>${m.name}</strong> (${m.dosage})
+                            <div style="color:var(--text-muted); font-size:0.75rem; margin-top:2px;">${m.frequency} • ${m.duration}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                ${r.notes ? `<div style="font-size:0.82rem; color:var(--text-secondary); margin-top:10px;"><em>Notes: ${r.notes}</em></div>` : ''}
+            </div>
+        `).join('') : '<p style="color:var(--text-muted); text-align:center; padding:20px;">No digital prescriptions on record.</p>';
+    }
+
+    // 3. Diagnostic Labs Tab
+    const labs = loadData('hms_lab_tests', defaultLabTests).filter(l => l.patientId === id || l.patientName === patient.name);
+    const labBox = document.getElementById('portalLabsContainer');
+    if (labBox) {
+        labBox.innerHTML = labs.length ? labs.map(l => `
+            <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:16px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span class="badge badge-info" style="font-family:'JetBrains Mono';">${l.id}</span>
+                        <strong style="font-size:1rem;">${l.testName}</strong>
+                    </div>
+                    <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">
+                        Specimen: ${l.specimen || 'Venous Blood'} | Ordered by ${l.doctorName} on ${formatDate(l.orderedDate)}
+                    </div>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <span class="badge badge-${l.status === 'Completed' ? 'success' : 'warning'}">${l.status}</span>
+                    <button class="btn btn-sm btn-info" onclick="viewLabReport('${l.id}')"><i class="fas fa-file-medical"></i> View Report</button>
+                </div>
+            </div>
+        `).join('') : '<p style="color:var(--text-muted); text-align:center; padding:20px;">No diagnostic lab tests recorded for this patient.</p>';
+    }
+
+    // 4. Consultations Tab
+    const appts = loadData('hms_appointments', defaultAppointments).filter(a => a.patientId === id || a.patientName === patient.name);
+    const apptBox = document.getElementById('portalApptsContainer');
+    if (apptBox) {
+        apptBox.innerHTML = appts.length ? appts.map(a => `
+            <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:16px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <strong>${a.doctorName}</strong>
+                    <div style="font-size:0.85rem; color:var(--text-muted); margin-top:2px;">${formatDate(a.date)} at ${a.time} • ${a.reason}</div>
+                </div>
+                <span class="badge badge-${a.status.toLowerCase()}">${a.status}</span>
+            </div>
+        `).join('') : '<p style="color:var(--text-muted); text-align:center; padding:20px;">No appointments on record.</p>';
+    }
+
+    // 5. Billing & Online Pay Tab
+    const bills = loadData('hms_bills', defaultBills).filter(b => b.patientId === id || b.patientName === patient.name);
+    const billBox = document.getElementById('portalBillsContainer');
+    if (billBox) {
+        billBox.innerHTML = bills.length ? bills.map(b => `
+            <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:16px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <strong style="font-family:'JetBrains Mono';">${b.id}</strong> — <span style="font-size:0.85rem; color:var(--text-muted);">${formatDate(b.date)}</span>
+                    <div style="font-size:1.15rem; font-weight:800; color:var(--success); font-family:'JetBrains Mono'; margin-top:4px;">${formatCurrency(b.total)}</div>
+                </div>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <span class="badge badge-${b.status.toLowerCase()}">${b.status}</span>
+                    ${b.status !== 'Paid' ? `
+                        <button class="btn btn-sm btn-success" onclick="openPaymentGateway('${b.id}', ${b.total})"><i class="fas fa-credit-card"></i> Pay Online</button>
+                    ` : `
+                        <button class="btn btn-sm btn-outline" onclick="viewInvoice('${b.id}')"><i class="fas fa-receipt"></i> Receipt</button>
+                    `}
+                </div>
+            </div>
+        `).join('') : '<p style="color:var(--text-muted); text-align:center; padding:20px;">No outstanding hospital bills.</p>';
+    }
+}
+
+function switchPortalTab(tab) {
+    playSound('click');
+    const tabs = ['rxs', 'labs', 'appts', 'bills'];
+    tabs.forEach(t => {
+        const el = document.getElementById(`portalTab${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        const btn = document.getElementById(`btnTab${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        if (el) el.style.display = (t === tab) ? 'block' : 'none';
+        if (btn) btn.className = (t === tab) ? 'btn btn-primary' : 'btn btn-outline';
+    });
+}
+
+function openPaymentGateway(billId, amount) {
+    const content = document.getElementById('paymentGatewayContent');
+    if (!content) return;
+
+    content.innerHTML = `
+        <div style="text-align:center; padding:10px 0;">
+            <div style="width:64px; height:64px; margin:0 auto 12px; border-radius:50%; background:rgba(16,185,129,0.15); border:2px solid #10b981; display:flex; align-items:center; justify-content:center; font-size:26px; color:#10b981;">
+                <i class="fas fa-lock"></i>
+            </div>
+            <h3 style="font-size:1.25rem; font-weight:800; margin-bottom:4px;">MediCare UPI & Card Checkout</h3>
+            <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:16px;">Invoice #${billId} • Total Due: <strong style="color:var(--success); font-family:'JetBrains Mono';">${formatCurrency(amount)}</strong></p>
+
+            <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:14px; margin-bottom:18px; text-align:left;">
+                <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:6px;">Select Payment Mode:</label>
+                <div style="display:flex; gap:8px; margin-bottom:12px;">
+                    <button type="button" class="btn btn-sm btn-primary" style="flex:1;"><i class="fab fa-google-pay"></i> Instant UPI</button>
+                    <button type="button" class="btn btn-sm btn-outline" style="flex:1;"><i class="fas fa-credit-card"></i> Card / NetBanking</button>
+                </div>
+                <div style="font-family:'JetBrains Mono'; font-size:0.8rem; color:#94a3b8; text-align:center; padding:8px; background:rgba(0,0,0,0.3); border-radius:6px;">
+                    UPI ID: medicare.hospital@hdfcbank
+                </div>
+            </div>
+
+            <button class="btn btn-success" style="width:100%; padding:12px; font-weight:700;" onclick="confirmOnlinePayment('${billId}')">
+                <i class="fas fa-check-circle"></i> Confirm & Authorize Payment
+            </button>
+        </div>
+    `;
+
+    openModal('paymentGatewayModal');
+}
+
+function confirmOnlinePayment(billId) {
+    let bills = loadData('hms_bills', defaultBills);
+    const idx = bills.findIndex(b => b.id === billId);
+    if (idx > -1) {
+        bills[idx].status = 'Paid';
+        bills[idx].paymentMethod = 'Online UPI Portal';
+        saveData('hms_bills', bills);
+    }
+
+    closeModal('paymentGatewayModal');
+    playSound('success');
+    showToast(`Payment of ₹${bills[idx]?.total} confirmed! Receipt issued.`, 'success');
+    renderPortalPatientData(portalCurrentPatientId);
+}
+
+function triggerSOSAmbulance() {
+    playSound('error');
+    showToast('🚨 SOS DISPATCHED: Ambulance ALS-01 is en route to patient location (ETA 4 Mins)!', 'error');
+}

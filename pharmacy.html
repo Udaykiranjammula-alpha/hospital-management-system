@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediCare HMS - Pharmacy & Drug Inventory Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css?v=4.0">
+</head>
+<body>
+    <div class="ambient-background">
+        <div class="ambient-orb orb-1"></div>
+        <div class="ambient-orb orb-2"></div>
+        <div class="ambient-orb orb-3"></div>
+        <div class="ambient-grid"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-hospital brand-icon"></i>
+                <h2>MediCare HMS</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+                <a href="patients.html" class="nav-item"><i class="fas fa-user-injured"></i><span>Patients</span></a>
+                <a href="doctors.html" class="nav-item"><i class="fas fa-user-md"></i><span>Doctors</span></a>
+                <a href="appointments.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>Appointments</span></a>
+                <a href="prescriptions.html" class="nav-item"><i class="fas fa-prescription"></i><span>Prescriptions</span></a>
+                <a href="laboratory.html" class="nav-item"><i class="fas fa-flask"></i><span>Laboratory</span></a>
+                <a href="pharmacy.html" class="nav-item active"><i class="fas fa-pills"></i><span>Pharmacy</span></a>
+                <a href="billing.html" class="nav-item"><i class="fas fa-file-invoice-dollar"></i><span>Billing</span></a>
+                <a href="admin.html" class="nav-item"><i class="fas fa-cogs"></i><span>Administration</span></a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="index.html" class="nav-item" onclick="logout()"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header HUD -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="btn-icon sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar"><i class="fas fa-bars"></i></button>
+                    <div>
+                        <h1 style="font-size: 1.35rem; font-weight: 700;">Pharmacy & Formulary Hub</h1>
+                        <span style="font-size: 0.76rem; color: var(--text-muted); font-family: 'JetBrains Mono';">Drug Inventory, Stock Alerts & Prescription Dispensing</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="header-search-pill" onclick="toggleCommandPalette(true)" title="Universal Search & Actions (Ctrl + K)">
+                        <i class="fas fa-search" style="font-size: 0.8rem; color: var(--primary);"></i>
+                        <span>Search</span>
+                        <kbd>Ctrl K</kbd>
+                    </div>
+                    <div class="live-emergency-ticker">
+                        <i class="fas fa-boxes-stacked"></i> <span>PHARMACY: FORMULARY SYNCED</span>
+                    </div>
+                    <div class="live-clock-widget">
+                        <span class="clock-dot"></span>
+                        <span class="clock-time" id="liveTime">--:--:--</span>
+                        <span style="opacity:0.4;">|</span>
+                        <span class="clock-date" id="liveDate">---</span>
+                    </div>
+                    <button class="btn-icon notification-bell-btn" onclick="toggleNotificationCenter()" title="Notifications & Alerts"><i class="fas fa-bell"></i></button>
+                    <button class="btn-icon sound-toggle" onclick="toggleSound()" title="Toggle Audio Feedback"><i class="fas fa-volume-up"></i></button>
+                    <button class="btn-icon wallpaper-toggle" onclick="cycleWallpaperMode()" title="Switch Wallpaper"><i class="fas fa-magic"></i></button>
+                    <button class="btn-icon theme-toggle" onclick="toggleTheme()" title="Switch Glass Theme"><i class="fas fa-moon"></i></button>
+                    <div class="user-info" id="globalUserBadge">
+                        <!-- Injected dynamically -->
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <!-- KPI Metric Cards -->
+                <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin-bottom: 24px;">
+                    <div class="stat-card blue">
+                        <div class="stat-icon"><i class="fas fa-pills"></i></div>
+                        <div class="stat-details">
+                            <h3 class="stat-number" id="pharmacyTotalDrugs">0</h3>
+                            <p class="stat-label">Formulary Drugs Active</p>
+                        </div>
+                    </div>
+                    <div class="stat-card orange">
+                        <div class="stat-icon"><i class="fas fa-triangle-exclamation"></i></div>
+                        <div class="stat-details">
+                            <h3 class="stat-number" id="pharmacyLowStock">0</h3>
+                            <p class="stat-label">Low Stock Reorder Alerts</p>
+                        </div>
+                    </div>
+                    <div class="stat-card red">
+                        <div class="stat-icon"><i class="fas fa-calendar-xmark"></i></div>
+                        <div class="stat-details">
+                            <h3 class="stat-number" id="pharmacyExpiringSoon">0</h3>
+                            <p class="stat-label">Expiring within 60 Days</p>
+                        </div>
+                    </div>
+                    <div class="stat-card green">
+                        <div class="stat-icon"><i class="fas fa-truck-medical"></i></div>
+                        <div class="stat-details">
+                            <h3 class="stat-number" id="pharmacyDispensedToday">0</h3>
+                            <p class="stat-label">Prescriptions Dispensed</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs (Inventory vs Dispensary Counter) -->
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <button class="btn btn-primary" id="tabInventoryBtn" onclick="switchPharmacyView('inventory')">
+                        <i class="fas fa-boxes-stacked"></i> Drug Inventory & Stock
+                    </button>
+                    <button class="btn btn-outline" id="tabDispensaryBtn" onclick="switchPharmacyView('dispensary')">
+                        <i class="fas fa-prescription-bottle-medical"></i> Prescription Dispensary Counter
+                        <span class="badge badge-warning" id="pendingDispenseBadge" style="margin-left: 6px;">0</span>
+                    </button>
+                </div>
+
+                <!-- VIEW 1: DRUG INVENTORY -->
+                <div id="pharmacyInventoryView">
+                    <!-- Actions Bar -->
+                    <div class="actions-bar" style="flex-wrap: wrap; gap: 12px;">
+                        <div class="search-box" style="flex: 1; min-width: 260px;">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="drugSearch" placeholder="Search drugs by name, code, category, supplier..." oninput="filterPharmacyDrugs()">
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <select id="drugCategoryFilter" class="form-control" style="width: auto; padding: 8px 14px;" onchange="filterPharmacyDrugs()">
+                                <option value="">All Categories</option>
+                                <option value="Antibiotic">Antibiotics</option>
+                                <option value="Antidiabetic">Antidiabetics</option>
+                                <option value="Cardiovascular">Cardiovascular</option>
+                                <option value="Analgesic">Analgesics & Pain</option>
+                                <option value="IV Fluids">IV Fluids & Infusions</option>
+                            </select>
+                            <select id="drugStockFilter" class="form-control" style="width: auto; padding: 8px 14px;" onchange="filterPharmacyDrugs()">
+                                <option value="">All Stock Levels</option>
+                                <option value="low">Low Stock Only</option>
+                                <option value="expiring">Expiring Soon Only</option>
+                                <option value="good">Adequate Stock</option>
+                            </select>
+                            <button class="btn btn-outline" onclick="exportPharmacyToCSV()" title="Export Drug Inventory to CSV">
+                                <i class="fas fa-file-csv"></i> Export CSV
+                            </button>
+                            <button class="btn btn-primary" onclick="showAddDrugModal()">
+                                <i class="fas fa-plus"></i> Add New Medication
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Drug Inventory Table -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-warehouse" style="color:var(--primary);"></i> Hospital Pharmacy Formulary</h3>
+                            <span class="badge badge-info" id="pharmacyListCount">0 Drugs</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table" id="drugsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Drug Code</th>
+                                        <th>Medication Name</th>
+                                        <th>Dosage & Form</th>
+                                        <th>Category</th>
+                                        <th>Available Stock</th>
+                                        <th>Unit Price</th>
+                                        <th>Batch # & Expiry</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="drugsTableBody">
+                                    <!-- Populated dynamically by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="empty-state" id="pharmacyEmptyState" style="display:none; text-align: center; padding: 40px;">
+                            <i class="fas fa-prescription-bottle" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 12px; display: block;"></i>
+                            <p style="color: var(--text-secondary);">No formulary medications found matching current filters.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW 2: PRESCRIPTION DISPENSARY COUNTER -->
+                <div id="pharmacyDispensaryView" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-prescription-bottle-medical" style="color:var(--primary);"></i> Doctor Prescriptions Awaiting Dispensation</h3>
+                            <span class="badge badge-warning" id="dispensaryQueueCount">0 Prescriptions</span>
+                        </div>
+                        <div style="padding: 20px;">
+                            <p style="color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 18px;">
+                                Pharmacists can verify medicine orders, check inventory availability, and dispense medications with 1-click automatic stock deduction.
+                            </p>
+                            <div id="dispensaryQueueList">
+                                <!-- Populated dynamically by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL: Add / Edit Drug -->
+    <div class="modal-overlay" id="drugModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="drugModalTitle"><i class="fas fa-pills" style="color:var(--primary);"></i> Add Formulary Medication</h3>
+                <button class="modal-close" onclick="closeModal('drugModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="drugForm" onsubmit="event.preventDefault(); saveDrugItem();">
+                    <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                        <div class="form-group">
+                            <label class="form-label" for="drugName">Medication Name *</label>
+                            <input type="text" class="form-control" id="drugName" placeholder="e.g. Amoxicillin, Metformin" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="drugDosage">Dosage Strength *</label>
+                            <input type="text" class="form-control" id="drugDosage" placeholder="e.g. 500mg, 1000mg ER" required>
+                        </div>
+                    </div>
+
+                    <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 10px;">
+                        <div class="form-group">
+                            <label class="form-label" for="drugCategory">Category *</label>
+                            <select class="form-control" id="drugCategory" required>
+                                <option value="Antibiotic">Antibiotic</option>
+                                <option value="Antidiabetic">Antidiabetic</option>
+                                <option value="Cardiovascular">Cardiovascular</option>
+                                <option value="Analgesic">Analgesic / Antipyretic</option>
+                                <option value="IV Fluids">IV Fluids / Electrolyte</option>
+                                <option value="Respiratory">Respiratory / Inhaler</option>
+                                <option value="Gastrointestinal">Gastrointestinal</option>
+                                <option value="Neurology">Neurology / Sedative</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="drugFormType">Dosage Form *</label>
+                            <select class="form-control" id="drugFormType" required>
+                                <option value="Tablet">Tablet</option>
+                                <option value="Capsule">Capsule</option>
+                                <option value="Syrup / Liquid">Syrup / Liquid</option>
+                                <option value="Injection / Vial">Injection / Vial</option>
+                                <option value="IV Infusion">IV Infusion</option>
+                                <option value="Ointment / Cream">Ointment / Cream</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-top: 10px;">
+                        <div class="form-group">
+                            <label class="form-label" for="drugStock">Initial Stock Qty *</label>
+                            <input type="number" class="form-control" id="drugStock" min="0" placeholder="e.g. 200" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="drugMinStock">Min Reorder Alert *</label>
+                            <input type="number" class="form-control" id="drugMinStock" min="0" placeholder="e.g. 50" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="drugUnitPrice">Unit Price (₹) *</label>
+                            <input type="number" step="0.5" class="form-control" id="drugUnitPrice" min="0" placeholder="e.g. 15.00" required>
+                        </div>
+                    </div>
+
+                    <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 10px;">
+                        <div class="form-group">
+                            <label class="form-label" for="drugBatchNo">Batch Number</label>
+                            <input type="text" class="form-control" id="drugBatchNo" placeholder="e.g. BATCH-2026-X">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="drugExpiry">Expiry Date *</label>
+                            <input type="date" class="form-control" id="drugExpiry" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 10px;">
+                        <label class="form-label" for="drugSupplier">Pharmaceutical Supplier / Manufacturer</label>
+                        <input type="text" class="form-control" id="drugSupplier" placeholder="e.g. Sun Pharma, Cipla Healthcare">
+                    </div>
+
+                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                        <button type="button" class="btn btn-outline" onclick="closeModal('drugModal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Medication</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Quick Restock -->
+    <div class="modal-overlay" id="restockDrugModal">
+        <div class="modal-content" style="max-width: 440px;">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fas fa-truck-loading" style="color:var(--primary);"></i> Restock Medication</h3>
+                <button class="modal-close" onclick="closeModal('restockDrugModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="restockDrugInfo" style="font-weight: 600; color: var(--text-primary); margin-bottom: 14px;"></p>
+                <div class="form-group">
+                    <label class="form-label" for="restockUnits">Quantity to Add (Units) *</label>
+                    <input type="number" class="form-control" id="restockUnits" min="1" value="100" required>
+                </div>
+                <div style="display: flex; gap: 8px; margin: 12px 0 18px;">
+                    <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('restockUnits').value = 50">+50</button>
+                    <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('restockUnits').value = 100">+100</button>
+                    <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('restockUnits').value = 250">+250</button>
+                    <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('restockUnits').value = 500">+500</button>
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('restockDrugModal')">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="confirmRestock()"><i class="fas fa-check"></i> Add to Inventory</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+    <script src="js/app.js?v=4.0"></script>
+</body>
+</html>

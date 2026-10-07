@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediCare HMS - Patient Self-Service Health Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css?v=4.5">
+</head>
+<body>
+    <div class="ambient-background">
+        <div class="ambient-orb orb-1" style="background: radial-gradient(circle, rgba(56, 189, 248, 0.25) 0%, transparent 70%);"></div>
+        <div class="ambient-orb orb-2"></div>
+        <div class="ambient-orb orb-3"></div>
+        <div class="ambient-grid"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-hospital brand-icon"></i>
+                <h2>MediCare HMS</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+                <a href="emergency.html" class="nav-item" style="color: #ef4444;"><i class="fas fa-truck-medical" style="color: #ef4444;"></i><span>Emergency / ICU</span></a>
+                <a href="patients.html" class="nav-item"><i class="fas fa-user-injured"></i><span>Patients</span></a>
+                <a href="doctors.html" class="nav-item"><i class="fas fa-user-md"></i><span>Doctors</span></a>
+                <a href="appointments.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>Appointments</span></a>
+                <a href="prescriptions.html" class="nav-item"><i class="fas fa-prescription"></i><span>Prescriptions</span></a>
+                <a href="laboratory.html" class="nav-item"><i class="fas fa-flask"></i><span>Laboratory</span></a>
+                <a href="pharmacy.html" class="nav-item"><i class="fas fa-pills"></i><span>Pharmacy</span></a>
+                <a href="billing.html" class="nav-item"><i class="fas fa-file-invoice-dollar"></i><span>Billing</span></a>
+                <a href="admin.html" class="nav-item"><i class="fas fa-cogs"></i><span>Administration</span></a>
+                <a href="patient-portal.html" class="nav-item active" style="color: #38bdf8;"><i class="fas fa-id-badge" style="color: #38bdf8;"></i><span>Patient Portal</span></a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="index.html" class="nav-item" onclick="logout()"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header HUD -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="btn-icon sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar"><i class="fas fa-bars"></i></button>
+                    <div>
+                        <h1 style="font-size: 1.35rem; font-weight: 700; color: #38bdf8;"><i class="fas fa-id-badge" style="margin-right: 8px;"></i> Patient Self-Service Portal</h1>
+                        <span style="font-size: 0.76rem; color: var(--text-muted); font-family: 'JetBrains Mono';">Digital Health Passport • Prescriptions • Lab Results • Instant Payments</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <!-- Patient Persona Selector -->
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 0.78rem; color: var(--text-muted);">Switch Patient:</span>
+                        <select id="portalPatientSelector" class="form-control" style="width: auto; padding: 6px 12px; font-weight: 600;" onchange="switchPortalPatient(this.value)">
+                            <!-- Populated by JS -->
+                        </select>
+                    </div>
+
+                    <div class="live-clock-widget">
+                        <span class="clock-dot"></span>
+                        <span class="clock-time" id="liveTime">--:--:--</span>
+                    </div>
+                    <button class="btn-icon theme-toggle" onclick="toggleTheme()" title="Switch Glass Theme"><i class="fas fa-moon"></i></button>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <!-- Patient Digital Health ID Card -->
+                <div class="patient-id-card" id="patientDigitalIdCard">
+                    <!-- Populated dynamically by JS -->
+                </div>
+
+                <!-- Navigation Tabs -->
+                <div class="portal-nav-pills">
+                    <button class="btn btn-primary" id="btnTabRx" onclick="switchPortalTab('rxs')">
+                        <i class="fas fa-prescription-bottle-alt"></i> My Prescriptions
+                    </button>
+                    <button class="btn btn-outline" id="btnTabLabs" onclick="switchPortalTab('labs')">
+                        <i class="fas fa-flask"></i> Diagnostic Lab Reports
+                    </button>
+                    <button class="btn btn-outline" id="btnTabAppts" onclick="switchPortalTab('appts')">
+                        <i class="fas fa-calendar-check"></i> My Consultations
+                    </button>
+                    <button class="btn btn-outline" id="btnTabBills" onclick="switchPortalTab('bills')">
+                        <i class="fas fa-file-invoice-dollar"></i> Hospital Bills & Online Pay
+                    </button>
+                    <button class="btn btn-danger" style="margin-left: auto;" onclick="triggerSOSAmbulance()">
+                        <i class="fas fa-ambulance"></i> Request SOS Ambulance
+                    </button>
+                </div>
+
+                <!-- TAB 1: PRESCRIPTIONS -->
+                <div id="portalTabRxs" class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-pills" style="color:var(--primary);"></i> Active Prescribed Medications</h3>
+                    </div>
+                    <div style="padding: 20px;" id="portalRxsContainer">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- TAB 2: DIAGNOSTIC LABS -->
+                <div id="portalTabLabs" class="card" style="display: none;">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-flask" style="color:var(--primary);"></i> Pathology & Radiology Test Results</h3>
+                    </div>
+                    <div style="padding: 20px;" id="portalLabsContainer">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- TAB 3: CONSULTATIONS -->
+                <div id="portalTabAppts" class="card" style="display: none;">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-calendar-check" style="color:var(--primary);"></i> Scheduled Consultations</h3>
+                    </div>
+                    <div style="padding: 20px;" id="portalApptsContainer">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- TAB 4: BILLS & PAYMENTS -->
+                <div id="portalTabBills" class="card" style="display: none;">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-file-invoice-dollar" style="color:var(--primary);"></i> Financial Statement & Online Checkout</h3>
+                    </div>
+                    <div style="padding: 20px;" id="portalBillsContainer">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL: View Official Glassmorphic Diagnostic Report -->
+    <div class="modal-overlay" id="viewLabReportModal">
+        <div class="modal-content" style="max-width: 800px; padding: 0;">
+            <div class="modal-header" style="padding: 16px 24px; border-bottom: 1px solid var(--glass-border);">
+                <h3 class="modal-title"><i class="fas fa-file-medical" style="color:var(--primary);"></i> Official Diagnostic Pathology Report</h3>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn btn-sm btn-primary" onclick="window.print()"><i class="fas fa-print"></i> Print Official Report</button>
+                    <button class="modal-close" onclick="closeModal('viewLabReportModal')">&times;</button>
+                </div>
+            </div>
+            <div class="modal-body" style="padding: 24px; max-height: 80vh; overflow-y: auto;" id="printableLabReportContent"></div>
+        </div>
+    </div>
+
+    <!-- MODAL: Simulated Online Payment Gateway -->
+    <div class="modal-overlay" id="paymentGatewayModal">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fas fa-shield-alt" style="color:#10b981;"></i> Secure MediCare Checkout</h3>
+                <button class="modal-close" onclick="closeModal('paymentGatewayModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="paymentGatewayContent">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+    <script src="js/app.js?v=4.5"></script>
+</body>
+</html>

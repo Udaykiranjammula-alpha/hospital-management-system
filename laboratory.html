@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediCare HMS - Laboratory & Pathology Diagnostics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css?v=4.0">
+</head>
+<body>
+    <div class="ambient-background">
+        <div class="ambient-orb orb-1"></div>
+        <div class="ambient-orb orb-2"></div>
+        <div class="ambient-orb orb-3"></div>
+        <div class="ambient-grid"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-hospital brand-icon"></i>
+                <h2>MediCare HMS</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+                <a href="patients.html" class="nav-item"><i class="fas fa-user-injured"></i><span>Patients</span></a>
+                <a href="doctors.html" class="nav-item"><i class="fas fa-user-md"></i><span>Doctors</span></a>
+                <a href="appointments.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>Appointments</span></a>
+                <a href="prescriptions.html" class="nav-item"><i class="fas fa-prescription"></i><span>Prescriptions</span></a>
+                <a href="laboratory.html" class="nav-item active"><i class="fas fa-flask"></i><span>Laboratory</span></a>
+                <a href="pharmacy.html" class="nav-item"><i class="fas fa-pills"></i><span>Pharmacy</span></a>
+                <a href="billing.html" class="nav-item"><i class="fas fa-file-invoice-dollar"></i><span>Billing</span></a>
+                <a href="admin.html" class="nav-item"><i class="fas fa-cogs"></i><span>Administration</span></a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="index.html" class="nav-item" onclick="logout()"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header HUD -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="btn-icon sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar"><i class="fas fa-bars"></i></button>
+                    <div>
+                        <h1 style="font-size: 1.35rem; font-weight: 700;">Laboratory & Diagnostics Hub</h1>
+                        <span style="font-size: 0.76rem; color: var(--text-muted); font-family: 'JetBrains Mono';">Pathology, Radiology & Clinical Chemistry</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="header-search-pill" onclick="toggleCommandPalette(true)" title="Universal Search & Actions (Ctrl + K)">
+                        <i class="fas fa-search" style="font-size: 0.8rem; color: var(--primary);"></i>
+                        <span>Search</span>
+                        <kbd>Ctrl K</kbd>
+                    </div>
+                    <div class="live-emergency-ticker">
+                        <i class="fas fa-microscope"></i> <span>LAB: SPECIMEN PIPELINE ACTIVE</span>
+                    </div>
+                    <div class="live-clock-widget">
+                        <span class="clock-dot"></span>
+                        <span class="clock-time" id="liveTime">--:--:--</span>
+                        <span style="opacity:0.4;">|</span>
+                        <span class="clock-date" id="liveDate">---</span>
+                    </div>
+                    <button class="btn-icon notification-bell-btn" onclick="toggleNotificationCenter()" title="Notifications & Alerts"><i class="fas fa-bell"></i></button>
+                    <button class="btn-icon sound-toggle" onclick="toggleSound()" title="Toggle Audio Feedback"><i class="fas fa-volume-up"></i></button>
+                    <button class="btn-icon wallpaper-toggle" onclick="cycleWallpaperMode()" title="Switch Wallpaper"><i class="fas fa-magic"></i></button>
+                    <button class="btn-icon theme-toggle" onclick="toggleTheme()" title="Switch Glass Theme"><i class="fas fa-moon"></i></button>
+                    <div class="user-info" id="globalUserBadge">
+                        <!-- Injected dynamically -->
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <!-- Role Scoped Banner (Shown for Doctors or Techs) -->
+                <div id="labRoleBanner" style="display: none;"></div>
+
+                <!-- KPI Metric Cards -->
+                <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin-bottom: 24px;">
+                    <div class="stat-card blue">
+                        <div class="stat-icon"><i class="fas fa-vial"></i></div>
+                        <div class="stat-details">
+                            <h3 class="stat-number" id="labTotalTests">0</h3>
+                            <p class="stat-label">Total Diagnostic Orders</p>
+                        </div>
+                    </div>
+                    <div class="stat-card orange">
+                        <div class="stat-icon"><i class="fas fa-hourglass-half"></i></div>
+                        <div class="stat-details">
+                            <h3 class="stat-number" id="labPendingTests">0</h3>
+                            <p class="stat-label">Specimens In Processing</p>
+                        </div>
+                    </div>
+                    <div class="stat-card red">
+                        <div class="stat-icon"><i class="fas fa-triangle-exclamation"></i></div>
+                        <div class="stat-details">
+                            <h3 class="stat-number" id="labCriticalTests">0</h3>
+                            <p class="stat-label">Critical Alerts Triggered</p>
+                        </div>
+                    </div>
+                    <div class="stat-card green">
+                        <div class="stat-icon"><i class="fas fa-circle-check"></i></div>
+                        <div class="stat-details">
+                            <h3 class="stat-number" id="labCompletedTests">0</h3>
+                            <p class="stat-label">Completed & Verified</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions Bar -->
+                <div class="actions-bar" style="flex-wrap: wrap; gap: 12px;">
+                    <div class="search-box" style="flex: 1; min-width: 260px;">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="labSearch" placeholder="Search tests by patient, test name, ID, specimen..." oninput="filterLabTests()">
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <select id="labStatusFilter" class="form-control" style="width: auto; padding: 8px 14px;" onchange="filterLabTests()">
+                            <option value="">All Statuses</option>
+                            <option value="Ordered">Ordered (New)</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                        <select id="labPriorityFilter" class="form-control" style="width: auto; padding: 8px 14px;" onchange="filterLabTests()">
+                            <option value="">All Priorities</option>
+                            <option value="Routine">Routine</option>
+                            <option value="Urgent">Urgent</option>
+                            <option value="STAT">STAT / Emergency</option>
+                        </select>
+                        <button class="btn btn-outline" onclick="exportLabTestsToCSV()" title="Export Laboratory Records to CSV">
+                            <i class="fas fa-file-csv"></i> Export CSV
+                        </button>
+                        <button class="btn btn-primary" onclick="showOrderLabTestModal()">
+                            <i class="fas fa-plus"></i> Order Lab Test
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Lab Test Orders Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-clipboard-list" style="color:var(--primary);"></i> Diagnostic Test Queue</h3>
+                        <span class="badge badge-info" id="labOrdersCount">0 Tests</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table" id="labTestsTable">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Patient</th>
+                                    <th>Requesting Physician</th>
+                                    <th>Test & Category</th>
+                                    <th>Specimen</th>
+                                    <th>Priority</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="labTestsTableBody">
+                                <!-- Populated dynamically by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="empty-state" id="labEmptyState" style="display:none; text-align: center; padding: 40px;">
+                        <i class="fas fa-flask" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 12px; display: block;"></i>
+                        <p style="color: var(--text-secondary);">No diagnostic lab tests found matching current filters.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL: Order New Lab Test -->
+    <div class="modal-overlay" id="orderLabTestModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fas fa-flask" style="color:var(--primary);"></i> Order Diagnostic Lab Test</h3>
+                <button class="modal-close" onclick="closeModal('orderLabTestModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="orderLabTestForm" onsubmit="event.preventDefault(); saveLabTestOrder();">
+                    <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                        <div class="form-group">
+                            <label class="form-label" for="labPatientSelect">Select Patient *</label>
+                            <select class="form-control" id="labPatientSelect" required>
+                                <option value="">-- Choose Patient --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="labDoctorSelect">Requesting Physician *</label>
+                            <select class="form-control" id="labDoctorSelect" required>
+                                <option value="">-- Choose Doctor --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 10px;">
+                        <div class="form-group">
+                            <label class="form-label" for="labTestName">Test / Investigation *</label>
+                            <select class="form-control" id="labTestName" required onchange="handleTestTemplateSelect(this.value)">
+                                <option value="">-- Select Diagnostic Panel --</option>
+                                <option value="Complete Blood Count (CBC)">Complete Blood Count (CBC) [Hematology]</option>
+                                <option value="HbA1c & Fasting Blood Sugar">HbA1c & Fasting Blood Sugar [Biochemistry]</option>
+                                <option value="Lipid Profile Comprehensive">Lipid Profile Comprehensive [Biochemistry]</option>
+                                <option value="Cardiac High-Sensitivity Troponin I">Cardiac Troponin I (STAT) [Cardiology]</option>
+                                <option value="Dengue NS1 Antigen & Platelet Count">Dengue NS1 Antigen & Platelets [Serology]</option>
+                                <option value="Renal Function Test (RFT / KFT)">Renal Function Test (BUN / Creatinine) [Biochemistry]</option>
+                                <option value="Liver Function Test (LFT)">Liver Function Test [Biochemistry]</option>
+                                <option value="Digital X-Ray">Digital X-Ray [Radiology]</option>
+                                <option value="3T MRI Brain with Contrast">3T MRI Brain Scan [Neuro Radiology]</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="labSpecimen">Specimen Type</label>
+                            <input type="text" class="form-control" id="labSpecimen" placeholder="e.g. Venous Blood, Serum, Urine" value="Venous Blood">
+                        </div>
+                    </div>
+
+                    <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 10px;">
+                        <div class="form-group">
+                            <label class="form-label" for="labPriority">Priority Level *</label>
+                            <select class="form-control" id="labPriority" required>
+                                <option value="Routine">Routine</option>
+                                <option value="Urgent">Urgent</option>
+                                <option value="STAT">STAT / Emergency Triage</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="labCategory">Category</label>
+                            <input type="text" class="form-control" id="labCategory" placeholder="e.g. Hematology, Biochemistry" value="Biochemistry">
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 10px;">
+                        <label class="form-label" for="labClinicalNotes">Clinical Indication & Notes</label>
+                        <textarea class="form-control" id="labClinicalNotes" rows="2" placeholder="Clinical history, symptoms, or specific markers to evaluate..."></textarea>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                        <button type="button" class="btn btn-outline" onclick="closeModal('orderLabTestModal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-check"></i> Submit Test Order</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Enter Lab Diagnostic Results -->
+    <div class="modal-overlay" id="enterLabResultsModal">
+        <div class="modal-content" style="max-width: 680px;">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fas fa-microscope" style="color:var(--primary);"></i> Enter Diagnostic Test Results</h3>
+                <button class="modal-close" onclick="closeModal('enterLabResultsModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="labResultOrderHeader" style="margin-bottom: 16px; padding: 12px; background: rgba(56, 189, 248, 0.08); border-radius: 8px; border: 1px solid rgba(56, 189, 248, 0.2);">
+                    <!-- Populated by JS -->
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary);">Measured Parameters & Findings</h4>
+                    <button type="button" class="btn btn-sm btn-outline" onclick="addLabParamRow()">
+                        <i class="fas fa-plus"></i> Add Parameter
+                    </button>
+                </div>
+
+                <div id="labParamsContainer" style="display: flex; flex-direction: column; gap: 8px; max-height: 280px; overflow-y: auto; padding-right: 4px;">
+                    <!-- Parameter rows injected here -->
+                </div>
+
+                <div class="form-group" style="margin-top: 14px;">
+                    <label class="form-label" for="labPathologistImpression">Clinical Pathologist Impression / Remarks</label>
+                    <textarea class="form-control" id="labPathologistImpression" rows="2" placeholder="Diagnostic conclusions, critical value communications, or follow-up suggestions..."></textarea>
+                </div>
+
+                <div class="form-group" style="margin-top: 10px;">
+                    <label class="form-label" for="labStatusUpdate">Update Test Status</label>
+                    <select class="form-control" id="labStatusUpdate">
+                        <option value="In Progress">In Progress (Specimen Processing)</option>
+                        <option value="Completed" selected>Completed & Clinically Verified</option>
+                    </select>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('enterLabResultsModal')">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="saveLabResults()"><i class="fas fa-save"></i> Save & Verify Report</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: View Official Glassmorphic Diagnostic Report -->
+    <div class="modal-overlay" id="viewLabReportModal">
+        <div class="modal-content" style="max-width: 800px; padding: 0;">
+            <div class="modal-header" style="padding: 16px 24px; border-bottom: 1px solid var(--glass-border);">
+                <h3 class="modal-title"><i class="fas fa-file-medical" style="color:var(--primary);"></i> Official Diagnostic Pathology Report</h3>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn btn-sm btn-primary" onclick="printLabReport()"><i class="fas fa-print"></i> Print Official Report</button>
+                    <button class="modal-close" onclick="closeModal('viewLabReportModal')">&times;</button>
+                </div>
+            </div>
+            <div class="modal-body" style="padding: 24px; max-height: 80vh; overflow-y: auto;" id="printableLabReportContent">
+                <!-- Injected dynamically by JS -->
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+    <script src="js/app.js?v=4.0"></script>
+</body>
+</html>

@@ -58,7 +58,7 @@
         <form class="login-form" id="loginForm" onsubmit="return handleLogin(event);">
             <div class="form-group">
                 <label class="form-label">Select System Role</label>
-                <div class="role-selector">
+                <div class="role-selector" style="grid-template-columns: repeat(3, 1fr); gap: 6px;">
                     <button type="button" class="role-btn active" data-role="admin">
                         <i class="fas fa-user-shield"></i>
                         <span>Admin</span>
@@ -70,6 +70,14 @@
                     <button type="button" class="role-btn" data-role="receptionist">
                         <i class="fas fa-user-nurse"></i>
                         <span>Reception</span>
+                    </button>
+                    <button type="button" class="role-btn" data-role="pharmacist">
+                        <i class="fas fa-pills"></i>
+                        <span>Pharmacy</span>
+                    </button>
+                    <button type="button" class="role-btn" data-role="lab_tech">
+                        <i class="fas fa-flask"></i>
+                        <span>Lab Tech</span>
                     </button>
                 </div>
             </div>
@@ -100,10 +108,13 @@
 
         <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--glass-border); text-align: center;">
             <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">One-Click Demo Roles Autofill:</p>
-            <div style="display: flex; gap: 8px; justify-content: center;">
+            <div style="display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;">
                 <button type="button" class="btn btn-sm btn-outline" onclick="autofill('admin', 'admin')"><i class="fas fa-shield-alt"></i> Admin</button>
-                <button type="button" class="btn btn-sm btn-outline" onclick="autofill('doctor', 'doctor')"><i class="fas fa-stethoscope"></i> Doctor</button>
+                <button type="button" class="btn btn-sm btn-outline" onclick="autofill('dr.sharma', 'doctor')"><i class="fas fa-stethoscope"></i> Dr. Sharma</button>
+                <button type="button" class="btn btn-sm btn-outline" onclick="autofill('dr.verma', 'doctor')"><i class="fas fa-bone"></i> Dr. Verma</button>
                 <button type="button" class="btn btn-sm btn-outline" onclick="autofill('reception', 'receptionist')"><i class="fas fa-concierge-bell"></i> Reception</button>
+                <button type="button" class="btn btn-sm btn-outline" onclick="autofill('pharmacist', 'pharmacist')"><i class="fas fa-pills"></i> Pharmacy</button>
+                <button type="button" class="btn btn-sm btn-outline" onclick="autofill('pathologist', 'lab_tech')"><i class="fas fa-microscope"></i> Lab Tech</button>
             </div>
         </div>
 

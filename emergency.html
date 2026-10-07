@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediCare HMS - Emergency, ICU & Trauma Command Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css?v=4.5">
+</head>
+<body>
+    <div class="ambient-background">
+        <div class="ambient-orb orb-1" style="background: radial-gradient(circle, rgba(239, 68, 68, 0.25) 0%, transparent 70%);"></div>
+        <div class="ambient-orb orb-2"></div>
+        <div class="ambient-orb orb-3"></div>
+        <div class="ambient-grid"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-hospital brand-icon"></i>
+                <h2>MediCare HMS</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+                <a href="emergency.html" class="nav-item active" style="color: #ef4444;"><i class="fas fa-truck-medical" style="color: #ef4444;"></i><span>Emergency / ICU</span></a>
+                <a href="patients.html" class="nav-item"><i class="fas fa-user-injured"></i><span>Patients</span></a>
+                <a href="doctors.html" class="nav-item"><i class="fas fa-user-md"></i><span>Doctors</span></a>
+                <a href="appointments.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>Appointments</span></a>
+                <a href="prescriptions.html" class="nav-item"><i class="fas fa-prescription"></i><span>Prescriptions</span></a>
+                <a href="laboratory.html" class="nav-item"><i class="fas fa-flask"></i><span>Laboratory</span></a>
+                <a href="pharmacy.html" class="nav-item"><i class="fas fa-pills"></i><span>Pharmacy</span></a>
+                <a href="billing.html" class="nav-item"><i class="fas fa-file-invoice-dollar"></i><span>Billing</span></a>
+                <a href="admin.html" class="nav-item"><i class="fas fa-cogs"></i><span>Administration</span></a>
+                <a href="patient-portal.html" class="nav-item" style="color: #38bdf8;"><i class="fas fa-id-badge" style="color: #38bdf8;"></i><span>Patient Portal</span></a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="index.html" class="nav-item" onclick="logout()"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header HUD -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="btn-icon sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar"><i class="fas fa-bars"></i></button>
+                    <div>
+                        <h1 style="font-size: 1.35rem; font-weight: 700; color: #ef4444;"><i class="fas fa-heartbeat fa-beat" style="margin-right: 8px;"></i> Emergency & Trauma Command</h1>
+                        <span style="font-size: 0.76rem; color: var(--text-muted); font-family: 'JetBrains Mono';">Level-1 Trauma Center • Telemetry Monitoring • ALS Fleet Dispatch</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="header-search-pill" onclick="toggleCommandPalette(true)" title="Universal Search (Ctrl + K)">
+                        <i class="fas fa-search" style="font-size: 0.8rem; color: var(--primary);"></i>
+                        <span>Search</span>
+                        <kbd>Ctrl K</kbd>
+                    </div>
+                    <div class="live-emergency-ticker" style="border-color: rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.15);">
+                        <i class="fas fa-siren" style="color:#ef4444;"></i> <span style="color:#fca5a5;">TRAUMA CODE: OPERATIONAL</span>
+                    </div>
+                    <div class="live-clock-widget">
+                        <span class="clock-dot"></span>
+                        <span class="clock-time" id="liveTime">--:--:--</span>
+                        <span style="opacity:0.4;">|</span>
+                        <span class="clock-date" id="liveDate">---</span>
+                    </div>
+                    <button class="btn-icon notification-bell-btn" onclick="toggleNotificationCenter()" title="Notifications & Alerts"><i class="fas fa-bell"></i></button>
+                    <button class="btn-icon sound-toggle" onclick="toggleSound()" title="Toggle Audio Feedback"><i class="fas fa-volume-up"></i></button>
+                    <button class="btn-icon wallpaper-toggle" onclick="cycleWallpaperMode()" title="Switch Wallpaper"><i class="fas fa-magic"></i></button>
+                    <button class="btn-icon theme-toggle" onclick="toggleTheme()" title="Switch Glass Theme"><i class="fas fa-moon"></i></button>
+                    <div class="user-info" id="globalUserBadge">
+                        <!-- Injected dynamically -->
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <!-- Emergency Top Alert Action Banner -->
+                <div class="emergency-hud-banner" id="emergencyBanner">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <div style="width: 52px; height: 52px; border-radius: 12px; background: rgba(239, 68, 68, 0.2); border: 2px solid #ef4444; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #ef4444;">
+                            <i class="fas fa-truck-medical"></i>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 1.15rem; font-weight: 800; color: #ffffff; margin-bottom: 4px;">Level-1 Trauma & Critical Resuscitation Wing</h3>
+                            <p style="color: #cbd5e1; font-size: 0.85rem; margin: 0;">24/7 Dedicated Emergency Physicians, Cardiothoracic OT & Cath Lab on 5-Minute Standby.</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button class="btn-code-blue" onclick="triggerCodeBlueAlarm()">
+                            <i class="fas fa-triangle-exclamation"></i> TRIGGER CODE BLUE
+                        </button>
+                        <button class="btn btn-primary" onclick="showEmergencyIntakeModal()">
+                            <i class="fas fa-user-plus"></i> Rapid ER Intake
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Live Capacity KPI Metrics -->
+                <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin-bottom: 24px;">
+                    <div class="stat-card red">
+                        <div class="stat-icon"><i class="fas fa-lungs"></i></div>
+                        <div class="stat-details">
+                            <h3 class="stat-number" id="icuVentilatorsOccupied">18 / 24</h3>
+                            <p class="stat-label">ICU Ventilators Occupied (6 Free)</p>
+                        </div>
+                    </div>
+                    <div class="stat-card orange">
+                        <div class="stat-icon"><i class="fas fa-bed-pulse"></i></div>
+                        <div class="stat-details">
+                            <h3 class="stat-number" id="traumaBaysActive">4 / 6</h3>
+                            <p class="stat-label">Resuscitation Bays Active</p>
+                        </div>
+                    </div>
+                    <div class="stat-card blue">
+                        <div class="stat-icon"><i class="fas fa-ambulance"></i></div>
+                        <div class="stat-details">
+                            <h3 class="stat-number" id="ambulancesEnRoute">2 Active</h3>
+                            <p class="stat-label">Inbound ALS Ambulances</p>
+                        </div>
+                    </div>
+                    <div class="stat-card green">
+                        <div class="stat-icon"><i class="fas fa-user-doctor"></i></div>
+                        <div class="stat-details">
+                            <h3 class="stat-number" id="erStaffOnDuty">14 Staff</h3>
+                            <p class="stat-label">Critical Care Team On Duty</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 1: Live ICU Bed Telemetry Monitors with Waveforms -->
+                <div class="card" style="margin-bottom: 28px;">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 class="card-title"><i class="fas fa-heartbeat" style="color:#ef4444;"></i> Live ICU Critical Telemetry Monitors (Real-Time Waveforms)</h3>
+                        <span class="badge badge-success"><span class="clock-dot"></span> Live 60Hz Telemetry Feed</span>
+                    </div>
+                    <div style="padding: 20px;">
+                        <div class="icu-grid" id="icuMonitorsGrid">
+                            <!-- Populated with live Canvas ECG by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Emergency Triage Pipeline (ESI 1-5) -->
+                <div class="card" style="margin-bottom: 28px;">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 class="card-title"><i class="fas fa-ranking-star" style="color:var(--primary);"></i> Emergency Severity Index (ESI) Triage Pipeline</h3>
+                        <span class="badge badge-warning" id="triageCount">4 Critical Patients</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table" id="triageTable">
+                            <thead>
+                                <tr>
+                                    <th>Case ID</th>
+                                    <th>Patient</th>
+                                    <th>Triage Priority</th>
+                                    <th>Presenting Complaint</th>
+                                    <th>Bay / Bed</th>
+                                    <th>Vitals Baseline</th>
+                                    <th>Elapsed Time</th>
+                                    <th>Attending Physician</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="triageTableBody">
+                                <!-- Populated dynamically by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Section 3: Advanced Life Support (ALS) Ambulance Fleet Tracker -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-ambulance" style="color:var(--primary);"></i> Inbound & Stationed Ambulance Fleet Telemetry</h3>
+                        <span class="badge badge-info">GPS Satellite Sync</span>
+                    </div>
+                    <div style="padding: 20px;">
+                        <div class="ambulance-grid" id="ambulanceFleetGrid">
+                            <!-- Populated dynamically by JS -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL: Rapid Emergency Intake -->
+    <div class="modal-overlay" id="emergencyIntakeModal">
+        <div class="modal-content" style="max-width: 580px;">
+            <div class="modal-header">
+                <h3 class="modal-title" style="color: #ef4444;"><i class="fas fa-truck-medical"></i> Rapid Emergency Patient Intake</h3>
+                <button class="modal-close" onclick="closeModal('emergencyIntakeModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="emergencyIntakeForm" onsubmit="event.preventDefault(); saveEmergencyPatient();">
+                    <div class="form-grid" style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 12px;">
+                        <div class="form-group">
+                            <label class="form-label" for="erPatientName">Patient Name *</label>
+                            <input type="text" class="form-control" id="erPatientName" placeholder="e.g. Unknown Trauma Male / John Doe" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="erPatientAge">Age & Gender</label>
+                            <input type="text" class="form-control" id="erPatientAge" placeholder="e.g. 45 / Male" value="45 / Male">
+                        </div>
+                    </div>
+
+                    <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px;">
+                        <div class="form-group">
+                            <label class="form-label" for="erTriageLevel">ESI Triage Priority Level *</label>
+                            <select class="form-control" id="erTriageLevel" required>
+                                <option value="ESI-1">ESI-1: Resuscitation (Immediate Life Threat)</option>
+                                <option value="ESI-2">ESI-2: Emergent (High Risk / Confusion / Pain > 7)</option>
+                                <option value="ESI-3">ESI-3: Urgent (Requires 2+ Resources)</option>
+                                <option value="ESI-4">ESI-4: Less Urgent (Requires 1 Resource)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="erBayAlloc">Allocated Bed / Trauma Bay *</label>
+                            <select class="form-control" id="erBayAlloc" required>
+                                <option value="Trauma Bay 1 (Red Zone)">Trauma Bay 1 (Red Zone)</option>
+                                <option value="Trauma Bay 2 (Red Zone)">Trauma Bay 2 (Red Zone)</option>
+                                <option value="Resuscitation Suite 3">Resuscitation Suite 3</option>
+                                <option value="ICU Bed 105">ICU Bed 105 (Ventilated)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 10px;">
+                        <label class="form-label" for="erChiefComplaint">Chief Presenting Complaint *</label>
+                        <input type="text" class="form-control" id="erChiefComplaint" placeholder="e.g. Severe Stemi Chest Pain, Poly-trauma MVA, Acute Hypoxia" required>
+                    </div>
+
+                    <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px;">
+                        <div class="form-group">
+                            <label class="form-label" for="erInitialBP">Initial Blood Pressure</label>
+                            <input type="text" class="form-control" id="erInitialBP" placeholder="e.g. 90/60 mmHg" value="110/70 mmHg">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="erInitialSpO2">Oxygen Saturation (SpO2)</label>
+                            <input type="text" class="form-control" id="erInitialSpO2" placeholder="e.g. 94%" value="95%">
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 10px;">
+                        <label class="form-label" for="erPhysician">Lead Attending Intensivist</label>
+                        <select class="form-control" id="erPhysician">
+                            <option value="Dr. Priya Sharma (Cardiology)">Dr. Priya Sharma (Cardiology)</option>
+                            <option value="Dr. Rahul Verma (Orthopedics)">Dr. Rahul Verma (Orthopedics)</option>
+                            <option value="Dr. Meera Iyer (Internal Medicine)">Dr. Meera Iyer (Internal Medicine)</option>
+                        </select>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                        <button type="button" class="btn btn-outline" onclick="closeModal('emergencyIntakeModal')">Cancel</button>
+                        <button type="submit" class="btn btn-code-blue"><i class="fas fa-check"></i> Admit to Trauma Bay</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+    <script src="js/app.js?v=4.5"></script>
+</body>
+</html>
