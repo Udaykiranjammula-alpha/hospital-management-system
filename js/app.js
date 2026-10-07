@@ -226,6 +226,30 @@ function formatDate(dateStr) {
 // ==========================================
 window.doctorScopeOverride = false;
 
+function normalizePageName(pathname) {
+    let raw = (pathname !== undefined && pathname !== null ? String(pathname) : (typeof window !== 'undefined' ? window.location.pathname : ''));
+    raw = raw.replace(/\\/g, '/').split('?')[0].split('#')[0];
+    const parts = raw.split('/').filter(Boolean);
+    let p = (parts.pop() || '').toLowerCase();
+    if (!p || p === 'index' || p === 'index.html') return 'index.html';
+    if (p === 'slides' || p === 'slides.html') return 'slides.html';
+    if (!p.endsWith('.html')) {
+        p = p + '.html';
+    }
+    return p;
+}
+
+function isPageAllowed(pageName, allowedPages) {
+    if (!allowedPages || !Array.isArray(allowedPages)) return false;
+    const norm = normalizePageName(pageName);
+    const bare = norm.replace(/\.html$/, '');
+    return allowedPages.some(ap => {
+        const apNorm = normalizePageName(ap);
+        const apBare = apNorm.replace(/\.html$/, '');
+        return norm === apNorm || bare === apBare;
+    });
+}
+
 const ROLES = {
     ADMIN: {
         id: 'Admin',
@@ -467,12 +491,11 @@ function renderDynamicSidebar() {
 
     const user = getCurrentUser();
     const config = getRoleConfig(user.role);
-    const rawPath = (window.location.pathname.replace(/\\/g, '/').split('/').pop() || 'dashboard.html').toLowerCase();
-    const currentPath = rawPath === '' ? 'dashboard.html' : rawPath;
+    const currentPath = normalizePageName(window.location.pathname);
 
     nav.innerHTML = config.navItems.map(item => {
-        const itemHref = item.href.toLowerCase();
-        const isActive = (itemHref === currentPath) || (currentPath === 'dashboard.html' && itemHref === 'dashboard.html');
+        const itemPage = normalizePageName(item.href);
+        const isActive = (itemPage === currentPath);
         return `
             <a href="${item.href}" class="nav-item ${isActive ? 'active' : ''}">
                 <i class="fas ${item.icon}"></i>
@@ -496,10 +519,10 @@ function renderDynamicSidebar() {
 
 function applyRoleUIControls() {
     const user = getCurrentUser();
-    const rawPath = (window.location.pathname.replace(/\\/g, '/').split('/').pop() || '').toLowerCase();
+    const currentPath = normalizePageName(window.location.pathname);
 
     // 1. Patients Page
-    if (rawPath === 'patients.html') {
+    if (currentPath === 'patients.html') {
         if (user.role === 'Doctor') {
             document.querySelectorAll('button[onclick*="PatientModal"], a[href*="action=new"]').forEach(b => b.style.display = 'none');
         }
@@ -509,21 +532,20 @@ function applyRoleUIControls() {
     }
 
     // 2. Prescriptions Page
-    if (rawPath === 'prescriptions.html') {
+    if (currentPath === 'prescriptions.html') {
         if (user.role === 'Pharmacist') {
             document.querySelectorAll('button[onclick*="showCreatePrescriptionModal"], button[onclick*="addPrescription"]').forEach(b => b.style.display = 'none');
         }
     }
 
     // 3. Doctors Page
-    if (rawPath === 'doctors.html' && user.role !== 'Admin') {
+    if (currentPath === 'doctors.html' && user.role !== 'Admin') {
         document.querySelectorAll('button[onclick*="addDoctor"], button[onclick*="DoctorModal"]').forEach(b => b.style.display = 'none');
     }
 }
 
 function applyPageGuard() {
-    const rawPath = (window.location.pathname.replace(/\\/g, '/').split('/').pop() || 'index.html').toLowerCase();
-    const currentPath = rawPath === '' ? 'index.html' : rawPath;
+    const currentPath = normalizePageName(window.location.pathname);
 
     // Public pages
     if (currentPath === 'index.html' || currentPath === 'slides.html') {
@@ -540,7 +562,7 @@ function applyPageGuard() {
     const user = getCurrentUser();
     const config = getRoleConfig(user.role);
 
-    if (!config.allowedPages.includes(currentPath)) {
+    if (!isPageAllowed(currentPath, config.allowedPages)) {
         if (typeof playSound === 'function') playSound('error');
 
         const contentWrapper = document.querySelector('.content-wrapper') || document.querySelector('.main-content') || document.querySelector('main');
@@ -676,7 +698,7 @@ function toggleDoctorScopeOverride() {
     window.doctorScopeOverride = !window.doctorScopeOverride;
     if (typeof playSound === 'function') playSound('click');
     showToast(window.doctorScopeOverride ? 'Viewing all hospital records (Override Active)' : 'Restored scoped persona view', 'info');
-    const path = (window.location.pathname.replace(/\\/g, '/').split('/').pop() || '').toLowerCase();
+    const path = normalizePageName(window.location.pathname);
     if (path === 'appointments.html') initAppointmentsPage();
     else if (path === 'prescriptions.html') initPrescriptionsPage();
     else if (path === 'patients.html') initPatientsPage();
@@ -847,11 +869,7 @@ const WALLPAPER_MODES = [
     { id: 'grid', name: '🌐 Cyber Matrix Grid', icon: 'fa-cube' }
 ];
 
-const isLoginPage = typeof window !== 'undefined' && (
-    window.location.pathname.endsWith('index.html') ||
-    window.location.pathname.endsWith('/') ||
-    !window.location.pathname.includes('.html')
-);
+const isLoginPage = typeof window !== 'undefined' && normalizePageName(window.location.pathname) === 'index.html';
 
 let currentWallpaperMode = localStorage.getItem('hms_wallpaper_mode') || (isLoginPage ? 'hospital3d' : 'hospital3d');
 let wpCanvas = null;
@@ -1941,39 +1959,51 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     // 5. Active Nav Highlighting
-    const normalizedPath = (window.location.pathname.replace(/\\/g, '/').split('/').pop() || '').toLowerCase();
+    const currentPath = normalizePageName(window.location.pathname);
     document.querySelectorAll('.sidebar .nav-item').forEach(link => {
         link.classList.remove('active');
-        const href = (link.getAttribute('href') || '').toLowerCase();
-        if (href === normalizedPath || (normalizedPath === '' && href === 'dashboard.html')) {
+        const href = normalizePageName(link.getAttribute('href') || '');
+        if (href === currentPath) {
             link.classList.add('active');
         }
     });
 
     // 6. Universal Router Dispatcher (Detects page by DOM element & URL)
-    if (document.getElementById('loginForm') || normalizedPath === 'index.html' || (normalizedPath === '' && !document.querySelector('.sidebar'))) {
+    if (document.getElementById('loginForm') || currentPath === 'index.html' || (currentPath === 'index.html' && !document.querySelector('.sidebar'))) {
         initLoginPage();
     }
-    if (document.getElementById('recentAppointments') || document.getElementById('totalPatients') || normalizedPath === 'dashboard.html') {
+    if (document.getElementById('recentAppointments') || document.getElementById('totalPatients') || currentPath === 'dashboard.html') {
         initDashboardPage();
     }
-    if (document.getElementById('patientsTable') || document.getElementById('patientsTableBody') || normalizedPath === 'patients.html') {
+    if (document.getElementById('patientsTable') || document.getElementById('patientsTableBody') || currentPath === 'patients.html') {
         initPatientsPage();
     }
-    if (document.getElementById('doctorGrid') || normalizedPath === 'doctors.html') {
+    if (document.getElementById('doctorGrid') || currentPath === 'doctors.html') {
         initDoctorsPage();
     }
-    if (document.getElementById('appointmentsTableBody') || document.getElementById('calendarBody') || normalizedPath === 'appointments.html') {
+    if (document.getElementById('appointmentsTableBody') || document.getElementById('calendarBody') || currentPath === 'appointments.html') {
         initAppointmentsPage();
     }
-    if (document.getElementById('billsTableBody') || normalizedPath === 'billing.html') {
+    if (document.getElementById('billsTableBody') || currentPath === 'billing.html') {
         initBillingPage();
     }
-    if (document.getElementById('prescriptionsTableBody') || normalizedPath === 'prescriptions.html') {
+    if (document.getElementById('prescriptionsTableBody') || currentPath === 'prescriptions.html') {
         initPrescriptionsPage();
     }
-    if (document.getElementById('staffTableBody') || normalizedPath === 'admin.html') {
+    if (document.getElementById('staffTableBody') || currentPath === 'admin.html') {
         initAdminPage();
+    }
+    if (document.getElementById('labTestsTableBody') || currentPath === 'laboratory.html') {
+        initLaboratoryPage();
+    }
+    if (document.getElementById('pharmacyDrugsTableBody') || currentPath === 'pharmacy.html') {
+        initPharmacyPage();
+    }
+    if (document.getElementById('activeTraumaTableBody') || currentPath === 'emergency.html') {
+        initEmergencyPage();
+    }
+    if (document.getElementById('portalPatientCard') || currentPath === 'patient-portal.html') {
+        initPatientPortalPage();
     }
 
     // 7. Auto-trigger creation modals if navigated with ?action=new
@@ -4787,7 +4817,7 @@ function searchCommandPalette(query) {
                 badge: p.bloodGroup,
                 icon: 'fa-user-injured',
                 action: () => {
-                    if (window.location.pathname.includes('patients.html')) {
+                    if (normalizePageName(window.location.pathname) === 'patients.html') {
                         viewPatient(p.id);
                     } else {
                         window.location.href = `patients.html?view=${p.id}`;
@@ -4807,7 +4837,7 @@ function searchCommandPalette(query) {
                 badge: d.department,
                 icon: 'fa-user-md',
                 action: () => {
-                    if (window.location.pathname.includes('doctors.html')) {
+                    if (normalizePageName(window.location.pathname) === 'doctors.html') {
                         viewDoctor(d.id);
                     } else {
                         window.location.href = `doctors.html?view=${d.id}`;
@@ -4827,7 +4857,7 @@ function searchCommandPalette(query) {
                 badge: b.status,
                 icon: 'fa-receipt',
                 action: () => {
-                    if (window.location.pathname.includes('billing.html')) {
+                    if (normalizePageName(window.location.pathname) === 'billing.html') {
                         viewInvoice(b.id);
                     } else {
                         window.location.href = `billing.html?view=${b.id}`;
