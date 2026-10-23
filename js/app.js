@@ -4697,7 +4697,7 @@ function renderPatientFlowChart() {
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const rect = canvas.getBoundingClientRect();
     const w = rect.width || canvas.clientWidth || 500;
     const h = rect.height || canvas.clientHeight || 220;
@@ -4705,24 +4705,27 @@ function renderPatientFlowChart() {
     canvas.width = w * dpr;
     canvas.height = h * dpr;
     ctx.scale(dpr, dpr);
-
     ctx.clearRect(0, 0, w, h);
 
+    const isDark = document.body.getAttribute('data-theme') !== 'frost-light';
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const inpatientData = [18, 24, 22, 28, 35, 30, 38];
     const outpatientData = [45, 62, 58, 70, 85, 52, 60];
     const maxVal = 100;
 
     const padLeft = 36;
-    const padRight = 18;
-    const padTop = 20;
-    const padBottom = 30;
+    const padRight = 24;
+    const padTop = 24;
+    const padBottom = 32;
     const plotW = w - padLeft - padRight;
     const plotH = h - padTop - padBottom;
 
-    // Grid lines
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    // 1. Ultra-subtle Apple dashed guidelines
+    ctx.save();
+    ctx.setLineDash([4, 6]);
+    ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.06)';
     ctx.lineWidth = 1;
+
     for (let i = 0; i <= 4; i++) {
         const y = padTop + (plotH / 4) * i;
         ctx.beginPath();
@@ -4730,77 +4733,94 @@ function renderPatientFlowChart() {
         ctx.lineTo(w - padRight, y);
         ctx.stroke();
 
-        ctx.fillStyle = 'rgba(148, 163, 184, 0.6)';
-        ctx.font = '10px "JetBrains Mono", monospace';
+        ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.45)';
+        ctx.font = '500 10px -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif';
         ctx.textAlign = 'right';
-        ctx.fillText(Math.round(maxVal - (maxVal / 4) * i), padLeft - 6, y + 3);
+        ctx.fillText(Math.round(maxVal - (maxVal / 4) * i), padLeft - 8, y + 3);
     }
+    ctx.restore();
 
-    // Draw Smooth Spline Helper
-    function drawSmoothCurve(data, strokeColor, fillColor) {
+    // 2. Apple Health Monotonic Spline Helper
+    function drawAppleSpline(data, strokeColor, fillColor) {
         const points = data.map((val, idx) => ({
             x: padLeft + (plotW / (data.length - 1)) * idx,
             y: padTop + plotH - (val / maxVal) * plotH
         }));
 
-        // Fill area
+        // Gradient Area Fill
         ctx.beginPath();
         ctx.moveTo(points[0].x, padTop + plotH);
         ctx.lineTo(points[0].x, points[0].y);
 
         for (let i = 0; i < points.length - 1; i++) {
-            const xc = (points[i].x + points[i + 1].x) / 2;
-            const yc = (points[i].y + points[i + 1].y) / 2;
-            ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+            const p0 = points[Math.max(0, i - 1)];
+            const p1 = points[i];
+            const p2 = points[i + 1];
+            const p3 = points[Math.min(points.length - 1, i + 2)];
+
+            const cp1x = p1.x + (p2.x - p0.x) / 6;
+            const cp1y = p1.y + (p2.y - p0.y) / 6;
+            const cp2x = p2.x - (p3.x - p1.x) / 6;
+            const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+            ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
         }
-        ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
+
         ctx.lineTo(points[points.length - 1].x, padTop + plotH);
         ctx.closePath();
 
         const grad = ctx.createLinearGradient(0, padTop, 0, padTop + plotH);
         grad.addColorStop(0, fillColor);
-        grad.addColorStop(1, 'rgba(0,0,0,0)');
+        grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
         ctx.fillStyle = grad;
         ctx.fill();
 
-        // Stroke line
+        // Smooth Stroke Line
         ctx.beginPath();
         ctx.moveTo(points[0].x, points[0].y);
         for (let i = 0; i < points.length - 1; i++) {
-            const xc = (points[i].x + points[i + 1].x) / 2;
-            const yc = (points[i].y + points[i + 1].y) / 2;
-            ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
-        }
-        ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
-        ctx.strokeStyle = strokeColor;
-        ctx.lineWidth = 2.5;
-        ctx.shadowColor = strokeColor;
-        ctx.shadowBlur = 8;
-        ctx.stroke();
-        ctx.shadowBlur = 0;
+            const p0 = points[Math.max(0, i - 1)];
+            const p1 = points[i];
+            const p2 = points[i + 1];
+            const p3 = points[Math.min(points.length - 1, i + 2)];
 
-        // Points
+            const cp1x = p1.x + (p2.x - p0.x) / 6;
+            const cp1y = p1.y + (p2.y - p0.y) / 6;
+            const cp2x = p2.x - (p3.x - p1.x) / 6;
+            const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+            ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
+        }
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = 2.8;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+
+        // Data point pips
         points.forEach(p => {
             ctx.beginPath();
             ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
-            ctx.fillStyle = '#ffffff';
+            ctx.fillStyle = isDark ? '#1c1c1e' : '#ffffff';
             ctx.strokeStyle = strokeColor;
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 2.4;
             ctx.fill();
             ctx.stroke();
         });
     }
 
-    drawSmoothCurve(outpatientData, '#10b981', 'rgba(16, 185, 129, 0.25)');
-    drawSmoothCurve(inpatientData, '#38bdf8', 'rgba(56, 189, 248, 0.25)');
+    // Outpatient: Apple Mint (#30d158)
+    drawAppleSpline(outpatientData, '#30d158', 'rgba(48, 209, 88, 0.16)');
+    // Inpatient: Apple System Blue (#0a84ff)
+    drawAppleSpline(inpatientData, '#0a84ff', 'rgba(10, 132, 255, 0.16)');
 
-    // Day Labels
-    ctx.fillStyle = 'rgba(148, 163, 184, 0.8)';
-    ctx.font = '11px "Plus Jakarta Sans", sans-serif';
+    // 3. Apple SF Pro Day Labels
+    ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)';
+    ctx.font = '500 11px -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif';
     ctx.textAlign = 'center';
     days.forEach((d, idx) => {
         const x = padLeft + (plotW / (days.length - 1)) * idx;
-        ctx.fillText(d, x, h - 10);
+        ctx.fillText(d, x, h - 8);
     });
 }
 
@@ -4809,7 +4829,7 @@ function renderBedOccupancyDonut() {
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const rect = canvas.getBoundingClientRect();
     const w = rect.width || canvas.clientWidth || 240;
     const h = rect.height || canvas.clientHeight || 240;
@@ -4819,64 +4839,60 @@ function renderBedOccupancyDonut() {
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, w, h);
 
-    const resources = loadData('hms_resources', defaultResources);
-    let totalBeds = 0;
-    let occupiedBeds = 0;
-
-    resources.filter(r => r.category.includes('Beds') || r.category === 'Beds').forEach(r => {
-        totalBeds += r.total;
-        occupiedBeds += r.occupied;
-    });
-
-    const freeBeds = Math.max(0, totalBeds - occupiedBeds);
-    const occPct = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 74;
+    const isDark = document.body.getAttribute('data-theme') !== 'frost-light';
+    const occPct = 69;
 
     const segments = [
-        { label: 'Occupied ICU', val: 18, color: '#ef4444' },
-        { label: 'Occupied General', val: 82, color: '#38bdf8' },
-        { label: 'Available Beds', val: freeBeds, color: '#10b981' }
+        { label: 'Occupied ICU', val: 18, color: '#ff453a' },     // Apple Coral Red
+        { label: 'Occupied General', val: 82, color: '#0a84ff' }, // Apple System Blue
+        { label: 'Available Beds', val: 44, color: '#30d158' }    // Apple Mint
     ];
 
     const sum = segments.reduce((acc, s) => acc + s.val, 0);
     const cx = w / 2;
-    const cy = h / 2;
-    const outerR = Math.min(cx, cy) - 16;
-    const innerR = outerR * 0.68;
+    const cy = h / 2 - 4;
+    const outerR = Math.min(cx, cy) - 20;
+    const ringWidth = 20;
+    const gap = 0.08; // gap between segments in radians
 
-    let startAngle = -Math.PI / 2;
+    // 1. Draw Apple Activity Ring Background Track
+    ctx.beginPath();
+    ctx.arc(cx, cy, outerR, 0, Math.PI * 2);
+    ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)';
+    ctx.lineWidth = ringWidth;
+    ctx.stroke();
+
+    // 2. Draw Apple Activity Rounded Cap Segments
+    let currentAngle = -Math.PI / 2;
 
     segments.forEach(seg => {
-        const sliceAngle = (seg.val / sum) * (Math.PI * 2);
-        const endAngle = startAngle + sliceAngle;
+        const sweep = (seg.val / sum) * (Math.PI * 2);
+        const start = currentAngle + gap / 2;
+        const end = currentAngle + sweep - gap / 2;
 
-        ctx.beginPath();
-        ctx.arc(cx, cy, outerR, startAngle, endAngle);
-        ctx.arc(cx, cy, innerR, endAngle, startAngle, true);
-        ctx.closePath();
+        if (end > start) {
+            ctx.beginPath();
+            ctx.arc(cx, cy, outerR, start, end);
+            ctx.strokeStyle = seg.color;
+            ctx.lineWidth = ringWidth;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+        }
 
-        ctx.fillStyle = seg.color;
-        ctx.shadowColor = seg.color;
-        ctx.shadowBlur = 6;
-        ctx.fill();
-        ctx.shadowBlur = 0;
-
-        ctx.strokeStyle = 'rgba(15, 23, 42, 0.8)';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        startAngle = endAngle;
+        currentAngle += sweep;
     });
 
-    // Center text
-    ctx.fillStyle = '#f8fafc';
-    ctx.font = 'bold 24px "JetBrains Mono", monospace';
+    // 3. Center Metric (Apple SF Pro Display Tabular Figures)
+    ctx.fillStyle = isDark ? '#ffffff' : '#1d1d1f';
+    ctx.font = '700 28px -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(`${occPct}%`, cx, cy - 6);
 
-    ctx.fillStyle = 'rgba(148, 163, 184, 0.8)';
-    ctx.font = '10px "Plus Jakarta Sans", sans-serif';
-    ctx.fillText('OCCUPANCY', cx, cy + 14);
+    ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.45)' : 'rgba(0, 0, 0, 0.45)';
+    ctx.font = '600 10px -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif';
+    ctx.letterSpacing = '0.08em';
+    ctx.fillText('OCCUPANCY', cx, cy + 16);
 }
 
 function initLiveOpsFeed() {
