@@ -243,7 +243,7 @@ button:active,
 }
 
 /* ==========================================================================
-   3. Dynamic Ambient Glowing Background ("Live Theme")
+   3. Apple Dynamic Fluid Mesh Wallpaper (macOS Sequoia / Sonoma & visionOS)
    ========================================================================== */
 .ambient-background {
     position: fixed;
@@ -254,6 +254,29 @@ button:active,
     pointer-events: none;
     z-index: 0;
     overflow: hidden;
+    background: 
+        radial-gradient(circle at 18% 18%, rgba(10, 132, 255, 0.16) 0%, transparent 45%),
+        radial-gradient(circle at 82% 25%, rgba(94, 92, 230, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 50% 80%, rgba(191, 90, 242, 0.12) 0%, transparent 55%),
+        radial-gradient(circle at 85% 85%, rgba(48, 209, 88, 0.08) 0%, transparent 45%),
+        var(--bg-base);
+    transition: background 0.6s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+body[data-theme="frost-light"] .ambient-background {
+    background: 
+        radial-gradient(circle at 20% 20%, rgba(0, 113, 227, 0.10) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(88, 86, 214, 0.08) 0%, transparent 45%),
+        radial-gradient(circle at 50% 80%, rgba(175, 82, 222, 0.06) 0%, transparent 50%),
+        #f5f5f7;
+}
+
+body[data-theme="aurora-glass"] .ambient-background {
+    background: 
+        radial-gradient(circle at 20% 20%, rgba(48, 209, 88, 0.16) 0%, transparent 50%),
+        radial-gradient(circle at 80% 25%, rgba(64, 200, 224, 0.14) 0%, transparent 50%),
+        radial-gradient(circle at 50% 85%, rgba(99, 230, 226, 0.10) 0%, transparent 55%),
+        #031210;
 }
 
 #liveWallpaperCanvas {
@@ -275,9 +298,10 @@ button:active,
     background: var(--glass-card);
     backdrop-filter: var(--blur-heavy);
     -webkit-backdrop-filter: var(--blur-heavy);
-    border: 1px solid var(--glass-border-glow);
+    border: 1px solid var(--glass-border-light);
+    border-top: 1px solid rgba(255, 255, 255, 0.22);
     padding: 8px 18px;
-    border-radius: 30px;
+    border-radius: 9999px;
     box-shadow: var(--shadow-glass-lg);
     display: flex;
     align-items: center;
@@ -289,13 +313,12 @@ button:active,
     transition: var(--transition);
     user-select: none;
     -webkit-user-select: none;
-    animation: slideInRight 0.5s ease-out;
+    animation: slideInRight 0.5s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .wallpaper-hud-pill:hover {
-    transform: translateY(-2px) scale(1.05);
-    box-shadow: var(--shadow-neon);
-    border-color: var(--primary);
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
     background: var(--glass-bg-hover);
 }
 
@@ -305,7 +328,7 @@ button:active,
     border-radius: 50%;
     background: var(--primary);
     box-shadow: 0 0 10px var(--primary);
-    animation: pulseDot 1.6s infinite ease-in-out;
+    animation: pulseDot 2s infinite ease-in-out;
 }
 
 @keyframes pulseDot {
@@ -325,61 +348,80 @@ button:active,
 .ambient-orb {
     position: absolute;
     border-radius: 50%;
-    filter: blur(80px);
-    opacity: 0.65;
-    animation: floatOrb 22s infinite alternate ease-in-out;
+    filter: blur(90px);
+    opacity: 0.75;
+    will-change: transform, opacity;
+    animation: appleMeshFloat 24s infinite alternate ease-in-out;
 }
 
 .orb-1 {
-    width: 550px;
-    height: 550px;
-    background: var(--bg-ambient-1);
-    top: -10%;
+    width: 650px;
+    height: 650px;
+    background: radial-gradient(circle, var(--bg-ambient-1) 0%, transparent 70%);
+    top: -12%;
     right: 5%;
-    animation-duration: 24s;
+    animation-duration: 26s;
 }
 
 .orb-2 {
-    width: 650px;
-    height: 650px;
-    background: var(--bg-ambient-2);
+    width: 750px;
+    height: 750px;
+    background: radial-gradient(circle, var(--bg-ambient-2) 0%, transparent 70%);
     bottom: -15%;
     left: -10%;
-    animation-duration: 28s;
-    animation-delay: -5s;
+    animation-duration: 30s;
+    animation-delay: -6s;
 }
 
 .orb-3 {
-    width: 450px;
-    height: 450px;
-    background: var(--bg-ambient-3);
+    width: 550px;
+    height: 550px;
+    background: radial-gradient(circle, var(--bg-ambient-3) 0%, transparent 70%);
     top: 40%;
-    left: 35%;
-    animation-duration: 20s;
-    animation-delay: -10s;
+    left: 30%;
+    animation-duration: 22s;
+    animation-delay: -12s;
 }
 
 .ambient-grid {
     position: absolute;
     inset: 0;
     background-image: 
-        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-    background-size: 40px 40px;
-    mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
-    opacity: 0.7;
+        linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse at center, black 45%, transparent 80%);
+    -webkit-mask-image: radial-gradient(ellipse at center, black 45%, transparent 80%);
+    opacity: 0.6;
 }
 
-@keyframes floatOrb {
+body[data-theme="frost-light"] .ambient-grid {
+    background-image: 
+        linear-gradient(to right, rgba(0, 0, 0, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 0, 0, 0.02) 1px, transparent 1px);
+}
+
+@keyframes appleMeshFloat {
     0% {
-        transform: translate(0px, 0px) scale(1);
+        transform: translate3d(0, 0, 0) scale(1);
     }
-    50% {
-        transform: translate(60px, -40px) scale(1.1);
+    33% {
+        transform: translate3d(40px, -30px, 0) scale(1.06);
+    }
+    66% {
+        transform: translate3d(-30px, 40px, 0) scale(0.95);
     }
     100% {
-        transform: translate(-40px, 50px) scale(0.95);
+        transform: translate3d(20px, 20px, 0) scale(1.03);
     }
+}
+
+/* Explicitly disable all old video overlay elements */
+.cinematic-video-bg,
+.cinematic-overlay,
+.cinematic-hud-badge,
+.video-scene-selector {
+    display: none !important;
 }
 
 /* ==========================================================================
