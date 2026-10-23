@@ -764,6 +764,14 @@ function playSound(type = 'click') {
         osc.connect(gain);
         gain.connect(ctx.destination);
 
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+            try {
+                if (type === 'click') navigator.vibrate(8);
+                else if (type === 'success') navigator.vibrate([12, 30, 15]);
+                else if (type === 'error') navigator.vibrate([25, 35, 25]);
+            } catch (_) {}
+        }
+
         const now = ctx.currentTime;
         if (type === 'click') {
             osc.frequency.setValueAtTime(800, now);
@@ -855,7 +863,12 @@ function toggleTheme() {
     const nextIdx = (THEMES.indexOf(current) + 1) % THEMES.length;
     const nextTheme = THEMES[nextIdx];
     applyTheme(nextTheme);
-    showToast(`Theme Switched: ${nextTheme.replace('-', ' ').toUpperCase()}`, 'info');
+    const appleThemeTitles = {
+        'cyber-glass': 'Apple Space Black Glass',
+        'aurora-glass': 'Apple visionOS Aurora Glass',
+        'frost-light': 'Apple Studio Silver Glass'
+    };
+    showToast(`Appearance: ${appleThemeTitles[nextTheme] || nextTheme.toUpperCase()}`, 'info');
 }
 
 // ==========================================
@@ -5413,24 +5426,49 @@ function setupDraggableAIChatbot(container) {
     let justDragged = false;
     let startX = 0, startY = 0;
     let origLeft = 0, origTop = 0;
+    let lastMoveTime = 0;
+    let lastMoveX = 0, lastMoveY = 0;
+    let velocityX = 0, velocityY = 0;
 
-    function clampAndSetPosition(x, y) {
+    // Apple Rubber-Banding (WWDC Designing Fluid Interfaces)
+    function appleRubberband(overshoot, dimension, constant = 0.55) {
+        return (overshoot * dimension * constant) / (dimension + constant * Math.abs(overshoot));
+    }
+
+    function applyPhysicsPosition(x, y, rubberband = false) {
         const pad = 12;
         const w = container.offsetWidth || 185;
         const h = container.offsetHeight || 52;
-        const maxW = Math.max(10, window.innerWidth - w - pad);
-        const maxH = Math.max(10, window.innerHeight - h - pad);
+        const minX = pad;
+        const maxX = Math.max(10, window.innerWidth - w - pad);
+        const minY = pad;
+        const maxY = Math.max(10, window.innerHeight - h - pad);
 
-        const clampedX = Math.max(pad, Math.min(maxW, x));
-        const clampedY = Math.max(pad, Math.min(maxH, y));
+        let finalX = x;
+        let finalY = y;
 
-        container.style.left = `${clampedX}px`;
-        container.style.top = `${clampedY}px`;
+        if (rubberband) {
+            if (x < minX) finalX = minX - appleRubberband(minX - x, window.innerWidth);
+            else if (x > maxX) finalX = maxX + appleRubberband(x - maxX, window.innerWidth);
+
+            if (y < minY) finalY = minY - appleRubberband(minY - y, window.innerHeight);
+            else if (y > maxY) finalY = maxY + appleRubberband(y - maxY, window.innerHeight);
+        } else {
+            finalX = Math.max(minX, Math.min(maxX, x));
+            finalY = Math.max(minY, Math.min(maxY, y));
+        }
+
+        container.style.left = `${Math.round(finalX)}px`;
+        container.style.top = `${Math.round(finalY)}px`;
         container.style.bottom = 'auto';
         container.style.right = 'auto';
 
-        adjustChatWindowPlacement(clampedX, clampedY);
-        return { clampedX, clampedY };
+        adjustChatWindowPlacement(finalX, finalY);
+        return { clampedX: finalX, clampedY: finalY };
+    }
+
+    function clampAndSetPosition(x, y) {
+        return applyPhysicsPosition(x, y, false);
     }
 
     // Restore saved position or default safely above the wallpaper pill (bottom: 92px, right: 24px)
@@ -5455,6 +5493,12 @@ function setupDraggableAIChatbot(container) {
         origLeft = rect.left;
         origTop = rect.top;
         isDragging = false;
+        lastMoveTime = performance.now();
+        lastMoveX = e.clientX;
+        lastMoveY = e.clientY;
+        velocityX = 0;
+        velocityY = 0;
+        container.style.transition = 'none';
 
         if (trigger.setPointerCapture && e.pointerId !== undefined) {
             try { trigger.setPointerCapture(e.pointerId); } catch (_) {}
@@ -5476,7 +5520,15 @@ function setupDraggableAIChatbot(container) {
 
         if (isDragging) {
             if (e.cancelable) e.preventDefault();
-            clampAndSetPosition(origLeft + dx, origTop + dy);
+            const now = performance.now();
+            const dt = Math.max(1, now - lastMoveTime);
+            velocityX = (e.clientX - lastMoveX) / dt;
+            velocityY = (e.clientY - lastMoveY) / dt;
+            lastMoveTime = now;
+            lastMoveX = e.clientX;
+            lastMoveY = e.clientY;
+
+            applyPhysicsPosition(origLeft + dx, origTop + dy, true);
         }
     }
 
@@ -5494,9 +5546,20 @@ function setupDraggableAIChatbot(container) {
             justDragged = true;
             setTimeout(() => { justDragged = false; }, 220);
 
+            // Apple Momentum Projection (WWDC Designing Fluid Interfaces: current + (v/1000)*d/(1-d))
+            const decel = 0.994;
+            const projectX = (velocityX * 1000) * (decel / (1 - decel)) * 0.001;
+            const projectY = (velocityY * 1000) * (decel / (1 - decel)) * 0.001;
+
             const rect = container.getBoundingClientRect();
-            localStorage.setItem('hms_ai_pos_x', Math.round(rect.left));
-            localStorage.setItem('hms_ai_pos_y', Math.round(rect.top));
+            const targetX = rect.left + Math.max(-150, Math.min(150, projectX));
+            const targetY = rect.top + Math.max(-150, Math.min(150, projectY));
+
+            container.style.transition = 'left 0.4s cubic-bezier(0.32, 0.72, 0, 1), top 0.4s cubic-bezier(0.32, 0.72, 0, 1)';
+            const finalPos = clampAndSetPosition(targetX, targetY);
+
+            localStorage.setItem('hms_ai_pos_x', Math.round(finalPos.clampedX));
+            localStorage.setItem('hms_ai_pos_y', Math.round(finalPos.clampedY));
             isDragging = false;
         }
     }

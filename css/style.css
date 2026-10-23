@@ -1,146 +1,157 @@
 /*
- * MediCare HMS - Glassmorphic Live Theme Design System
- * Masterpiece UI/UX for Executive Healthcare Management
- * Themes: Cyber Obsidian Glass (Default) | Aurora Emerald Glass | Crystal Frost Light
+ * MediCare HMS - Apple Design System (Cupertino & macOS HIG)
+ * Fluid Physical Motion, Translucent Materials, SF Pro Optical Typography, and Direct Manipulation
+ * Themes: Apple Space Black Glass (Default) | Apple visionOS Aurora | Apple Studio Silver
  */
 
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 /* ==========================================================================
-   1. Theme Variables & Glass Tokens
+   1. Apple Design System Tokens & Translucent Materials
    ========================================================================== */
 :root,
 body[data-theme="cyber-glass"],
 body.dark-mode {
-    /* Base Colors - Cyber Obsidian Glass */
-    --primary: #38bdf8;
-    --primary-glow: rgba(56, 189, 248, 0.45);
-    --primary-gradient: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);
-    --secondary: #818cf8;
-    --accent: #c084fc;
-    --success: #34d399;
-    --success-glow: rgba(52, 211, 153, 0.45);
-    --warning: #fbbf24;
-    --warning-glow: rgba(251, 191, 36, 0.45);
-    --danger: #f87171;
-    --danger-glow: rgba(248, 113, 113, 0.45);
-    --info: #38bdf8;
+    /* Apple System Colors (Dark Mode HIG) */
+    --primary: #0a84ff;                  /* Apple System Blue */
+    --primary-glow: rgba(10, 132, 255, 0.35);
+    --primary-gradient: linear-gradient(135deg, #0071e3 0%, #0a84ff 100%);
+    --secondary: #5e5ce6;                /* Apple System Indigo */
+    --accent: #bf5af2;                   /* Apple System Purple */
+    --success: #30d158;                  /* Apple System Green */
+    --success-glow: rgba(48, 209, 88, 0.35);
+    --warning: #ff9f0a;                  /* Apple System Orange */
+    --warning-glow: rgba(255, 159, 10, 0.35);
+    --danger: #ff453a;                   /* Apple System Red */
+    --danger-glow: rgba(255, 69, 58, 0.35);
+    --info: #40c8e0;                     /* Apple System Teal */
+    --mint: #63e6e2;                     /* Apple System Mint */
 
-    /* Backgrounds */
-    --bg-base: #060913;
-    --bg-deep: #0b1120;
-    --bg-ambient-1: rgba(14, 165, 233, 0.18);
-    --bg-ambient-2: rgba(99, 102, 241, 0.18);
-    --bg-ambient-3: rgba(168, 85, 247, 0.14);
+    /* Backgrounds (Cupertino Space Black & Midnight OLED) */
+    --bg-base: #000000;
+    --bg-deep: #0b0c10;
+    --bg-ambient-1: rgba(10, 132, 255, 0.12);
+    --bg-ambient-2: rgba(94, 92, 230, 0.10);
+    --bg-ambient-3: rgba(191, 90, 242, 0.08);
 
-    /* Glass Surfaces */
-    --glass-bg: rgba(15, 23, 42, 0.65);
-    --glass-bg-hover: rgba(30, 41, 59, 0.78);
-    --glass-card: rgba(15, 23, 42, 0.72);
-    --glass-sidebar: rgba(11, 17, 32, 0.88);
-    --glass-header: rgba(11, 17, 32, 0.78);
-    --glass-modal: rgba(15, 23, 42, 0.94);
-    --glass-dropdown: rgba(15, 23, 42, 0.95);
-    --glass-input: rgba(2, 6, 23, 0.65);
+    /* Apple Translucent Materials (visionOS & macOS Sequoia Frosted Glass) */
+    --glass-bg: rgba(28, 28, 30, 0.65);
+    --glass-bg-hover: rgba(44, 44, 46, 0.78);
+    --glass-card: rgba(28, 28, 30, 0.72);
+    --glass-sidebar: rgba(18, 18, 20, 0.82);
+    --glass-header: rgba(18, 18, 20, 0.80);
+    --glass-modal: rgba(28, 28, 30, 0.94);
+    --glass-dropdown: rgba(28, 28, 30, 0.96);
+    --glass-input: rgba(44, 44, 46, 0.60);
 
-    /* Glass Borders & Specular Highlights */
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --glass-border-light: rgba(255, 255, 255, 0.2);
-    --glass-border-glow: rgba(56, 189, 248, 0.4);
+    /* Apple Specular Edges (Light Catching Glass Borders) */
+    --glass-border: rgba(255, 255, 255, 0.10);
+    --glass-border-light: rgba(255, 255, 255, 0.20);
+    --glass-border-glow: rgba(10, 132, 255, 0.35);
 
-    /* Text */
-    --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --text-inverse: #020617;
-    --text-glow: 0 0 16px rgba(56, 189, 248, 0.35);
+    /* Apple High-Contrast Typography */
+    --text-primary: #f5f5f7;
+    --text-secondary: #98989d;
+    --text-muted: #6e6e73;
+    --text-inverse: #000000;
+    --text-glow: 0 0 14px rgba(10, 132, 255, 0.30);
 
-    /* Shadows & Glows */
-    --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
-    --shadow-glass-lg: 0 16px 48px 0 rgba(0, 0, 0, 0.65);
-    --shadow-neon: 0 0 20px rgba(56, 189, 248, 0.3);
-    --inset-specular: inset 0 1px 1px 0 rgba(255, 255, 255, 0.16);
+    /* Apple Shadows & Inset Highlights */
+    --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.35), 0 1px 2px 0 rgba(0, 0, 0, 0.20);
+    --shadow-glass-lg: 0 20px 50px 0 rgba(0, 0, 0, 0.55), 0 1px 3px 0 rgba(0, 0, 0, 0.25);
+    --shadow-neon: 0 0 24px rgba(10, 132, 255, 0.25);
+    --inset-specular: inset 0 1px 0 0 rgba(255, 255, 255, 0.18);
 
-    /* Blur Filter */
-    --blur-glass: blur(18px) saturate(180%);
-    --blur-heavy: blur(28px) saturate(200%);
+    /* Blur & Vibrancy Filters */
+    --blur-glass: blur(28px) saturate(190%);
+    --blur-heavy: blur(36px) saturate(200%);
 
-    /* Layout */
+    /* Apple Layout & Squircles */
     --sidebar-width: 265px;
     --sidebar-collapsed-width: 76px;
     --header-height: 72px;
     --border-radius: 14px;
     --border-radius-lg: 20px;
-    --border-radius-sm: 8px;
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --border-radius-sm: 10px;
+    --border-radius-pill: 9999px;
+
+    /* Apple Fluid Springs (Critically Damped, Responsive, Interruptible) */
+    --transition: all 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    --transition-snappy: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    --spring-bounce: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Aurora Emerald Glass Theme */
+/* Apple visionOS Aurora Glass Theme */
 body[data-theme="aurora-glass"] {
-    --primary: #10b981;
-    --primary-glow: rgba(16, 185, 129, 0.45);
-    --primary-gradient: linear-gradient(135deg, #059669 0%, #34d399 100%);
-    --secondary: #06b6d4;
-    --accent: #14b8a6;
-    --bg-base: #031412;
-    --bg-deep: #05201c;
-    --bg-ambient-1: rgba(16, 185, 129, 0.2);
-    --bg-ambient-2: rgba(6, 182, 212, 0.18);
-    --bg-ambient-3: rgba(20, 184, 166, 0.18);
+    --primary: #30d158;                  /* Apple System Green */
+    --primary-glow: rgba(48, 209, 88, 0.35);
+    --primary-gradient: linear-gradient(135deg, #00c7be 0%, #30d158 100%);
+    --secondary: #40c8e0;                /* Apple System Teal */
+    --accent: #63e6e2;                   /* Apple System Mint */
+    --bg-base: #031210;
+    --bg-deep: #061c18;
+    --bg-ambient-1: rgba(48, 209, 88, 0.15);
+    --bg-ambient-2: rgba(64, 200, 224, 0.12);
+    --bg-ambient-3: rgba(99, 230, 226, 0.10);
 
-    --glass-bg: rgba(6, 30, 27, 0.68);
-    --glass-bg-hover: rgba(9, 44, 40, 0.8);
-    --glass-card: rgba(6, 30, 27, 0.74);
-    --glass-sidebar: rgba(4, 22, 19, 0.88);
-    --glass-header: rgba(4, 22, 19, 0.78);
-    --glass-modal: rgba(6, 30, 27, 0.94);
-    --glass-input: rgba(3, 18, 16, 0.7);
+    --glass-bg: rgba(6, 32, 28, 0.68);
+    --glass-bg-hover: rgba(9, 48, 42, 0.80);
+    --glass-card: rgba(6, 32, 28, 0.74);
+    --glass-sidebar: rgba(4, 24, 21, 0.88);
+    --glass-header: rgba(4, 24, 21, 0.80);
+    --glass-modal: rgba(6, 32, 28, 0.94);
+    --glass-input: rgba(3, 20, 18, 0.65);
 
-    --glass-border: rgba(52, 211, 153, 0.18);
-    --glass-border-light: rgba(52, 211, 153, 0.3);
-    --glass-border-glow: rgba(52, 211, 153, 0.5);
-    --text-primary: #ecfdf5;
-    --text-secondary: #a7f3d0;
-    --text-muted: #6ee7b7;
-    --shadow-neon: 0 0 20px rgba(16, 185, 129, 0.35);
+    --glass-border: rgba(48, 209, 88, 0.15);
+    --glass-border-light: rgba(48, 209, 88, 0.28);
+    --glass-border-glow: rgba(48, 209, 88, 0.45);
+    --text-primary: #f0fdf4;
+    --text-secondary: #86efac;
+    --text-muted: #4ade80;
+    --shadow-neon: 0 0 24px rgba(48, 209, 88, 0.30);
+    --inset-specular: inset 0 1px 0 0 rgba(48, 209, 88, 0.25);
 }
 
-/* Crystal Frost Light Glass Theme */
+/* Apple Studio Silver Light Glass Theme */
 body[data-theme="frost-light"] {
-    --primary: #0284c7;
-    --primary-glow: rgba(2, 132, 199, 0.25);
-    --primary-gradient: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);
-    --secondary: #6366f1;
-    --accent: #8b5cf6;
-    --bg-base: #eef2f6;
-    --bg-deep: #e2e8f0;
-    --bg-ambient-1: rgba(2, 132, 199, 0.18);
-    --bg-ambient-2: rgba(99, 102, 241, 0.15);
-    --bg-ambient-3: rgba(147, 197, 253, 0.25);
+    --primary: #0071e3;                  /* Apple Signature Blue (Light) */
+    --primary-glow: rgba(0, 113, 227, 0.22);
+    --primary-gradient: linear-gradient(135deg, #0071e3 0%, #0a84ff 100%);
+    --secondary: #5856d6;                /* Apple System Indigo */
+    --accent: #af52de;                   /* Apple System Purple */
+    --success: #34c759;                  /* Apple System Green */
+    --warning: #ff9500;                  /* Apple System Orange */
+    --danger: #ff3b30;                   /* Apple System Red */
+    --bg-base: #f5f5f7;                  /* Apple Studio Silver / Hardware Finish */
+    --bg-deep: #e8e8ed;
+    --bg-ambient-1: rgba(0, 113, 227, 0.12);
+    --bg-ambient-2: rgba(88, 86, 214, 0.08);
+    --bg-ambient-3: rgba(175, 82, 222, 0.06);
 
     --glass-bg: rgba(255, 255, 255, 0.72);
-    --glass-bg-hover: rgba(255, 255, 255, 0.88);
+    --glass-bg-hover: rgba(255, 255, 255, 0.90);
     --glass-card: rgba(255, 255, 255, 0.78);
-    --glass-sidebar: rgba(255, 255, 255, 0.88);
-    --glass-header: rgba(255, 255, 255, 0.82);
+    --glass-sidebar: rgba(246, 246, 248, 0.84);
+    --glass-header: rgba(246, 246, 248, 0.82);
     --glass-modal: rgba(255, 255, 255, 0.96);
-    --glass-input: rgba(241, 245, 249, 0.85);
+    --glass-input: rgba(242, 242, 247, 0.85);
 
-    --glass-border: rgba(203, 213, 225, 0.65);
-    --glass-border-light: rgba(255, 255, 255, 0.95);
-    --glass-border-glow: rgba(2, 132, 199, 0.35);
+    --glass-border: rgba(0, 0, 0, 0.08);
+    --glass-border-light: rgba(0, 0, 0, 0.14);
+    --glass-border-glow: rgba(0, 113, 227, 0.25);
 
-    --text-primary: #0f172a;
-    --text-secondary: #334155;
-    --text-muted: #64748b;
-    --shadow-glass: 0 8px 30px rgba(0, 0, 0, 0.08);
-    --shadow-glass-lg: 0 16px 40px rgba(0, 0, 0, 0.12);
-    --shadow-neon: 0 0 20px rgba(2, 132, 199, 0.2);
-    --inset-specular: inset 0 1px 1px 0 rgba(255, 255, 255, 0.9);
+    --text-primary: #1d1d1f;             /* Apple Body Text */
+    --text-secondary: #515154;           /* Apple Secondary */
+    --text-muted: #86868b;               /* Apple Tertiary */
+    --text-inverse: #ffffff;
+    --shadow-glass: 0 8px 30px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+    --shadow-glass-lg: 0 16px 45px rgba(0, 0, 0, 0.10), 0 1px 4px rgba(0, 0, 0, 0.06);
+    --shadow-neon: 0 0 20px rgba(0, 113, 227, 0.18);
+    --inset-specular: inset 0 1px 0 0 rgba(255, 255, 255, 0.95);
 }
 
 /* ==========================================================================
-   2. Reset & Global Aesthetics
+   2. Reset & Apple SF Pro Optical Typography
    ========================================================================== */
 *, *::before, *::after {
     box-sizing: border-box;
@@ -151,18 +162,84 @@ body[data-theme="frost-light"] {
 html {
     scroll-behavior: smooth;
     font-size: 15px;
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", system-ui, -apple-system-ui, "Helvetica Neue", "Plus Jakarta Sans", sans-serif;
     background-color: var(--bg-base);
     color: var(--text-primary);
-    line-height: 1.6;
+    line-height: 1.5;
     min-height: 100vh;
     overflow-x: hidden;
     position: relative;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+/* Apple Size-Specific Tracking (Optical Sizing) */
+h1, .display-1 {
+    font-size: clamp(1.6rem, 3.5vw, 2.3rem);
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+    font-weight: 700;
+}
+
+h2, .page-title {
+    font-size: 1.35rem;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    font-weight: 600;
+}
+
+h3, .card-title {
+    font-size: 1.12rem;
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+    font-weight: 600;
+}
+
+h4, h5, h6 {
+    letter-spacing: -0.01em;
+    line-height: 1.35;
+    font-weight: 600;
+}
+
+p, span, td, th, li, a {
+    letter-spacing: -0.005em;
+}
+
+.stat-value, .stat-number, .tabular-nums, .clock-time {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
+    font-weight: 700;
+}
+
+code, kbd, pre {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "SF Pro Mono", Monaco, Menlo, monospace;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   2b. Apple Direct Touch Response - 0 Latency Instant Press Feedback
+   ========================================================================== */
+.btn:active,
+button:active,
+.nav-item:active,
+.stat-card:active,
+.login-cat-btn:active,
+.staff-sub-btn:active,
+.ai-chip:active,
+.btn-icon:active,
+.quick-action-btn:active,
+.action-btn:active,
+.role-btn:active,
+.tab-btn:active,
+.scene-btn:active {
+    transform: scale(0.97) !important;
+    transition: transform 100ms cubic-bezier(0.32, 0.72, 0, 1) !important;
 }
 
 /* ==========================================================================
@@ -3702,3 +3779,366 @@ body[data-theme="frost-light"] .icu-monitor-card {
     box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
 }
 
+
+
+/* ==========================================================================
+   27. APPLE DESIGN SYSTEM OVERRIDES & FLUID INTERACTION FOUNDATIONS
+   ========================================================================== */
+
+/* 1. Apple Specular Edges & Translucent Materials */
+.card,
+.stat-card,
+.modal-content,
+.login-container,
+.ai-chatbot-window,
+.cmd-palette-card {
+    border-top: 1px solid rgba(255, 255, 255, 0.22) !important;
+    border-left: 1px solid var(--glass-border) !important;
+    border-right: 1px solid var(--glass-border) !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.20) !important;
+    border-radius: 20px !important;
+}
+
+body[data-theme="frost-light"] .card,
+body[data-theme="frost-light"] .stat-card,
+body[data-theme="frost-light"] .modal-content,
+body[data-theme="frost-light"] .login-container,
+body[data-theme="frost-light"] .ai-chatbot-window,
+body[data-theme="frost-light"] .cmd-palette-card {
+    border-top: 1px solid rgba(255, 255, 255, 0.95) !important;
+    border-left: 1px solid rgba(0, 0, 0, 0.08) !important;
+    border-right: 1px solid rgba(0, 0, 0, 0.08) !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+}
+
+/* 2. Apple Segmented Controls (Login Category Selector) */
+.login-category-selector {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 4px !important;
+    background: rgba(120, 120, 128, 0.16) !important;
+    padding: 4px !important;
+    border-radius: 14px !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    margin-bottom: 14px !important;
+}
+
+.login-cat-btn {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 10px 6px !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 11px !important;
+    color: var(--text-secondary) !important;
+    cursor: pointer !important;
+    transition: all 0.25s cubic-bezier(0.32, 0.72, 0, 1) !important;
+    user-select: none !important;
+}
+
+.login-cat-btn:hover {
+    color: var(--text-primary) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+}
+
+.login-cat-btn.active {
+    background: rgba(255, 255, 255, 0.16) !important;
+    color: #ffffff !important;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+    font-weight: 600 !important;
+}
+
+body[data-theme="frost-light"] .login-category-selector {
+    background: rgba(120, 120, 128, 0.12) !important;
+    border-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+body[data-theme="frost-light"] .login-cat-btn.active {
+    background: #ffffff !important;
+    color: #1d1d1f !important;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Apple Sub-Role Segmented Selector */
+.staff-sub-selector {
+    background: rgba(120, 120, 128, 0.12) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 14px !important;
+    padding: 6px !important;
+    margin-bottom: 14px !important;
+}
+
+.staff-sub-selector .sub-btn-group {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 4px !important;
+}
+
+.staff-sub-btn {
+    padding: 8px 6px !important;
+    font-size: 0.78rem !important;
+    font-weight: 500 !important;
+    border-radius: 10px !important;
+    border: none !important;
+    background: transparent !important;
+    color: var(--text-secondary) !important;
+    cursor: pointer !important;
+    transition: all 0.25s cubic-bezier(0.32, 0.72, 0, 1) !important;
+}
+
+.staff-sub-btn.active {
+    background: rgba(255, 255, 255, 0.16) !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.20) !important;
+    font-weight: 600 !important;
+}
+
+body[data-theme="frost-light"] .staff-sub-btn.active {
+    background: #ffffff !important;
+    color: #1d1d1f !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10) !important;
+}
+
+/* 3. Apple Sidebar Navigation (macOS Finder / iPadOS style) */
+.sidebar {
+    background: var(--glass-sidebar) !important;
+    backdrop-filter: blur(30px) saturate(190%) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(190%) !important;
+}
+
+.nav-item {
+    border-radius: 11px !important;
+    padding: 10px 14px !important;
+    font-weight: 500 !important;
+    transition: all 0.2s cubic-bezier(0.32, 0.72, 0, 1) !important;
+}
+
+.nav-item:hover {
+    background: rgba(255, 255, 255, 0.06) !important;
+    transform: none !important;
+}
+
+.nav-item.active {
+    background: var(--primary) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(10, 132, 255, 0.35) !important;
+    font-weight: 600 !important;
+}
+
+body[data-theme="frost-light"] .nav-item:hover {
+    background: rgba(0, 0, 0, 0.04) !important;
+}
+
+body[data-theme="frost-light"] .nav-item.active {
+    background: var(--primary) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(0, 113, 227, 0.30) !important;
+}
+
+/* 4. Apple Stat Cards (Apple Health & Fitness Inset Metrics) */
+.stat-card {
+    border-radius: 20px !important;
+    padding: 22px !important;
+    transition: all 0.3s cubic-bezier(0.32, 0.72, 0, 1) !important;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px) !important;
+}
+
+.stat-card .stat-icon {
+    width: 46px !important;
+    height: 46px !important;
+    border-radius: 13px !important;
+}
+
+.stat-card.blue .stat-icon {
+    background: rgba(10, 132, 255, 0.16) !important;
+    color: var(--primary) !important;
+}
+
+.stat-card.green .stat-icon {
+    background: rgba(48, 209, 88, 0.16) !important;
+    color: var(--success) !important;
+}
+
+.stat-card.amber .stat-icon, .stat-card.orange .stat-icon {
+    background: rgba(255, 159, 10, 0.16) !important;
+    color: var(--warning) !important;
+}
+
+.stat-card.purple .stat-icon, .stat-card.indigo .stat-icon {
+    background: rgba(191, 90, 242, 0.16) !important;
+    color: var(--accent) !important;
+}
+
+/* 5. Apple Inset Grouped Tables */
+.table-responsive {
+    border-radius: 20px !important;
+    overflow: hidden !important;
+    border: 1px solid var(--glass-border) !important;
+}
+
+th {
+    font-size: 0.74rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.04em !important;
+    text-transform: uppercase !important;
+    padding: 13px 18px !important;
+}
+
+td {
+    padding: 14px 18px !important;
+    font-size: 0.88rem !important;
+}
+
+tbody tr:hover td {
+    background: rgba(255, 255, 255, 0.04) !important;
+}
+
+body[data-theme="frost-light"] tbody tr:hover td {
+    background: rgba(0, 0, 0, 0.03) !important;
+}
+
+/* 6. Apple Capsule Badges */
+.badge {
+    border-radius: 9999px !important;
+    padding: 3px 10px !important;
+    font-size: 0.72rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.02em !important;
+}
+
+/* 7. Apple Buttons (macOS HIG) */
+.btn {
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.01em !important;
+    transition: all 0.2s cubic-bezier(0.32, 0.72, 0, 1) !important;
+}
+
+.btn-primary {
+    background: var(--primary) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(10, 132, 255, 0.35) !important;
+}
+
+.btn-outline {
+    background: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid var(--glass-border-light) !important;
+}
+
+body[data-theme="frost-light"] .btn-outline {
+    background: rgba(0, 0, 0, 0.05) !important;
+    border-color: rgba(0, 0, 0, 0.10) !important;
+    color: #1d1d1f !important;
+}
+
+/* 8. Apple Modal Sheet Presentation */
+.modal-content {
+    border-radius: 24px !important;
+    transform: scale(0.95) translateY(12px) !important;
+    transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.32s !important;
+}
+
+.modal-overlay.active .modal-content {
+    transform: scale(1) translateY(0) !important;
+}
+
+.modal-close {
+    border-radius: 50% !important;
+    background: rgba(120, 120, 128, 0.20) !important;
+    transition: all 0.2s cubic-bezier(0.32, 0.72, 0, 1) !important;
+}
+
+.modal-close:hover {
+    background: rgba(120, 120, 128, 0.35) !important;
+}
+
+/* 9. Apple Form Controls & System Focus Rings */
+.form-control, input, select, textarea {
+    border-radius: 11px !important;
+    letter-spacing: -0.01em !important;
+    transition: all 0.2s cubic-bezier(0.32, 0.72, 0, 1) !important;
+}
+
+.form-control:focus, input:focus, select:focus, textarea:focus {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3.5px rgba(10, 132, 255, 0.25) !important;
+}
+
+body[data-theme="frost-light"] .form-control:focus {
+    box-shadow: 0 0 0 3.5px rgba(0, 113, 227, 0.22) !important;
+}
+
+/* 10. Apple Siri / Dynamic Island Ask Assistant Pill */
+.ai-chatbot-trigger {
+    border-radius: 9999px !important;
+    background: rgba(22, 22, 24, 0.85) !important;
+    backdrop-filter: blur(28px) saturate(200%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(200%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.40), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+    transition: transform 0.2s cubic-bezier(0.32, 0.72, 0, 1), box-shadow 0.2s !important;
+}
+
+.ai-chatbot-window {
+    border-radius: 24px !important;
+    background: rgba(22, 22, 24, 0.88) !important;
+    backdrop-filter: blur(35px) saturate(200%) !important;
+    -webkit-backdrop-filter: blur(35px) saturate(200%) !important;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.65) !important;
+}
+
+body[data-theme="frost-light"] .ai-chatbot-trigger {
+    background: rgba(255, 255, 255, 0.85) !important;
+    color: #1d1d1f !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+}
+
+body[data-theme="frost-light"] .ai-chatbot-window {
+    background: rgba(255, 255, 255, 0.92) !important;
+    border-color: rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* 11. Apple Spotlight Command Palette */
+.cmd-palette-card {
+    border-radius: 20px !important;
+    background: rgba(24, 24, 27, 0.88) !important;
+    backdrop-filter: blur(35px) saturate(200%) !important;
+    -webkit-backdrop-filter: blur(35px) saturate(200%) !important;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.70) !important;
+}
+
+/* 12. Accessibility: Reduced Motion & Reduced Transparency */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+    .sidebar, .header, .card, .stat-card, .modal-content, .login-container, .ai-chatbot-window, .ai-chatbot-trigger {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: #1c1c1e !important;
+    }
+    body[data-theme="frost-light"] .sidebar,
+    body[data-theme="frost-light"] .header,
+    body[data-theme="frost-light"] .card,
+    body[data-theme="frost-light"] .modal-content {
+        background: #ffffff !important;
+    }
+}
