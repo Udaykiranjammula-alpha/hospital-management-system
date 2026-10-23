@@ -4184,3 +4184,295 @@ body[data-theme="frost-light"] .ai-chatbot-window {
         background: #ffffff !important;
     }
 }
+
+
+/* ==========================================================================
+    APPLE DESIGN SYSTEM ENHANCEMENTS (Emil Kowalski / WWDC HIG)
+   ========================================================================== */
+
+/* 1. Global SF Pro Typography & Optical Sizing */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", "Helvetica Neue", "Plus Jakarta Sans", sans-serif !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+h1, .display, .portal-header h1 {
+    letter-spacing: -0.025em !important;
+    line-height: 1.15 !important;
+}
+
+h2, h3, .card-title, .portal-section-title {
+    letter-spacing: -0.018em !important;
+    line-height: 1.25 !important;
+}
+
+.stat-number, .icu-vital-val, .clock-time, kbd {
+    font-variant-numeric: tabular-nums !important;
+    font-feature-settings: "tnum" 1 !important;
+    letter-spacing: -0.02em !important;
+}
+
+/* 2. Apple Fluid Motion & Latency Elimination (Respond on Press) */
+button:active,
+.btn:active,
+.btn-icon:active,
+.nav-item:active,
+.stat-card:active,
+.icu-monitor-card:active,
+.login-cat-btn:active,
+.staff-sub-btn:active,
+.ai-chatbot-trigger:active,
+.wallpaper-hud-pill:active,
+.action-btn:active,
+.quick-action-btn:active {
+    transform: scale(0.97) !important;
+    transition: transform 100ms cubic-bezier(0.32, 0.72, 0, 1) !important;
+}
+
+/* 3. Apple Health Inset Stat Cards (Remove harsh glowing underlines) */
+.stat-card::after {
+    display: none !important;
+}
+
+.stat-card {
+    background: var(--glass-card) !important;
+    backdrop-filter: blur(28px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.20) !important;
+    border-radius: 20px !important;
+    padding: 22px 20px !important;
+    box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+    transition: transform 0.25s cubic-bezier(0.32, 0.72, 0, 1), box-shadow 0.25s cubic-bezier(0.32, 0.72, 0, 1), border-color 0.25s !important;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 14px 32px -4px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+    border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+body[data-theme="frost-light"] .stat-card {
+    background: rgba(255, 255, 255, 0.75) !important;
+    border: 1px solid rgba(0, 0, 0, 0.06) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.95) !important;
+    box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* 4. Apple Emergency Banner & Action Controls */
+.emergency-hud-banner {
+    background: rgba(255, 69, 58, 0.08) !important;
+    backdrop-filter: blur(28px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+    border: 1px solid rgba(255, 69, 58, 0.25) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.22) !important;
+    border-radius: 20px !important;
+    padding: 20px 24px !important;
+    box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.35) !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+body[data-theme="frost-light"] .emergency-hud-banner {
+    background: rgba(255, 69, 58, 0.06) !important;
+    border: 1px solid rgba(255, 69, 58, 0.2) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.9) !important;
+    box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.06) !important;
+}
+
+.btn-code-blue {
+    background: #ff453a !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.01em !important;
+    padding: 10px 20px !important;
+    box-shadow: 0 4px 16px rgba(255, 69, 58, 0.4) !important;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.32, 0.72, 0, 1) !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-code-blue:hover {
+    background: #ff3b30 !important;
+    box-shadow: 0 6px 22px rgba(255, 69, 58, 0.55) !important;
+    transform: translateY(-1px);
+}
+
+/* 5. Live Emergency Status Pill */
+.live-emergency-ticker {
+    background: rgba(255, 69, 58, 0.12) !important;
+    border: 1px solid rgba(255, 69, 58, 0.28) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.20) !important;
+    border-radius: 9999px !important;
+    padding: 6px 14px !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.74rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.02em !important;
+    color: #ff453a !important;
+}
+
+body[data-theme="frost-light"] .live-emergency-ticker {
+    background: rgba(255, 69, 58, 0.10) !important;
+    border: 1px solid rgba(255, 69, 58, 0.22) !important;
+    color: #e11d48 !important;
+}
+
+/* 6. Apple ICU Telemetry Monitor Cards */
+.icu-monitor-card {
+    background: rgba(22, 22, 26, 0.75) !important;
+    backdrop-filter: blur(28px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.18) !important;
+    border-radius: 20px !important;
+    padding: 20px !important;
+    box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.4) !important;
+    transition: all 0.25s cubic-bezier(0.32, 0.72, 0, 1) !important;
+}
+
+.icu-monitor-card:hover {
+    transform: translateY(-2px) !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 14px 36px -4px rgba(0, 0, 0, 0.5) !important;
+}
+
+body[data-theme="frost-light"] .icu-monitor-card {
+    background: rgba(255, 255, 255, 0.78) !important;
+    border: 1px solid rgba(0, 0, 0, 0.06) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.95) !important;
+    box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Apple Calibrated Emergency Code Blue Alert (Soft Ambient Specular Warning) */
+.icu-monitor-card.code-blue-active {
+    border: 1px solid rgba(255, 69, 58, 0.45) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.25) !important;
+    animation: appleEmergencyPulse 2.4s infinite ease-in-out !important;
+}
+
+@keyframes appleEmergencyPulse {
+    0%, 100% {
+        box-shadow: 0 10px 30px -4px rgba(255, 69, 58, 0.25), inset 0 0 20px rgba(255, 69, 58, 0.08);
+        border-color: rgba(255, 69, 58, 0.35);
+    }
+    50% {
+        box-shadow: 0 14px 40px -2px rgba(255, 69, 58, 0.45), inset 0 0 35px rgba(255, 69, 58, 0.16);
+        border-color: rgba(255, 69, 58, 0.75);
+    }
+}
+
+.icu-ecg-canvas {
+    border-radius: 12px !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    background: rgba(0, 0, 0, 0.45) !important;
+}
+
+.icu-vital-item {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-radius: 12px !important;
+    padding: 10px 6px !important;
+}
+
+body[data-theme="frost-light"] .icu-vital-item {
+    background: rgba(0, 0, 0, 0.03) !important;
+    border: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+
+/* 7. Apple Dynamic Island / Siri Ask Assistant Capsule */
+.ai-chatbot-trigger {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 10px 18px !important;
+    border-radius: 9999px !important;
+    background: rgba(22, 22, 26, 0.82) !important;
+    backdrop-filter: blur(28px) saturate(200%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(200%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.28) !important;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    font-size: 0.86rem !important;
+    letter-spacing: -0.01em !important;
+    cursor: grab !important;
+    user-select: none !important;
+    position: fixed !important;
+    z-index: 9990 !important;
+}
+
+.ai-chatbot-trigger:active {
+    cursor: grabbing !important;
+    transform: scale(0.97) !important;
+}
+
+.ai-siri-orb {
+    width: 9px !important;
+    height: 9px !important;
+    border-radius: 50% !important;
+    background: linear-gradient(135deg, #0a84ff, #bf5af2, #30d158) !important;
+    box-shadow: 0 0 10px rgba(10, 132, 255, 0.8) !important;
+    animation: siriBreathe 3s infinite ease-in-out !important;
+    display: inline-block !important;
+}
+
+@keyframes siriBreathe {
+    0%, 100% { transform: scale(1); opacity: 0.9; filter: hue-rotate(0deg); }
+    50% { transform: scale(1.25); opacity: 1; filter: hue-rotate(60deg); box-shadow: 0 0 14px rgba(191, 90, 242, 0.9); }
+}
+
+.ai-chatbot-pulse {
+    display: none !important;
+}
+
+/* 8. Apple Wallpaper HUD Pill */
+.wallpaper-hud-pill {
+    background: rgba(22, 22, 26, 0.80) !important;
+    backdrop-filter: blur(28px) saturate(190%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.25) !important;
+    border-radius: 9999px !important;
+    padding: 7px 16px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
+    font-weight: 500 !important;
+    letter-spacing: -0.01em !important;
+    font-size: 0.82rem !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9989;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.wallpaper-hud-pill:hover {
+    transform: translateY(-2px) !important;
+    border-color: rgba(255, 255, 255, 0.22) !important;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45) !important;
+}
+
+body[data-theme="frost-light"] .wallpaper-hud-pill {
+    background: rgba(255, 255, 255, 0.82) !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.95) !important;
+    color: #1d1d1f !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+}

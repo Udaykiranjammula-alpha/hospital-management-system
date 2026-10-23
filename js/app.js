@@ -875,16 +875,20 @@ function toggleTheme() {
 // 4b. LIVE SUPER-GRAPHIC TOUCH-RESPONSIVE WALLPAPERS
 // ==========================================
 const WALLPAPER_MODES = [
-    { id: 'hospital3d', name: '🏥 Cinematic Hospital 3D', icon: 'fa-hospital' },
-    { id: 'synapse', name: '🌌 Bio-Synapse Matrix', icon: 'fa-brain' },
-    { id: 'ecg', name: '💓 Vital ECG Pulsar', icon: 'fa-heartbeat' },
-    { id: 'aurora', name: '✨ Fluid Cosmic Aurora', icon: 'fa-wind' },
-    { id: 'grid', name: '🌐 Cyber Matrix Grid', icon: 'fa-cube' }
+    { id: 'appleFluid', name: ' Apple Fluid Mesh', icon: 'fa-apple-whole' },
+    { id: 'aurora', name: '✨ VisionOS Aurora', icon: 'fa-wind' },
+    { id: 'synapse', name: '🧬 Bio-Neural Float', icon: 'fa-brain' },
+    { id: 'ecg', name: '💓 Vital Harmonic Flow', icon: 'fa-heartbeat' },
+    { id: 'minimal', name: '💎 Studio Glass Flow', icon: 'fa-gem' }
 ];
 
 const isLoginPage = typeof window !== 'undefined' && normalizePageName(window.location.pathname) === 'index.html';
 
-let currentWallpaperMode = localStorage.getItem('hms_wallpaper_mode') || (isLoginPage ? 'hospital3d' : 'hospital3d');
+let currentWallpaperMode = localStorage.getItem('hms_wallpaper_mode');
+if (!currentWallpaperMode || currentWallpaperMode === 'hospital3d' || currentWallpaperMode === 'grid') {
+    currentWallpaperMode = 'appleFluid';
+    localStorage.setItem('hms_wallpaper_mode', 'appleFluid');
+}
 let wpCanvas = null;
 let wpCtx = null;
 let wpWidth = 0;
@@ -906,38 +910,10 @@ const wpParticles = [];
 let ecgOffset = 0;
 let auroraTime = 0;
 
-// 3D Cinematic Hospital Corridor Walkthrough State
-let corridorZ = 0;
-let corridorSpeed = 2.2;
-let targetCorridorSpeed = 2.2;
-let isEnteringHospital = false;
-let camTiltX = 0;
-let camTiltY = 0;
-let corridorTime = 0;
-let hospitalDustMotes = [];
-
-const HOSPITAL_DEPARTMENTS = [
-    { name: 'EMERGENCY & TRAUMA LEVEL 1', sub: 'STAT RESUSCITATION', color: '#ef4444', icon: '🚨' },
-    { name: 'ICU - INTENSIVE CARE SUITE 04', sub: 'CARDIAC INTENSIVE', color: '#06b6d4', icon: '💙' },
-    { name: 'OR 02 - SURGICAL THEATRE', sub: 'ACTIVE STERILE SUITE', color: '#10b981', icon: '🟢' },
-    { name: 'CARDIOLOGY & VASCULAR LAB', sub: 'CATHETERIZATION UNIT', color: '#f43f5e', icon: '💓' },
-    { name: 'NEURO-DIAGNOSTICS & MRI', sub: 'ADVANCED NEURO-IMAGING', color: '#a855f7', icon: '🧠' },
-    { name: 'PHARMACY & LAB DISPENSARY', sub: 'AUTOMATED DISPENSARY', color: '#38bdf8', icon: '💊' }
-];
-
-function initHospitalDustMotes() {
-    hospitalDustMotes = [];
-    for (let i = 0; i < 45; i++) {
-        hospitalDustMotes.push({
-            x: (Math.random() - 0.5) * 550,
-            y: (Math.random() - 0.5) * 380,
-            z: Math.random() * 2200,
-            size: 1 + Math.random() * 2.2,
-            alpha: 0.25 + Math.random() * 0.5
-        });
-    }
-}
-
+// Apple Dynamic Fluid State (WWDC Fluid Interfaces & Springs)
+let appleFluidTime = 0;
+let applePointerVx = 0;
+let applePointerVy = 0;
 function cycleWallpaperMode() {
     playSound('modal');
     const idx = WALLPAPER_MODES.findIndex(m => m.id === currentWallpaperMode);
@@ -1072,16 +1048,16 @@ function renderLiveWallpaper() {
     const accent = style.getPropertyValue('--accent').trim() || '#c084fc';
 
     // 1. Render Specific Wallpaper Mode
-    if (currentWallpaperMode === 'hospital3d') {
-        renderHospitalCorridorMode();
+    if (currentWallpaperMode === 'appleFluid') {
+        renderAppleFluidMode(primary, secondary, accent);
+    } else if (currentWallpaperMode === 'aurora') {
+        renderAuroraMode(primary, secondary, accent);
     } else if (currentWallpaperMode === 'synapse') {
         renderSynapseMode(primary, secondary, accent);
     } else if (currentWallpaperMode === 'ecg') {
         renderECGMode(primary, accent);
-    } else if (currentWallpaperMode === 'aurora') {
-        renderAuroraMode(primary, secondary, accent);
-    } else if (currentWallpaperMode === 'grid') {
-        renderGridMode(primary, secondary);
+    } else {
+        renderAppleFluidMode(primary, secondary, accent);
     }
 
     // 2. Render Touch Trail
@@ -1311,404 +1287,125 @@ function renderGridMode(primary, secondary) {
     wpCtx.globalAlpha = 1.0;
 }
 
-function renderHospitalCorridorMode() {
-    if (!hospitalDustMotes || !hospitalDustMotes.length) initHospitalDustMotes();
+function renderAppleFluidMode(primary, secondary, accent) {
+    appleFluidTime += 0.007;
+    const isDark = document.body.getAttribute('data-theme') !== 'frost-light';
 
-    // Lerp speed (normal glide vs hyperspeed warp entrance)
-    corridorSpeed += (targetCorridorSpeed - corridorSpeed) * (isEnteringHospital ? 0.08 : 0.04);
-    corridorZ += corridorSpeed;
-    corridorTime += 0.02;
-
-    // Smooth steadycam camera sway
-    const swayX = Math.sin(corridorTime * 1.2) * 6;
-    const swayY = Math.cos(corridorTime * 2.4) * 4.5;
-
-    // Mouse / Touch Parallax Steering
-    const targetTiltX = (wpPointer.x > -500) ? (wpPointer.x - wpWidth / 2) * 0.12 : 0;
-    const targetTiltY = (wpPointer.y > -500) ? (wpPointer.y - wpHeight / 2) * 0.08 : 0;
-    camTiltX += (targetTiltX - camTiltX) * 0.06;
-    camTiltY += (targetTiltY - camTiltY) * 0.06;
-
-    const camX = swayX + camTiltX;
-    const camY = swayY + camTiltY;
-
-    const vpX = wpWidth * 0.5;
-    const vpY = wpHeight * 0.48;
-    const F = wpWidth * 0.65;
-
-    function project(x, y, z) {
-        const relZ = z - corridorZ;
-        if (relZ <= 10) return null;
-        const scale = F / relZ;
-        return {
-            x: vpX + (x - camX) * scale,
-            y: vpY + (y - camY) * scale,
-            scale: scale,
-            relZ: relZ
-        };
-    }
-
-    const hallW = 340;
-    const hallH = 220;
-    const segDist = 180;
-    const maxSegments = 16;
-    const startSeg = Math.floor(corridorZ / segDist);
-
-    // 1. Deep Horizon Atrium Glow
-    const horizonGlowRad = isEnteringHospital ? wpWidth * 0.8 : wpWidth * 0.55;
-    const glowGrad = wpCtx.createRadialGradient(vpX - camTiltX * 0.5, vpY - camTiltY * 0.5, 2, vpX - camTiltX * 0.5, vpY - camTiltY * 0.5, horizonGlowRad);
-    glowGrad.addColorStop(0, isEnteringHospital ? 'rgba(255, 255, 255, 0.95)' : 'rgba(56, 189, 248, 0.65)');
-    glowGrad.addColorStop(0.25, 'rgba(14, 165, 233, 0.4)');
-    glowGrad.addColorStop(0.55, 'rgba(99, 102, 241, 0.18)');
-    glowGrad.addColorStop(1, 'transparent');
-    wpCtx.fillStyle = glowGrad;
-    wpCtx.fillRect(0, 0, wpWidth, wpHeight);
-
-    // 2. Far vanishing atrium glass double doors with medical cross
-    const farP = project(0, 0, (startSeg + maxSegments) * segDist);
-    if (farP) {
-        const fW = hallW * 2 * farP.scale;
-        const fH = hallH * 2 * farP.scale;
-        const atriumGrad = wpCtx.createLinearGradient(0, farP.y - fH / 2, 0, farP.y + fH / 2);
-        atriumGrad.addColorStop(0, '#38bdf8');
-        atriumGrad.addColorStop(0.5, '#0284c7');
-        atriumGrad.addColorStop(1, '#0369a1');
-        wpCtx.fillStyle = atriumGrad;
-        wpCtx.fillRect(farP.x - fW / 2, farP.y - fH / 2, fW, fH);
-
-        // Distant glowing hospital cross
-        const crossSize = Math.max(7, fH * 0.28);
-        wpCtx.fillStyle = '#ffffff';
-        wpCtx.shadowColor = '#ffffff';
-        wpCtx.shadowBlur = 12;
-        wpCtx.fillRect(farP.x - crossSize * 0.2, farP.y - crossSize * 0.5, crossSize * 0.4, crossSize);
-        wpCtx.fillRect(farP.x - crossSize * 0.5, farP.y - crossSize * 0.2, crossSize, crossSize * 0.4);
-        wpCtx.shadowBlur = 0;
-
-        wpCtx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
-        wpCtx.lineWidth = 1.5;
-        wpCtx.strokeRect(farP.x - fW / 2, farP.y - fH / 2, fW, fH);
-    }
-
-    // 3. Render Segments from Back to Front
-    for (let i = startSeg + maxSegments; i >= startSeg; i--) {
-        const zFar = (i + 1) * segDist;
-        const zNear = i * segDist;
-
-        const pTL_near = project(-hallW, -hallH, zNear);
-        const pTR_near = project(hallW, -hallH, zNear);
-        const pBL_near = project(-hallW, hallH, zNear);
-        const pBR_near = project(hallW, hallH, zNear);
-
-        const pTL_far = project(-hallW, -hallH, zFar);
-        const pTR_far = project(hallW, -hallH, zFar);
-        const pBL_far = project(-hallW, hallH, zFar);
-        const pBR_far = project(hallW, hallH, zFar);
-
-        if (!pTL_near || !pTL_far) continue;
-
-        const depthAlpha = Math.min(1, Math.max(0, 1 - (pTL_near.relZ / (maxSegments * segDist))));
-
-        // --- CEILING PLANE ---
-        wpCtx.beginPath();
-        wpCtx.moveTo(pTL_near.x, pTL_near.y);
-        wpCtx.lineTo(pTR_near.x, pTR_near.y);
-        wpCtx.lineTo(pTR_far.x, pTR_far.y);
-        wpCtx.lineTo(pTL_far.x, pTL_far.y);
-        wpCtx.closePath();
-        const ceilGrad = wpCtx.createLinearGradient(0, pTL_near.y, 0, pTL_far.y);
-        ceilGrad.addColorStop(0, `rgba(15, 23, 42, ${0.82 * depthAlpha})`);
-        ceilGrad.addColorStop(1, `rgba(8, 14, 26, ${0.96 * depthAlpha})`);
-        wpCtx.fillStyle = ceilGrad;
-        wpCtx.fill();
-
-        // --- FLOOR PLANE (Glossy Epoxy Reflection) ---
-        wpCtx.beginPath();
-        wpCtx.moveTo(pBL_near.x, pBL_near.y);
-        wpCtx.lineTo(pBR_near.x, pBR_near.y);
-        wpCtx.lineTo(pBR_far.x, pBR_far.y);
-        wpCtx.lineTo(pBL_far.x, pBL_far.y);
-        wpCtx.closePath();
-        const floorGrad = wpCtx.createLinearGradient(0, pBL_near.y, 0, pBL_far.y);
-        floorGrad.addColorStop(0, `rgba(10, 18, 36, ${0.92 * depthAlpha})`);
-        floorGrad.addColorStop(1, `rgba(3, 7, 18, ${0.98 * depthAlpha})`);
-        wpCtx.fillStyle = floorGrad;
-        wpCtx.fill();
-
-        // Floor tile border
-        wpCtx.strokeStyle = `rgba(56, 189, 248, ${0.16 * depthAlpha})`;
-        wpCtx.lineWidth = 1;
-        wpCtx.stroke();
-
-        // Floor center reflection line
-        const pCenterNear = project(0, hallH, zNear);
-        const pCenterFar = project(0, hallH, zFar);
-        if (pCenterNear && pCenterFar) {
-            wpCtx.beginPath();
-            wpCtx.moveTo(pCenterNear.x, pCenterNear.y);
-            wpCtx.lineTo(pCenterFar.x, pCenterFar.y);
-            wpCtx.strokeStyle = `rgba(56, 189, 248, ${0.24 * depthAlpha})`;
-            wpCtx.stroke();
+    // 1. Organic Harmonic Fluid Meshes (Apple WWDC 2018 Fluid Interfaces)
+    const orbs = isDark ? [
+        {
+            x: wpWidth * 0.22 + Math.sin(appleFluidTime * 1.1) * 120,
+            y: wpHeight * 0.28 + Math.cos(appleFluidTime * 0.8) * 90,
+            r: Math.min(wpWidth, wpHeight) * 0.44,
+            colorStart: 'rgba(10, 132, 255, 0.22)', // Apple System Blue
+            colorEnd: 'rgba(10, 132, 255, 0)'
+        },
+        {
+            x: wpWidth * 0.78 + Math.cos(appleFluidTime * 0.9) * 110,
+            y: wpHeight * 0.32 + Math.sin(appleFluidTime * 1.2) * 100,
+            r: Math.min(wpWidth, wpHeight) * 0.46,
+            colorStart: 'rgba(94, 92, 230, 0.20)', // Apple System Indigo
+            colorEnd: 'rgba(94, 92, 230, 0)'
+        },
+        {
+            x: wpWidth * 0.52 + Math.sin(appleFluidTime * 0.75 + 1.5) * 130,
+            y: wpHeight * 0.74 + Math.cos(appleFluidTime * 1.05 + 1) * 85,
+            r: Math.min(wpWidth, wpHeight) * 0.48,
+            colorStart: 'rgba(191, 90, 242, 0.16)', // Apple System Purple
+            colorEnd: 'rgba(191, 90, 242, 0)'
+        },
+        {
+            x: wpWidth * 0.85 + Math.sin(appleFluidTime * 1.3 + 3) * 80,
+            y: wpHeight * 0.82 + Math.sin(appleFluidTime * 0.7) * 70,
+            r: Math.min(wpWidth, wpHeight) * 0.36,
+            colorStart: 'rgba(48, 209, 88, 0.10)', // Apple System Mint
+            colorEnd: 'rgba(48, 209, 88, 0)'
         }
-
-        // --- LEFT WALL ---
-        wpCtx.beginPath();
-        wpCtx.moveTo(pTL_near.x, pTL_near.y);
-        wpCtx.lineTo(pTL_far.x, pTL_far.y);
-        wpCtx.lineTo(pBL_far.x, pBL_far.y);
-        wpCtx.lineTo(pBL_near.x, pBL_near.y);
-        wpCtx.closePath();
-        wpCtx.fillStyle = `rgba(13, 20, 36, ${0.78 * depthAlpha})`;
-        wpCtx.fill();
-        wpCtx.strokeStyle = `rgba(30, 41, 59, ${0.4 * depthAlpha})`;
-        wpCtx.stroke();
-
-        // --- RIGHT WALL ---
-        wpCtx.beginPath();
-        wpCtx.moveTo(pTR_near.x, pTR_near.y);
-        wpCtx.lineTo(pTR_far.x, pTR_far.y);
-        wpCtx.lineTo(pBR_far.x, pBR_far.y);
-        wpCtx.lineTo(pBR_near.x, pBR_near.y);
-        wpCtx.closePath();
-        wpCtx.fillStyle = `rgba(13, 20, 36, ${0.78 * depthAlpha})`;
-        wpCtx.fill();
-        wpCtx.strokeStyle = `rgba(30, 41, 59, ${0.4 * depthAlpha})`;
-        wpCtx.stroke();
-
-        // --- WALL BUMPER & ACCENT STRIPS ---
-        const pL_stripNear = project(-hallW, hallH - 30, zNear);
-        const pL_stripFar = project(-hallW, hallH - 30, zFar);
-        if (pL_stripNear && pL_stripFar) {
-            wpCtx.beginPath();
-            wpCtx.moveTo(pL_stripNear.x, pL_stripNear.y);
-            wpCtx.lineTo(pL_stripFar.x, pL_stripFar.y);
-            wpCtx.strokeStyle = `rgba(56, 189, 248, ${0.45 * depthAlpha})`;
-            wpCtx.lineWidth = 1.5;
-            wpCtx.stroke();
+    ] : [
+        {
+            x: wpWidth * 0.25 + Math.sin(appleFluidTime * 1.1) * 100,
+            y: wpHeight * 0.30 + Math.cos(appleFluidTime * 0.8) * 80,
+            r: Math.min(wpWidth, wpHeight) * 0.45,
+            colorStart: 'rgba(0, 113, 227, 0.14)', // Apple Studio Light Blue
+            colorEnd: 'rgba(0, 113, 227, 0)'
+        },
+        {
+            x: wpWidth * 0.75 + Math.cos(appleFluidTime * 0.9) * 90,
+            y: wpHeight * 0.35 + Math.sin(appleFluidTime * 1.2) * 90,
+            r: Math.min(wpWidth, wpHeight) * 0.44,
+            colorStart: 'rgba(88, 86, 214, 0.11)', // Apple Studio Violet
+            colorEnd: 'rgba(88, 86, 214, 0)'
+        },
+        {
+            x: wpWidth * 0.50 + Math.sin(appleFluidTime * 0.75 + 1.5) * 110,
+            y: wpHeight * 0.75 + Math.cos(appleFluidTime * 1.05 + 1) * 75,
+            r: Math.min(wpWidth, wpHeight) * 0.46,
+            colorStart: 'rgba(175, 82, 222, 0.08)', // Apple Studio Lavender
+            colorEnd: 'rgba(175, 82, 222, 0)'
         }
-        const pR_stripNear = project(hallW, hallH - 30, zNear);
-        const pR_stripFar = project(hallW, hallH - 30, zFar);
-        if (pR_stripNear && pR_stripFar) {
-            wpCtx.beginPath();
-            wpCtx.moveTo(pR_stripNear.x, pR_stripNear.y);
-            wpCtx.lineTo(pR_stripFar.x, pR_stripFar.y);
-            wpCtx.strokeStyle = `rgba(56, 189, 248, ${0.45 * depthAlpha})`;
-            wpCtx.lineWidth = 1.5;
-            wpCtx.stroke();
-        }
+    ];
 
-        // --- RECESSED CEILING LED TROFFER ---
-        const lightW = 48;
-        const warpStretch = (corridorSpeed > 5) ? (corridorSpeed - 2.2) * 12 : 0;
-        const lightZ1 = zNear + 30;
-        const lightZ2 = zNear + 150 + warpStretch;
-        const pLT1 = project(-lightW, -hallH + 1, lightZ1);
-        const pLT2 = project(lightW, -hallH + 1, lightZ1);
-        const pLT3 = project(lightW, -hallH + 1, lightZ2);
-        const pLT4 = project(-lightW, -hallH + 1, lightZ2);
+    // Pointer Interactive Fluid Deflection with velocity coupling
+    const hasPointer = (wpPointer.x > -500 && wpPointer.y > -500);
 
-        if (pLT1 && pLT2 && pLT3 && pLT4) {
-            wpCtx.beginPath();
-            wpCtx.moveTo(pLT1.x, pLT1.y);
-            wpCtx.lineTo(pLT2.x, pLT2.y);
-            wpCtx.lineTo(pLT3.x, pLT3.y);
-            wpCtx.lineTo(pLT4.x, pLT4.y);
-            wpCtx.closePath();
-            wpCtx.fillStyle = `rgba(240, 249, 255, ${0.92 * depthAlpha})`;
-            wpCtx.shadowColor = '#38bdf8';
-            wpCtx.shadowBlur = 14 * depthAlpha;
-            wpCtx.fill();
-            wpCtx.shadowBlur = 0;
+    for (let i = 0; i < orbs.length; i++) {
+        const orb = orbs[i];
+        let finalX = orb.x;
+        let finalY = orb.y;
 
-            // FLOOR SPECULAR REFLECTION OF LIGHT TROFFER
-            const pLF1 = project(-lightW, hallH - 1, lightZ1);
-            const pLF2 = project(lightW, hallH - 1, lightZ1);
-            const pLF3 = project(lightW, hallH - 1, lightZ2);
-            const pLF4 = project(-lightW, hallH - 1, lightZ2);
-
-            if (pLF1 && pLF2 && pLF3 && pLF4) {
-                wpCtx.beginPath();
-                wpCtx.moveTo(pLF1.x, pLF1.y);
-                wpCtx.lineTo(pLF2.x, pLF2.y);
-                wpCtx.lineTo(pLF3.x, pLF3.y);
-                wpCtx.lineTo(pLF4.x, pLF4.y);
-                wpCtx.closePath();
-                wpCtx.fillStyle = `rgba(56, 189, 248, ${0.28 * depthAlpha})`;
-                wpCtx.fill();
+        if (hasPointer) {
+            const dx = wpPointer.x - orb.x;
+            const dy = wpPointer.y - orb.y;
+            const dist = Math.hypot(dx, dy);
+            const maxDist = orb.r * 1.2;
+            if (dist < maxDist && dist > 1) {
+                const norm = (maxDist - dist) / maxDist;
+                const pullFactor = wpPointer.isDown ? 0.22 : 0.09;
+                finalX += (dx / dist) * norm * orb.r * pullFactor;
+                finalY += (dy / dist) * norm * orb.r * pullFactor;
             }
         }
 
-        // --- PASSING MEDICAL DEPARTMENT DOORS & SIGNS ---
-        if (i % 2 === 0) {
-            const isLeft = (i / 2) % 2 === 0;
-            const wallX = isLeft ? -hallW : hallW;
-            const deptIdx = Math.floor(i / 2) % HOSPITAL_DEPARTMENTS.length;
-            const dept = HOSPITAL_DEPARTMENTS[deptIdx];
+        const grad = wpCtx.createRadialGradient(finalX, finalY, orb.r * 0.04, finalX, finalY, orb.r);
+        grad.addColorStop(0, orb.colorStart);
+        grad.addColorStop(0.45, orb.colorStart);
+        grad.addColorStop(1, orb.colorEnd);
 
-            const doorZ1 = zNear + 25;
-            const doorZ2 = zNear + 155;
-            const doorTopY = -hallH * 0.35;
-            const doorBotY = hallH - 5;
-
-            const pD1 = project(wallX, doorTopY, doorZ1);
-            const pD2 = project(wallX, doorTopY, doorZ2);
-            const pD3 = project(wallX, doorBotY, doorZ2);
-            const pD4 = project(wallX, doorBotY, doorZ1);
-
-            if (pD1 && pD2 && pD3 && pD4) {
-                // Glass Door Frame
-                wpCtx.beginPath();
-                wpCtx.moveTo(pD1.x, pD1.y);
-                wpCtx.lineTo(pD2.x, pD2.y);
-                wpCtx.lineTo(pD3.x, pD3.y);
-                wpCtx.lineTo(pD4.x, pD4.y);
-                wpCtx.closePath();
-                wpCtx.fillStyle = `rgba(14, 165, 233, ${0.12 * depthAlpha})`;
-                wpCtx.fill();
-                wpCtx.strokeStyle = `rgba(56, 189, 248, ${0.5 * depthAlpha})`;
-                wpCtx.lineWidth = 1.2;
-                wpCtx.stroke();
-
-                // Floor glow under door
-                const pDF1 = project(wallX, hallH - 1, doorZ1);
-                const pDF2 = project(wallX, hallH - 1, doorZ2);
-                const pDF3 = project(wallX * 0.72, hallH - 1, doorZ2);
-                const pDF4 = project(wallX * 0.72, hallH - 1, doorZ1);
-                if (pDF1 && pDF2 && pDF3 && pDF4) {
-                    wpCtx.beginPath();
-                    wpCtx.moveTo(pDF1.x, pDF1.y);
-                    wpCtx.lineTo(pDF2.x, pDF2.y);
-                    wpCtx.lineTo(pDF3.x, pDF3.y);
-                    wpCtx.lineTo(pDF4.x, pDF4.y);
-                    wpCtx.closePath();
-                    wpCtx.fillStyle = dept.color;
-                    wpCtx.globalAlpha = 0.16 * depthAlpha;
-                    wpCtx.fill();
-                    wpCtx.globalAlpha = 1.0;
-                }
-
-                // Illuminated Overhead Medical Sign Plaque
-                const signH = 38;
-                const pS1 = project(wallX, doorTopY - signH, doorZ1);
-                const pS2 = project(wallX, doorTopY - signH, doorZ2);
-
-                if (pS1 && pS2) {
-                    wpCtx.beginPath();
-                    wpCtx.moveTo(pS1.x, pS1.y);
-                    wpCtx.lineTo(pS2.x, pS2.y);
-                    wpCtx.lineTo(pD2.x, pD2.y);
-                    wpCtx.lineTo(pD1.x, pD1.y);
-                    wpCtx.closePath();
-                    wpCtx.fillStyle = `rgba(15, 23, 42, ${0.92 * depthAlpha})`;
-                    wpCtx.fill();
-                    wpCtx.strokeStyle = dept.color;
-                    wpCtx.lineWidth = 2 * depthAlpha;
-                    wpCtx.shadowColor = dept.color;
-                    wpCtx.shadowBlur = 10 * depthAlpha;
-                    wpCtx.stroke();
-                    wpCtx.shadowBlur = 0;
-
-                    // Render sign name text if within readable range
-                    if (pD1.relZ < 680 && pD1.relZ > 40) {
-                        const signMidX = (pS1.x + pS2.x) / 2;
-                        const signMidY = (pS1.y + pD1.y) / 2;
-                        const signW = Math.abs(pS2.x - pS1.x);
-                        const fontSize = Math.max(9, Math.min(18, signW * 0.12));
-                        wpCtx.font = `bold ${fontSize}px "Plus Jakarta Sans", sans-serif`;
-                        wpCtx.fillStyle = '#ffffff';
-                        wpCtx.textAlign = 'center';
-                        wpCtx.textBaseline = 'middle';
-                        wpCtx.shadowColor = dept.color;
-                        wpCtx.shadowBlur = 10;
-                        wpCtx.fillText(`${dept.icon} ${dept.name}`, signMidX, signMidY);
-                        wpCtx.shadowBlur = 0;
-                    }
-                }
-            }
-        } else {
-            // Alternating segment: Telemetry Vitals Monitor Mounted on Pillar!
-            const isLeft = ((i - 1) / 2) % 2 === 1;
-            const wallX = isLeft ? -hallW + 2 : hallW - 2;
-            const monZ1 = zNear + 50;
-            const monZ2 = zNear + 130;
-            const monTopY = -hallH * 0.15;
-            const monBotY = hallH * 0.25;
-
-            const pM1 = project(wallX, monTopY, monZ1);
-            const pM2 = project(wallX, monTopY, monZ2);
-            const pM3 = project(wallX, monBotY, monZ2);
-            const pM4 = project(wallX, monBotY, monZ1);
-
-            if (pM1 && pM2 && pM3 && pM4) {
-                wpCtx.beginPath();
-                wpCtx.moveTo(pM1.x, pM1.y);
-                wpCtx.lineTo(pM2.x, pM2.y);
-                wpCtx.lineTo(pM3.x, pM3.y);
-                wpCtx.lineTo(pM4.x, pM4.y);
-                wpCtx.closePath();
-                wpCtx.fillStyle = `rgba(2, 6, 23, ${0.92 * depthAlpha})`;
-                wpCtx.fill();
-                wpCtx.strokeStyle = `rgba(16, 185, 129, ${0.65 * depthAlpha})`;
-                wpCtx.lineWidth = 1.2;
-                wpCtx.stroke();
-
-                // Live animated pulsing ECG waveform on the telemetry monitor
-                if (pM1.relZ < 700) {
-                    wpCtx.beginPath();
-                    const step = (pM2.x - pM1.x) / 10;
-                    for (let s = 0; s <= 10; s++) {
-                        const px = pM1.x + step * s;
-                        const py = (pM1.y + pM4.y) / 2 + Math.sin(s * 1.5 + corridorTime * 4) * 8 * pM1.scale * 3;
-                        if (s === 0) wpCtx.moveTo(px, py);
-                        else wpCtx.lineTo(px, py);
-                    }
-                    wpCtx.strokeStyle = '#10b981';
-                    wpCtx.shadowColor = '#10b981';
-                    wpCtx.shadowBlur = 6;
-                    wpCtx.lineWidth = 1.5;
-                    wpCtx.stroke();
-                    wpCtx.shadowBlur = 0;
-                }
-            }
-        }
+        wpCtx.beginPath();
+        wpCtx.arc(finalX, finalY, orb.r, 0, Math.PI * 2);
+        wpCtx.fillStyle = grad;
+        wpCtx.fill();
     }
 
-    // 4. Clinical Air Dust / Bokeh Motes
-    for (let m of hospitalDustMotes) {
-        m.z -= corridorSpeed * 0.7;
-        if (m.z < 20) m.z = 2000;
-        const p = project(m.x, m.y, m.z + corridorZ);
-        if (p && p.relZ > 20 && p.relZ < 2000) {
-            wpCtx.beginPath();
-            wpCtx.arc(p.x, p.y, m.size * p.scale * 2.5, 0, Math.PI * 2);
-            wpCtx.fillStyle = `rgba(224, 242, 254, ${m.alpha * Math.min(1, (2000 - p.relZ) / 2000)})`;
-            wpCtx.shadowColor = '#38bdf8';
-            wpCtx.shadowBlur = 6;
-            wpCtx.fill();
-            wpCtx.shadowBlur = 0;
-        }
-    }
+    // 2. Soft Ambient Stardust Float
+    const pCount = wpParticles.length;
+    for (let i = 0; i < pCount; i++) {
+        const p = wpParticles[i];
+        p.x += p.vx * 0.5;
+        p.y += p.vy * 0.5;
 
-    // 5. Warp Speed Light Streak Tunnel Effect (When Authenticating)
-    if (isEnteringHospital || corridorSpeed > 8) {
-        const streakAlpha = Math.min(0.8, (corridorSpeed - 2.2) / 30);
-        wpCtx.save();
-        wpCtx.globalCompositeOperation = 'lighter';
-        for (let s = 0; s < 18; s++) {
-            const angle = (s / 18) * Math.PI * 2;
-            const r1 = 30 + Math.random() * 40;
-            const r2 = r1 + corridorSpeed * 15;
-            wpCtx.beginPath();
-            wpCtx.moveTo(vpX + Math.cos(angle) * r1, vpY + Math.sin(angle) * r1);
-            wpCtx.lineTo(vpX + Math.cos(angle) * r2, vpY + Math.sin(angle) * r2);
-            wpCtx.strokeStyle = `rgba(56, 189, 248, ${streakAlpha * (0.4 + Math.random() * 0.6)})`;
-            wpCtx.lineWidth = 2 + Math.random() * 3;
-            wpCtx.stroke();
+        if (p.x < 0) p.x = wpWidth;
+        if (p.x > wpWidth) p.x = 0;
+        if (p.y < 0) p.y = wpHeight;
+        if (p.y > wpHeight) p.y = 0;
+
+        if (hasPointer) {
+            const pDx = wpPointer.x - p.x;
+            const pDy = wpPointer.y - p.y;
+            const pDist = Math.hypot(pDx, pDy);
+            if (pDist < 120 && pDist > 1) {
+                const pForce = (120 - pDist) / 120;
+                p.x -= (pDx / pDist) * pForce * 3;
+                p.y -= (pDy / pDist) * pForce * 3;
+            }
         }
-        wpCtx.restore();
+
+        wpCtx.beginPath();
+        wpCtx.arc(p.x, p.y, p.baseRadius * 0.8, 0, Math.PI * 2);
+        wpCtx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.45)' : 'rgba(0, 113, 227, 0.35)';
+        wpCtx.fill();
     }
 }
-
 function renderTouchTrail(primary, accent) {
     for (let i = wpPointer.trail.length - 1; i >= 0; i--) {
         const pt = wpPointer.trail[i];
@@ -2037,8 +1734,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ==========================================
 function startHospitalWarpSequence(callback) {
     playSound('warp');
-    isEnteringHospital = true;
-    targetCorridorSpeed = 42.0;
+    createShockwave(window.innerWidth / 2, window.innerHeight / 2, 450);
 
     const bgVideo = document.getElementById('bgVideo');
     if (bgVideo) {
@@ -5353,9 +5049,7 @@ function initAIChatbot() {
     container.className = 'ai-chatbot-container';
     container.innerHTML = `
         <button class="ai-chatbot-trigger" id="aiChatTrigger" title="Drag to move • Click to open MediCare Assistant">
-            <span class="ai-chatbot-pulse"></span>
-            <i class="fas fa-robot"></i>
-            <span>Ask AI Assistant</span>
+            <span class="ai-siri-glow"></span><span class="ai-siri-orb"></span><i class="fas fa-sparkles"></i><span>Ask AI Assistant</span>
             <span class="ai-chatbot-tooltip"><i class="fas fa-arrows-up-down-left-right"></i> Drag anywhere • Click to chat</span>
         </button>
 
