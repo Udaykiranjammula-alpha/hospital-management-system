@@ -2,14 +2,12 @@
   "name": "medicare-hospital-management-system",
   "version": "2.0.0",
   "private": true,
-  "type": "module",
-  "description": "MediCare HMS - Apple Design Healthcare Platform with React, Vite & RBAC",
+  "description": "MediCare HMS - Apple Design Healthcare Platform with React 18, Vite & RBAC",
+  "main": "index.html",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build --config vite.react.config.js && vite build",
-    "build:react": "vite build --config vite.react.config.js",
-    "preview": "vite preview",
-    "start": "vite"
+    "start": "npx serve .",
+    "dev": "vite build --config vite.react.config.js --watch",
+    "build:react": "vite build --config vite.react.config.js"
   },
   "keywords": [
     "react",
@@ -24,8 +22,7 @@
   "license": "MIT",
   "dependencies": {
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.30.6"
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^6.1.2",

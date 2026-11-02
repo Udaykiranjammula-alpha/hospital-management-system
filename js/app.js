@@ -1751,26 +1751,33 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
+// ==========================================
 // 8. PAGE: LOGIN (index.html)
 // ==========================================
+let isLoggingIn = false;
+
 function startHospitalWarpSequence(callback) {
-    playSound('warp');
-    createShockwave(window.innerWidth / 2, window.innerHeight / 2, 450);
+    try {
+        playSound('warp');
+        createShockwave(window.innerWidth / 2, window.innerHeight / 2, 450);
 
-    const bgVideo = document.getElementById('bgVideo');
-    if (bgVideo) {
-        bgVideo.playbackRate = 3.2;
-        bgVideo.classList.add('warp-accelerate');
-    }
+        const bgVideo = document.getElementById('bgVideo');
+        if (bgVideo) {
+            bgVideo.playbackRate = 3.2;
+            bgVideo.classList.add('warp-accelerate');
+        }
 
-    const loginContainer = document.querySelector('.login-container');
-    if (loginContainer) {
-        loginContainer.classList.add('login-entering');
+        const loginContainer = document.querySelector('.login-container');
+        if (loginContainer) {
+            loginContainer.classList.add('login-entering');
+        }
+    } catch (animErr) {
+        console.warn('Warp animation note:', animErr);
     }
 
     setTimeout(() => {
         if (typeof callback === 'function') callback();
-    }, 680);
+    }, 380);
 }
 
 // Registered authorized personnel credentials with role mapping
@@ -1778,6 +1785,7 @@ const VALID_CREDENTIALS = [
     // 1. ADMIN CATEGORY (Full System Control)
     { username: 'admin', password: 'password123', category: 'ADMIN', role: 'Admin', displayName: 'System Administrator', department: 'Executive Operations', avatar: 'https://ui-avatars.com/api/?name=Admin&background=2563eb&color=fff' },
     { username: 'admin', password: 'admin123', category: 'ADMIN', role: 'Admin', displayName: 'System Administrator', department: 'Executive Operations', avatar: 'https://ui-avatars.com/api/?name=Admin&background=2563eb&color=fff' },
+    { username: 'admin', password: 'admin', category: 'ADMIN', role: 'Admin', displayName: 'System Administrator', department: 'Executive Operations', avatar: 'https://ui-avatars.com/api/?name=Admin&background=2563eb&color=fff' },
     { username: 'phaneendra', password: 'password123', category: 'ADMIN', role: 'Admin', displayName: 'Phaneendra Kumar (Team Lead)', department: 'System Architecture', avatar: 'https://ui-avatars.com/api/?name=Phaneendra+Kumar&background=f59e0b&color=fff' },
     { username: 'nistala', password: 'password123', category: 'ADMIN', role: 'Admin', displayName: 'Phaneendra Kumar (Team Lead)', department: 'System Architecture', avatar: 'https://ui-avatars.com/api/?name=Phaneendra+Kumar&background=f59e0b&color=fff' },
     { username: 'uday', password: 'password123', category: 'ADMIN', role: 'Admin', displayName: 'Uday Kiran (Developer)', department: 'Full Stack Engineering', avatar: 'https://ui-avatars.com/api/?name=Uday+Kiran&background=8b5cf6&color=fff' },
@@ -1786,6 +1794,7 @@ const VALID_CREDENTIALS = [
     // 2. DOCTOR CATEGORY (Clinical Practice Cockpit)
     { username: 'doctor', password: 'password123', category: 'DOCTOR', role: 'Doctor', doctorId: 'D001', displayName: 'Dr. Priya Sharma', department: 'Cardiology', avatar: 'https://ui-avatars.com/api/?name=Dr+Sharma&background=0284c7&color=fff' },
     { username: 'doctor', password: 'doctor123', category: 'DOCTOR', role: 'Doctor', doctorId: 'D001', displayName: 'Dr. Priya Sharma', department: 'Cardiology', avatar: 'https://ui-avatars.com/api/?name=Dr+Sharma&background=0284c7&color=fff' },
+    { username: 'doctor', password: 'doctor', category: 'DOCTOR', role: 'Doctor', doctorId: 'D001', displayName: 'Dr. Priya Sharma', department: 'Cardiology', avatar: 'https://ui-avatars.com/api/?name=Dr+Sharma&background=0284c7&color=fff' },
     { username: 'dr.sharma', password: 'password123', category: 'DOCTOR', role: 'Doctor', doctorId: 'D001', displayName: 'Dr. Priya Sharma', department: 'Cardiology', avatar: 'https://ui-avatars.com/api/?name=Dr+Sharma&background=0284c7&color=fff' },
     { username: 'dr sharma', password: 'password123', category: 'DOCTOR', role: 'Doctor', doctorId: 'D001', displayName: 'Dr. Priya Sharma', department: 'Cardiology', avatar: 'https://ui-avatars.com/api/?name=Dr+Sharma&background=0284c7&color=fff' },
     { username: 'dr.verma', password: 'password123', category: 'DOCTOR', role: 'Doctor', doctorId: 'D002', displayName: 'Dr. Rahul Verma', department: 'Orthopedics', avatar: 'https://ui-avatars.com/api/?name=Rahul+Verma&background=f59e0b&color=fff' },
@@ -1799,13 +1808,16 @@ const VALID_CREDENTIALS = [
     { username: 'reception', password: 'password123', category: 'STAFF', role: 'Receptionist', displayName: 'Ananya Desai (Receptionist)', department: 'Front Desk & Patient Admissions', avatar: 'https://ui-avatars.com/api/?name=Reception&background=10b981&color=fff' },
     { username: 'receptionist', password: 'password123', category: 'STAFF', role: 'Receptionist', displayName: 'Ananya Desai (Receptionist)', department: 'Front Desk & Patient Admissions', avatar: 'https://ui-avatars.com/api/?name=Reception&background=10b981&color=fff' },
     { username: 'reception', password: 'reception123', category: 'STAFF', role: 'Receptionist', displayName: 'Ananya Desai (Receptionist)', department: 'Front Desk & Patient Admissions', avatar: 'https://ui-avatars.com/api/?name=Reception&background=10b981&color=fff' },
+    { username: 'reception', password: 'reception', category: 'STAFF', role: 'Receptionist', displayName: 'Ananya Desai (Receptionist)', department: 'Front Desk & Patient Admissions', avatar: 'https://ui-avatars.com/api/?name=Reception&background=10b981&color=fff' },
     // Pharmacy
     { username: 'pharmacist', password: 'password123', category: 'STAFF', role: 'Pharmacist', displayName: 'Sushma Singh (Pharmacist)', department: 'Pharmacy & Drug Dispensary', avatar: 'https://ui-avatars.com/api/?name=Pharmacist&background=ec4899&color=fff' },
     { username: 'pharmacy', password: 'password123', category: 'STAFF', role: 'Pharmacist', displayName: 'Sushma Singh (Pharmacist)', department: 'Pharmacy & Drug Dispensary', avatar: 'https://ui-avatars.com/api/?name=Pharmacist&background=ec4899&color=fff' },
+    { username: 'pharmacist', password: 'pharmacist', category: 'STAFF', role: 'Pharmacist', displayName: 'Sushma Singh (Pharmacist)', department: 'Pharmacy & Drug Dispensary', avatar: 'https://ui-avatars.com/api/?name=Pharmacist&background=ec4899&color=fff' },
     // Lab Technician
     { username: 'pathologist', password: 'password123', category: 'STAFF', role: 'LabTechnician', displayName: 'Ravi Kumar (Lab Technologist)', department: 'Pathology Diagnostics', avatar: 'https://ui-avatars.com/api/?name=Pathologist&background=06b6d4&color=fff' },
     { username: 'lab', password: 'password123', category: 'STAFF', role: 'LabTechnician', displayName: 'Ravi Kumar (Lab Technologist)', department: 'Pathology Diagnostics', avatar: 'https://ui-avatars.com/api/?name=Pathologist&background=06b6d4&color=fff' },
-    { username: 'labtech', password: 'password123', category: 'STAFF', role: 'LabTechnician', displayName: 'Ravi Kumar (Lab Technologist)', department: 'Pathology Diagnostics', avatar: 'https://ui-avatars.com/api/?name=Pathologist&background=06b6d4&color=fff' }
+    { username: 'labtech', password: 'password123', category: 'STAFF', role: 'LabTechnician', displayName: 'Ravi Kumar (Lab Technologist)', department: 'Pathology Diagnostics', avatar: 'https://ui-avatars.com/api/?name=Pathologist&background=06b6d4&color=fff' },
+    { username: 'pathologist', password: 'pathologist', category: 'STAFF', role: 'LabTechnician', displayName: 'Ravi Kumar (Lab Technologist)', department: 'Pathology Diagnostics', avatar: 'https://ui-avatars.com/api/?name=Pathologist&background=06b6d4&color=fff' }
 ];
 
 window.VALID_CREDENTIALS = VALID_CREDENTIALS;
@@ -1817,7 +1829,7 @@ function showLoginModal(htmlContent) {
         overlay.id = 'loginModalOverlay';
         overlay.className = 'modal-overlay active';
         overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;background:rgba(0,0,0,0.85);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);display:flex;align-items:center;justify-content:center;z-index:999999;padding:20px;box-sizing:border-box;';
-        overlay.innerHTML = `<div class="login-popup-card" id="loginModalCard"><div id="loginModalContent"></div></div>`;
+        overlay.innerHTML = '<div class="login-popup-card" id="loginModalCard"><div id="loginModalContent"></div></div>';
         document.body.appendChild(overlay);
     }
     const content = document.getElementById('loginModalContent');
@@ -1827,6 +1839,7 @@ function showLoginModal(htmlContent) {
 }
 
 function closeLoginModal() {
+    isLoggingIn = false;
     const overlay = document.getElementById('loginModalOverlay');
     if (overlay) {
         overlay.classList.remove('active');
@@ -1840,6 +1853,7 @@ function closeLoginModal() {
 }
 
 function quickFillAndLogin(user, pass, role) {
+    isLoggingIn = false;
     closeLoginModal();
     const uInput = document.getElementById('username');
     const pInput = document.getElementById('password');
@@ -1861,7 +1875,11 @@ function quickFillAndLogin(user, pass, role) {
 }
 
 function handleLogin(e) {
-    if (e && e.preventDefault) e.preventDefault();
+    if (e) {
+        if (typeof e.preventDefault === 'function') e.preventDefault();
+        if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
+    if (isLoggingIn) return false;
 
     const userInputEl = document.getElementById('username');
     const passwordInputEl = document.getElementById('password');
@@ -1877,7 +1895,8 @@ function handleLogin(e) {
 
     // 1. Check if empty
     if (!userInput || !passwordInput) {
-        playSound('error');
+        isLoggingIn = false;
+        try { playSound('error'); } catch (_) {}
         if (!userInput) userInputEl?.classList.add('input-error');
         if (!passwordInput) passwordInputEl?.classList.add('input-error');
 
@@ -1912,7 +1931,8 @@ function handleLogin(e) {
 
     if (!matchedAccount) {
         // AUTHENTICATION FAILED!
-        playSound('error');
+        isLoggingIn = false;
+        try { playSound('error'); } catch (_) {}
         userInputEl?.classList.add('input-error');
         passwordInputEl?.classList.add('input-error');
 
@@ -1972,7 +1992,8 @@ function handleLogin(e) {
     }
 
     // 3. AUTHENTICATION SUCCESSFUL!
-    playSound('success');
+    isLoggingIn = true;
+    try { playSound('success'); } catch (_) {}
 
     // Save session in localStorage
     localStorage.setItem('hms_username', matchedAccount.displayName);
@@ -1989,44 +2010,57 @@ function handleLogin(e) {
     });
 
     // Display Success Hologram Popup
-    showLoginModal(`
-        <div style="text-align: center; padding: 10px 0;">
-            <div style="width: 76px; height: 76px; margin: 0 auto 16px; border-radius: 50%; background: rgba(16, 185, 129, 0.16); border: 2px solid #10b981; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(16, 185, 129, 0.5); animation: pulseGlow 1.5s infinite;">
-                <i class="fas fa-shield-check" style="font-size: 36px; color: #10b981;"></i>
+    try {
+        showLoginModal(`
+            <div style="text-align: center; padding: 10px 0;">
+                <div style="width: 76px; height: 76px; margin: 0 auto 16px; border-radius: 50%; background: rgba(16, 185, 129, 0.16); border: 2px solid #10b981; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(16, 185, 129, 0.5); animation: pulseGlow 1.5s infinite;">
+                    <i class="fas fa-shield-check" style="font-size: 36px; color: #10b981;"></i>
+                </div>
+                <div style="display: inline-block; padding: 3px 12px; background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 20px; color: #34d399; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+                    <i class="fas fa-badge-check"></i> Biometric & Credentials Verified
+                </div>
+                <h3 style="color: #ffffff; font-size: 1.35rem; font-weight: 700; margin-bottom: 6px;">Welcome Back!</h3>
+                <p style="color: #93c5fd; font-size: 1.05rem; font-weight: 600; margin-bottom: 6px;">${matchedAccount.displayName}</p>
+                <div style="margin-bottom: 16px; display: flex; gap: 8px; justify-content: center;">
+                    <span class="badge badge-info" style="font-size: 0.8rem; padding: 4px 12px;">Role: ${matchedAccount.role}</span>
+                    <span class="badge badge-success" style="font-size: 0.8rem; padding: 4px 12px;">Security: 256-bit AES</span>
+                </div>
+                
+                <div style="width: 100%; background: rgba(255, 255, 255, 0.08); height: 6px; border-radius: 6px; overflow: hidden; margin: 16px 0 10px; position: relative;">
+                    <div id="loginProgressBar" style="width: 25%; height: 100%; background: linear-gradient(90deg, #10b981, #38bdf8); border-radius: 6px; transition: width 0.35s ease-out; box-shadow: 0 0 10px #38bdf8;"></div>
+                </div>
+                <p style="color: #94a3b8; font-size: 0.82rem; margin: 0;">
+                    <i class="fas fa-circle-notch fa-spin" style="margin-right: 6px; color: #38bdf8;"></i> Launching Hospital Command Hub...
+                </p>
             </div>
-            <div style="display: inline-block; padding: 3px 12px; background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 20px; color: #34d399; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
-                <i class="fas fa-badge-check"></i> Biometric & Credentials Verified
-            </div>
-            <h3 style="color: #ffffff; font-size: 1.35rem; font-weight: 700; margin-bottom: 6px;">Welcome Back!</h3>
-            <p style="color: #93c5fd; font-size: 1.05rem; font-weight: 600; margin-bottom: 6px;">${matchedAccount.displayName}</p>
-            <div style="margin-bottom: 16px; display: flex; gap: 8px; justify-content: center;">
-                <span class="badge badge-info" style="font-size: 0.8rem; padding: 4px 12px;">Role: ${matchedAccount.role}</span>
-                <span class="badge badge-success" style="font-size: 0.8rem; padding: 4px 12px;">Security: 256-bit AES</span>
-            </div>
-            
-            <div style="width: 100%; background: rgba(255, 255, 255, 0.08); height: 6px; border-radius: 6px; overflow: hidden; margin: 16px 0 10px; position: relative;">
-                <div id="loginProgressBar" style="width: 15%; height: 100%; background: linear-gradient(90deg, #10b981, #38bdf8); border-radius: 6px; transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px #38bdf8;"></div>
-            </div>
-            <p style="color: #94a3b8; font-size: 0.82rem; margin: 0;">
-                <i class="fas fa-circle-notch fa-spin" style="margin-right: 6px; color: #38bdf8;"></i> Launching Hospital Command Hub...
-            </p>
-        </div>
-    `);
+        `);
+    } catch (_) {}
 
-    showToast(`Access Verified! Welcome ${matchedAccount.displayName}`, 'success');
+    try {
+        showToast(`Access Verified! Welcome ${matchedAccount.displayName}`, 'success');
+    } catch (_) {}
 
     // Smooth progress bar fill
     setTimeout(() => {
         const bar = document.getElementById('loginProgressBar');
         if (bar) bar.style.width = '100%';
-    }, 100);
+    }, 60);
+
+    let navigated = false;
+    const performRedirect = () => {
+        if (!navigated) {
+            navigated = true;
+            window.location.href = 'dashboard.html';
+        }
+    };
 
     // Warp sequence and redirect
     setTimeout(() => {
-        startHospitalWarpSequence(() => {
-            window.location.href = 'dashboard.html';
-        });
-    }, 750);
+        startHospitalWarpSequence(performRedirect);
+    }, 300);
+
+    // Guaranteed fallback redirection
+    setTimeout(performRedirect, 800);
 
     return false;
 }
