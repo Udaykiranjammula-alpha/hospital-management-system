@@ -69,6 +69,8 @@
                     <button class="btn-icon sound-toggle" onclick="toggleSound()" title="Toggle Audio Feedback"><i class="fas fa-volume-up"></i></button>
                     <button class="btn-icon wallpaper-toggle" onclick="cycleWallpaperMode()" title="Switch Wallpaper"><i class="fas fa-magic"></i></button>
                     <button class="btn-icon theme-toggle" onclick="toggleTheme()" title="Switch Glass Theme"><i class="fas fa-moon"></i></button>
+                    <!-- React 18 Architecture Badge Mount -->
+                    <div id="react-badge-mount"></div>
                     <div class="user-info" id="globalUserBadge">
                         <!-- Injected dynamically -->
                     </div>
@@ -321,6 +323,7 @@
     </div>
 
     <div id="toast-container"></div>
+    <script src="js/react-components.bundle.js"></script>
     <script src="js/app.js?v=9.0"></script>
 </body>
 </html>

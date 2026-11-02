@@ -24,3 +24,5 @@ Thumbs.db
 # Temporary archives
 *.zip
 *.tar.gz
+
+dist

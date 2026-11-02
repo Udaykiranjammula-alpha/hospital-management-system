@@ -1727,6 +1727,27 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (document.getElementById('doctorModal')) showAddDoctorModal();
         }, 200);
     }
+
+    // 8. Safe Check to Initialize MediCare React 18 & Hooks Component Architecture
+    try {
+        if (typeof window.mountReactWidgets === 'function') {
+            window.mountReactWidgets();
+        } else if (typeof mountReactWidgets === 'function') {
+            mountReactWidgets();
+        } else {
+            // Lazy load bundle if not loaded synchronously
+            const reactBundleScript = document.createElement('script');
+            reactBundleScript.src = 'js/react-components.bundle.js';
+            reactBundleScript.onload = () => {
+                if (typeof window.mountReactWidgets === 'function') {
+                    window.mountReactWidgets();
+                }
+            };
+            document.head.appendChild(reactBundleScript);
+        }
+    } catch (reactMountErr) {
+        console.warn('[MediCare React] Note on React initialization:', reactMountErr);
+    }
 });
 
 // ==========================================

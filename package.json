@@ -1,18 +1,34 @@
 {
   "name": "medicare-hospital-management-system",
   "version": "2.0.0",
-  "description": "MediCare HMS — Enterprise Glassmorphic Hospital Management System with Real-Time Analytics & EHR",
-  "main": "index.html",
+  "private": true,
+  "type": "module",
+  "description": "MediCare HMS - Apple Design Healthcare Platform with React, Vite & RBAC",
   "scripts": {
-    "start": "npx serve ."
+    "dev": "vite",
+    "build": "vite build --config vite.react.config.js && vite build",
+    "build:react": "vite build --config vite.react.config.js",
+    "preview": "vite preview",
+    "start": "vite"
   },
   "keywords": [
+    "react",
+    "vite",
     "hospital-management-system",
+    "apple-design",
     "healthcare-saas",
     "glassmorphism",
-    "ehr",
-    "vercel"
+    "rbac"
   ],
   "author": "MediCare Team",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.30.6"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.1.2",
+    "vite": "^8.3.5"
+  }
 }
