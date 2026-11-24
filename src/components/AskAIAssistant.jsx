@@ -359,7 +359,7 @@ export default function AskAIAssistant() {
   };
 
   // Hook 10: Dispatch user message and route to clinical answer
-  const handleSendMessage = useCallback((queryText) => {
+  const handleSendMessage = useCallback((queryText, forceKey = null) => {
     const textToSend = queryText || inputQuery;
     if (!textToSend.trim() || isStreaming) return;
 
@@ -380,7 +380,9 @@ export default function AskAIAssistant() {
     const activeKb = MULTILINGUAL_KNOWLEDGE_BASE[currentLang] || MULTILINGUAL_KNOWLEDGE_BASE['en-IN'];
     let responseText = '';
 
-    if (
+    if (forceKey && activeKb.knowledge && activeKb.knowledge[forceKey]) {
+      responseText = `${activeKb.knowledge[forceKey].title}\n\n${activeKb.knowledge[forceKey].body}`;
+    } else if (
       qLower.includes('stemi') || qLower.includes('chest pain') || qLower.includes('heart') || 
       qLower.includes('सीने') || qLower.includes('दर्द') || qLower.includes('గుండె') || qLower.includes('ఛాతీ')
     ) {
@@ -445,8 +447,8 @@ export default function AskAIAssistant() {
   // Quick triage chip click handler
   const handleChipClick = (key) => {
     const kb = MULTILINGUAL_KNOWLEDGE_BASE[currentLang] || MULTILINGUAL_KNOWLEDGE_BASE['en-IN'];
-    if (kb.knowledge[key]) {
-      handleSendMessage(kb.knowledge[key].title);
+    if (kb.knowledge && kb.knowledge[key]) {
+      handleSendMessage(kb.knowledge[key].title, key);
     }
   };
 

@@ -53,6 +53,23 @@ export default function LiveTelemetryMonitor({ patientId = 'BED-04' }) {
     simStateRef.current.bpm = heartRate;
   }, [heartRate]);
 
+  // Listen for real-time biometric webcam PPG synchronization
+  useEffect(() => {
+    const handleBiometricSync = (e) => {
+      if (e && e.detail && e.detail.bpm) {
+        setHeartRate(e.detail.bpm);
+        if (e.detail.spo2) {
+          const parsed = parseFloat(e.detail.spo2);
+          if (!isNaN(parsed)) setSpo2(parsed);
+        }
+      }
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('medicare_biometric_sync', handleBiometricSync);
+      return () => window.removeEventListener('medicare_biometric_sync', handleBiometricSync);
+    }
+  }, []);
+
   // Hook 3: useCallback for Web Audio API QRS Beep
   const playQRSBeep = useCallback((pitch = 880) => {
     if (!audioEnabled) return;

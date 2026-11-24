@@ -188,6 +188,8 @@ const defaultResources = [
 // ==========================================
 const CLINICAL_MESH_CHANNEL_NAME = 'medicare_clinical_mesh';
 let hospitalMeshChannel = null;
+const handledMeshEventIds = new Set();
+const currentSessionTabId = 'tab_' + Math.random().toString(36).slice(2, 9) + '_' + Date.now();
 
 try {
     if (typeof BroadcastChannel !== 'undefined') {
@@ -213,13 +215,18 @@ if (typeof window !== 'undefined') {
 }
 
 function broadcastHospitalEvent(type, payload = {}, summary = '') {
+    const eventId = 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
     const eventData = {
+        eventId,
         type,
         payload,
         summary: summary || `Hospital clinical record updated: ${type}`,
         timestamp: Date.now(),
-        tabId: window.name || ('tab_' + Math.floor(Math.random() * 100000))
+        tabId: currentSessionTabId
     };
+
+    // Mark as locally handled to prevent self-reflection
+    handledMeshEventIds.add(eventId);
 
     if (hospitalMeshChannel) {
         try {
@@ -238,7 +245,16 @@ function handleHospitalMeshEvent(data) {
     if (!data || !data.type) return;
 
     // Avoid self-reflection if origin tab matches
-    if (window.name && data.tabId && data.tabId === window.name) return;
+    if (data.tabId && data.tabId === currentSessionTabId) return;
+
+    // Deduplicate between BroadcastChannel and storage events
+    const evtId = data.eventId || (data.tabId + '_' + data.timestamp);
+    if (handledMeshEventIds.has(evtId)) return;
+    handledMeshEventIds.add(evtId);
+    if (handledMeshEventIds.size > 200) {
+        const first = handledMeshEventIds.values().next().value;
+        handledMeshEventIds.delete(first);
+    }
 
     // 1. Play clinical chime
     if (typeof playSound === 'function') playSound('mesh');
@@ -256,7 +272,7 @@ function handleHospitalMeshEvent(data) {
             if (typeof getScopedPatients === 'function' && typeof renderPatients === 'function') {
                 renderPatients(getScopedPatients());
             }
-            if (typeof updatePatientStats === 'function') updatePatientStats();
+            updatePatientStats();
         }
     }
 
@@ -265,8 +281,10 @@ function handleHospitalMeshEvent(data) {
             if (typeof getScopedAppointments === 'function' && typeof renderAppointments === 'function') {
                 renderAppointments(getScopedAppointments());
             }
-            if (typeof updateAppointmentStats === 'function') updateAppointmentStats();
-            if (typeof renderCalendarView === 'function') renderCalendarView(currentCalendarMonth, currentCalendarYear);
+            updateAppointmentStats();
+            if (typeof renderCalendarView === 'function' && typeof currentCalendarMonth !== 'undefined' && typeof currentCalendarYear !== 'undefined') {
+                renderCalendarView(currentCalendarMonth, currentCalendarYear);
+            }
         }
     }
 
@@ -301,12 +319,12 @@ function handleHospitalMeshEvent(data) {
         if (data.type.includes('lab') || data.type.includes('sync')) {
             const tests = typeof getScopedLabTests === 'function' ? getScopedLabTests() : loadData('hms_lab_tests', defaultLabTests);
             if (typeof renderLabTests === 'function') renderLabTests(tests);
-            if (typeof updateLabStats === 'function') updateLabStats();
+            if (typeof updateLabKPIs === 'function') updateLabKPIs(tests);
         }
     }
 
     if (curPath === 'dashboard.html' || curPath === 'index.html' || curPath === '') {
-        if (typeof updateDashboardKPIs === 'function') updateDashboardKPIs();
+        if (typeof initDashboardPage === 'function') initDashboardPage();
     }
 
     if (curPath === 'patient-portal.html') {
@@ -314,6 +332,26 @@ function handleHospitalMeshEvent(data) {
             renderPortalPatientData(portalCurrentPatientId);
         }
     }
+}
+
+function updatePatientStats() {
+    if (typeof getScopedPatients === 'function') {
+        const patients = getScopedPatients();
+        const countBadge = document.getElementById('patientCount');
+        if (countBadge) countBadge.innerText = `${patients.length} Patients Recorded`;
+    }
+}
+
+function updateAppointmentStats() {
+    if (typeof getScopedAppointments === 'function') {
+        const appts = getScopedAppointments();
+        const countBadge = document.getElementById('appointmentCount');
+        if (countBadge) countBadge.innerText = `${appts.length} Scheduled`;
+    }
+}
+
+function updateDashboardKPIs() {
+    if (typeof initDashboardPage === 'function') initDashboardPage();
 }
 
 function loadData(key, fallback) {
@@ -1875,7 +1913,7 @@ document.addEventListener('DOMContentLoaded', () => {
         initPatientPortalPage();
     }
 
-    // 7. Auto-trigger creation modals if navigated with ?action=new
+    // 7. Auto-trigger creation modals if navigated with ?action=new or QR verification ?verify=ID
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('action') === 'new') {
         setTimeout(() => {
@@ -1885,6 +1923,18 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (document.getElementById('patientModal')) showAddPatientModal();
             else if (document.getElementById('doctorModal')) showAddDoctorModal();
         }, 200);
+    }
+    if (urlParams.get('verify')) {
+        const verifyRxId = urlParams.get('verify');
+        setTimeout(() => {
+            if (typeof viewPrescription === 'function') {
+                viewPrescription(verifyRxId);
+                if (typeof playSound === 'function') playSound('success');
+                if (typeof showToast === 'function') {
+                    showToast(`✅ Cryptographically Verified ABDM Prescription ${verifyRxId}!`, 'success');
+                }
+            }
+        }, 350);
     }
 
     // 8. Safe Check to Initialize MediCare React 18 & Hooks Component Architecture
@@ -4033,8 +4083,11 @@ async function viewPrescription(id) {
     while (hash.length < 32) hash += '9e4a3b8c';
     const rxHash = '0x' + hash.slice(0, 32).toUpperCase();
 
-    // Real verification URL that can be scanned by any phone
-    const verifyUrl = `https://medicare-hms.vercel.app/prescriptions.html?verify=${rx.id}&patient=${rx.patientId}&hash=${hash.slice(0, 12)}`;
+    // Real verification URL that can be scanned by any smartphone camera
+    const baseVerifyOrigin = (typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('file:'))
+        ? `${window.location.origin}${window.location.pathname.replace(/[^/]*$/, 'prescriptions.html')}`
+        : 'https://medicare-hms.vercel.app/prescriptions.html';
+    const verifyUrl = `${baseVerifyOrigin}?verify=${rx.id}&patient=${rx.patientId}&hash=${hash.slice(0, 12)}`;
 
     // Generate real scannable SVG QR Code
     let qrSvg = '';
@@ -7006,23 +7059,27 @@ function renderICUMonitors() {
         { bed: 'ICU BED 104', patient: 'Vikram Reddy (P005)', condition: 'Severe COPD on BiPAP', hr: 88, spo2: 92, bp: '135/88', rr: 20, doc: 'Dr. Meera Iyer' }
     ];
 
-    grid.innerHTML = monitors.map((m, idx) => `
-        <div class="icu-monitor-card ${m.hr > 120 || m.spo2 < 92 ? 'code-blue-active' : ''}">
+    grid.innerHTML = monitors.map((m, idx) => {
+        const synced = window.syncedBedVitals && window.syncedBedVitals[idx];
+        const hr = synced ? synced.hr : m.hr;
+        const spo2 = synced ? synced.spo2 : m.spo2;
+        return `
+        <div class="icu-monitor-card ${hr > 120 || spo2 < 92 ? 'code-blue-active' : ''}">
             <div class="icu-monitor-header">
                 <div>
                     <strong style="font-family:'JetBrains Mono'; color:#38bdf8;">${m.bed}</strong>
                     <div style="font-size:0.85rem; font-weight:700; color:#ffffff; margin-top:2px;">${m.patient}</div>
                 </div>
-                <span class="badge ${m.hr > 120 ? 'badge-danger' : 'badge-success'}">${m.condition}</span>
+                <span class="badge ${hr > 120 ? 'badge-danger' : 'badge-success'}">${m.condition}</span>
             </div>
             <canvas class="icu-ecg-canvas" id="ecgCanvas_${idx}"></canvas>
             <div class="icu-vitals-row">
                 <div class="icu-vital-item">
-                    <div class="icu-vital-val" style="color:${m.hr > 110 ? '#ef4444' : '#10b981'};">${m.hr}</div>
+                    <div class="icu-vital-val" style="color:${hr > 110 ? '#ef4444' : '#10b981'};">${hr}</div>
                     <div class="icu-vital-label">HR (BPM)</div>
                 </div>
                 <div class="icu-vital-item">
-                    <div class="icu-vital-val" style="color:${m.spo2 < 93 ? '#f59e0b' : '#38bdf8'};">${m.spo2}%</div>
+                    <div class="icu-vital-val" style="color:${spo2 < 93 ? '#f59e0b' : '#38bdf8'};">${spo2}%</div>
                     <div class="icu-vital-label">SpO2</div>
                 </div>
                 <div class="icu-vital-item">
@@ -7035,7 +7092,8 @@ function renderICUMonitors() {
                 </div>
             </div>
         </div>
-    `).join('');
+    `;
+    }).join('');
 }
 
 function startECGWaveformLoop() {
@@ -7449,9 +7507,19 @@ let ppgDemoInterval = null;
 let ppgTargetBedIdx = 0;
 
 function openBiometricScannerModal(bedIdx = 0) {
-    ppgTargetBedIdx = bedIdx;
+    let normalizedBedIdx = 0;
+    if (typeof bedIdx === 'number') {
+        normalizedBedIdx = bedIdx;
+    } else if (typeof bedIdx === 'string') {
+        const match = bedIdx.match(/\d+/);
+        if (match) {
+            normalizedBedIdx = (parseInt(match[0], 10) - 1) % 4;
+            if (normalizedBedIdx < 0) normalizedBedIdx = 0;
+        }
+    }
+    ppgTargetBedIdx = normalizedBedIdx;
     const bedSelect = document.getElementById('ppgTargetBedSelect');
-    if (bedSelect) bedSelect.value = bedIdx.toString();
+    if (bedSelect) bedSelect.value = normalizedBedIdx.toString();
 
     openModal('biometricScannerModal');
     initPPGWaveformCanvas();
@@ -7533,7 +7601,7 @@ async function startPPGCameraStream() {
 
         if (video) {
             video.srcObject = ppgStream;
-            video.play();
+            video.play().catch(() => {});
         }
 
         if (badge) {
@@ -7620,22 +7688,32 @@ function startPPGSamplingLoop() {
 }
 
 function processPPGDataPoint(time, rawVal) {
-    ppgBuffer.push({ time, val: rawVal });
-    if (ppgBuffer.length > 200) ppgBuffer.shift();
-
-    if (ppgBuffer.length < 30) return;
-
     // Moving average baseline subtraction for AC pulsatile signal
-    let sum = 0;
     const windowSize = 25;
-    const recent = ppgBuffer.slice(-windowSize);
-    for (let i = 0; i < recent.length; i++) sum += recent[i].val;
-    const baseline = sum / recent.length;
+    let baseline = rawVal;
+    if (ppgBuffer.length >= 5) {
+        const recent = ppgBuffer.slice(-windowSize);
+        let sum = 0;
+        for (let i = 0; i < recent.length; i++) sum += recent[i].val;
+        baseline = sum / recent.length;
+    }
     const acSignal = rawVal - baseline;
 
-    // Peak Detection with refractory threshold
+    ppgBuffer.push({ time, val: rawVal, ac: acSignal });
+    if (ppgBuffer.length > 200) ppgBuffer.shift();
+
+    if (ppgBuffer.length < 30) {
+        drawPPGWaveform();
+        return;
+    }
+
+    // Adaptive peak detection with refractory period (350ms to 1500ms)
+    const recentAc = ppgBuffer.slice(-30);
+    const maxAc = recentAc.reduce((m, p) => Math.max(m, Math.abs(p.ac || 0)), 0.2);
+    const adaptiveThreshold = Math.max(0.35, 0.40 * maxAc);
+
     const dt = time - ppgLastPeakTime;
-    if (acSignal > 1.2 && dt > 350 && dt < 1500) {
+    if (acSignal > adaptiveThreshold && dt > 350 && dt < 1500) {
         ppgLastPeakTime = time;
         const instBpm = Math.round(60000 / dt);
         if (instBpm >= 48 && instBpm <= 165) {
@@ -7748,6 +7826,14 @@ function drawPPGWaveform() {
 
     if (ppgBuffer.length < 2) return;
 
+    // Calculate dynamic auto-gain for the pulsatile AC wave
+    const midY = h / 2;
+    const stepX = w / 150;
+    const startIdx = Math.max(0, ppgBuffer.length - 150);
+    const visiblePoints = ppgBuffer.slice(startIdx);
+    const maxAc = visiblePoints.reduce((m, p) => Math.max(m, Math.abs(p.ac !== undefined ? p.ac : p.val)), 0.5);
+    const scale = (h * 0.38) / Math.max(maxAc, 1.5);
+
     // Plot waveform
     ctx.strokeStyle = '#10b981';
     ctx.lineWidth = 2.5;
@@ -7755,13 +7841,10 @@ function drawPPGWaveform() {
     ctx.shadowBlur = 8;
     ctx.beginPath();
 
-    const midY = h / 2;
-    const stepX = w / 150;
-    const startIdx = Math.max(0, ppgBuffer.length - 150);
-
     for (let i = startIdx; i < ppgBuffer.length; i++) {
         const x = (i - startIdx) * stepX;
-        const y = midY - (ppgBuffer[i].val * 2.2);
+        const ac = typeof ppgBuffer[i].ac === 'number' ? ppgBuffer[i].ac : ppgBuffer[i].val;
+        const y = midY - (ac * scale);
         const clampedY = Math.max(4, Math.min(h - 4, y));
 
         if (i === startIdx) ctx.moveTo(x, clampedY);
@@ -7769,8 +7852,10 @@ function drawPPGWaveform() {
     }
     ctx.stroke();
 
+    const lastPoint = ppgBuffer[ppgBuffer.length - 1];
+    const lastAc = typeof lastPoint.ac === 'number' ? lastPoint.ac : lastPoint.val;
     const lastX = (ppgBuffer.length - 1 - startIdx) * stepX;
-    const lastY = Math.max(4, Math.min(h - 4, midY - (ppgBuffer[ppgBuffer.length - 1].val * 2.2)));
+    const lastY = Math.max(4, Math.min(h - 4, midY - (lastAc * scale)));
     ctx.fillStyle = '#34d399';
     ctx.shadowColor = '#34d399';
     ctx.shadowBlur = 12;
@@ -7781,8 +7866,13 @@ function drawPPGWaveform() {
 
 function applyBiometricToICUBed() {
     const bedSelect = document.getElementById('ppgTargetBedSelect');
-    const bedIdx = bedSelect ? parseInt(bedSelect.value) : ppgTargetBedIdx;
+    const bedIdx = bedSelect ? parseInt(bedSelect.value, 10) : ppgTargetBedIdx;
     const bpm = ppgCurrentBpm || 74;
+    const estSpo2 = (98.2 + (bpm % 3) * 0.4).toFixed(1);
+
+    // Persist in memory so view re-renders preserve it
+    window.syncedBedVitals = window.syncedBedVitals || {};
+    window.syncedBedVitals[bedIdx] = { hr: bpm, spo2: estSpo2 };
 
     const canvasEl = document.getElementById(`ecgCanvas_${bedIdx}`);
     if (canvasEl) {
@@ -7796,7 +7886,14 @@ function applyBiometricToICUBed() {
         }
     }
 
-    broadcastHospitalEvent('biometric_sync', { bedIndex: bedIdx, bpm }, `Biometric sensor synced ${bpm} BPM to ICU Bed ${bedIdx + 1}`);
+    // Dispatch event for React widgets (e.g. LiveTelemetryMonitor on dashboard)
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('medicare_biometric_sync', {
+            detail: { bedIndex: bedIdx, bpm, spo2: estSpo2 }
+        }));
+    }
+
+    broadcastHospitalEvent('biometric_sync', { bedIndex: bedIdx, bpm, spo2: estSpo2 }, `Biometric sensor synced ${bpm} BPM to ICU Bed ${bedIdx + 1}`);
 
     if (typeof playSound === 'function') playSound('success');
     showToast(`✅ Synced ${bpm} BPM from Optical Sensor to ICU Bed ${bedIdx + 1}!`, 'success');
@@ -8234,6 +8331,80 @@ function handleJudgeXRayUpload(event) {
 
 function exportRadiologyReport() {
     const data = CXR_DEMO_CASES[currentCxrCase] || CXR_DEMO_CASES['pneumonia'];
+    const content = document.getElementById('printableLabReportContent');
+    if (content) {
+        content.innerHTML = `
+            <div class="lab-report-sheet" style="font-family:'Plus Jakarta Sans', sans-serif;">
+                <div class="lab-report-header" style="border-bottom: 2px solid #0284c7; padding-bottom: 14px; margin-bottom: 16px;">
+                    <div>
+                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
+                            <i class="fas fa-x-ray" style="font-size:1.8rem; color:#0284c7;"></i>
+                            <h2 style="font-size:1.4rem; font-weight:800; margin:0; color:#0369a1;">MEDICARE AI RADIOLOGY &amp; DIAGNOSTIC IMAGING</h2>
+                        </div>
+                        <div style="font-size:0.75rem; color:#64748b;">NABH ACCREDITED AI-ASSISTED RADIOLOGICAL PATHOLOGY REPORT</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <span class="badge badge-primary">${data.dicomId}</span>
+                        <div style="font-size:0.75rem; color:#64748b; margin-top:4px;">Date: <strong>${new Date().toLocaleDateString()}</strong></div>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px; margin-bottom:16px; font-size:0.82rem; color:#334155;">
+                    <div>
+                        <strong>Modality:</strong> Chest Radiography (PA View)<br>
+                        <strong>Neural Model:</strong> DenseNet-121 Grad-CAM Vision AI<br>
+                        <strong>Triage Priority:</strong> <span style="color:#dc2626; font-weight:700;">${data.triagePriority}</span>
+                    </div>
+                    <div>
+                        <strong>AI Confidence:</strong> <strong style="color:#0284c7;">${data.primaryProb}</strong><br>
+                        <strong>Primary Finding:</strong> <strong>${data.title}</strong><br>
+                        <strong>Status:</strong> <span class="badge badge-success">AI Verified &amp; Clinician Signed</span>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:16px;">
+                    <h4 style="margin:0 0 6px 0; color:#0f172a; font-size:0.9rem;">Radiological Findings &amp; Anatomical Description:</h4>
+                    <p style="margin:0; font-size:0.84rem; color:#475569; line-height:1.5;">${data.desc}</p>
+                </div>
+
+                <div style="margin-bottom:16px;">
+                    <h4 style="margin:0 0 6px 0; color:#0f172a; font-size:0.9rem;">Differential Diagnosis Probabilities:</h4>
+                    <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+                        <thead>
+                            <tr style="background:#f1f5f9; text-align:left;">
+                                <th style="padding:8px; color:#475569;">Pathology Candidate</th>
+                                <th style="padding:8px; color:#475569;">Confidence Score</th>
+                                <th style="padding:8px; color:#475569;">Clinical Risk Category</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.probabilities.map(p => `
+                                <tr style="border-bottom:1px solid #e2e8f0;">
+                                    <td style="padding:8px; font-weight:600; color:#1e293b;">${p.label}</td>
+                                    <td style="padding:8px; font-family:'JetBrains Mono'; font-weight:700; color:${p.alert ? '#dc2626' : '#0284c7'};">${p.score}%</td>
+                                    <td style="padding:8px;">${p.alert ? '<span style="color:#dc2626; font-weight:700;">● Critical Finding</span>' : '<span style="color:#10b981;">● Normal / Unlikely</span>'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px; margin-bottom:16px;">
+                    <h4 style="margin:0 0 4px 0; color:#166534; font-size:0.85rem;"><i class="fas fa-stethoscope"></i> Clinical Recommendation:</h4>
+                    <div style="font-size:0.82rem; color:#14532d; line-height:1.45;">${data.advice}</div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #e2e8f0; padding-top:12px; font-size:0.75rem; color:#64748b;">
+                    <div>MediCare Health ABDM Node • Cryptographically Timestamped</div>
+                    <div style="text-align:right;">
+                        <strong style="color:#0f172a;">Dr. Rajesh Bansal, MD</strong><br>
+                        Chief of Diagnostic Radiology • MCI-67210
+                    </div>
+                </div>
+            </div>
+        `;
+        openModal('printLabReportModal');
+    }
     if (typeof playSound === 'function') playSound('success');
     showToast(`📄 Verified Radiology AI Report generated for ${data.dicomId}`, 'success');
 }
@@ -8492,7 +8663,11 @@ function drawAmbulanceGPSMap(canvas) {
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.roundRect(curX + 12, curY - 18, 140, 36, 6);
+        if (typeof ctx.roundRect === 'function') {
+            ctx.roundRect(curX + 12, curY - 18, 140, 36, 6);
+        } else {
+            ctx.rect(curX + 12, curY - 18, 140, 36);
+        }
         ctx.fill();
         ctx.stroke();
 

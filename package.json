@@ -8,7 +8,8 @@
   "scripts": {
     "start": "npx serve .",
     "dev": "vite build --config vite.react.config.js --watch",
-    "build:react": "vite build --config vite.react.config.js"
+    "build:react": "vite build --config vite.react.config.js",
+    "test": "node scripts/deep-verify-hms.js"
   },
   "keywords": [
     "react",

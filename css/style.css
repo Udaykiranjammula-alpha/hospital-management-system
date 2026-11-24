@@ -1840,8 +1840,17 @@ textarea {
     .btn,
     .btn-icon,
     .no-print,
+    .modal-close,
     .modal-footer,
-    #toast-container {
+    #toast-container,
+    #react-assistant-mount,
+    #react-badge-mount,
+    .ai-chatbot-container,
+    .medicare-ai-assistant-wrapper {
+        display: none !important;
+    }
+    body:has(.modal-overlay.active) .main-wrapper,
+    body:has(.modal-overlay.active) .main-content {
         display: none !important;
     }
     .main-content,
@@ -1849,7 +1858,11 @@ textarea {
         margin: 0 !important;
         padding: 0 !important;
     }
-    .modal-overlay {
+    /* Hide all inactive modal overlays so empty dialogs are not printed */
+    .modal-overlay:not(.active) {
+        display: none !important;
+    }
+    .modal-overlay.active {
         position: static !important;
         width: 100% !important;
         height: auto !important;
@@ -1859,7 +1872,8 @@ textarea {
         padding: 0 !important;
         display: block !important;
     }
-    .modal-overlay .modal {
+    .modal-overlay.active .modal,
+    .modal-overlay.active .modal-content {
         box-shadow: none !important;
         border: 1px solid #cbd5e1 !important;
         background: #ffffff !important;
@@ -1883,6 +1897,22 @@ textarea {
         background: #ffffff !important;
         color: #0f172a !important;
     }
+}
+
+/* Biometric Optical Sensor & Radiology Scanner Animations */
+@keyframes ppgPulseBorder {
+    0% { transform: scale(0.96); box-shadow: 0 0 10px rgba(56, 189, 248, 0.3); }
+    100% { transform: scale(1.04); box-shadow: 0 0 25px rgba(56, 189, 248, 0.7); }
+}
+
+@keyframes ppgHeartbeatAnim {
+    0%, 100% { transform: scale(1); opacity: 0.6; }
+    50% { transform: scale(1.5); opacity: 1; }
+}
+
+@keyframes cxrLaserSweep {
+    0% { top: 0%; opacity: 0.8; }
+    100% { top: 100%; opacity: 0.8; }
 }
 
 /* ==========================================
