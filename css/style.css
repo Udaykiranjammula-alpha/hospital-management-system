@@ -1897,6 +1897,26 @@ textarea {
         background: #ffffff !important;
         color: #0f172a !important;
     }
+    .abha-card-wrap {
+        background: #ffffff !important;
+        border: 2px solid #0f172a !important;
+        color: #0f172a !important;
+        box-shadow: none !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    .abha-card-wrap h2,
+    .abha-card-wrap h3,
+    .abha-card-wrap h4,
+    .abha-card-wrap span,
+    .abha-card-wrap strong,
+    .abha-card-wrap div {
+        color: #0f172a !important;
+    }
+    .abha-card-wrap .abha-number-pill {
+        color: #0f172a !important;
+        text-shadow: none !important;
+    }
 }
 
 /* Biometric Optical Sensor & Radiology Scanner Animations */
@@ -5196,7 +5216,8 @@ body[data-theme="frost-light"] .progress-track {
     color: #34d399;
 }
 
-.bed-status-pill.sanitizing {
+.bed-status-pill.sanitizing,
+.bed-status-pill.sanitizationinprogress {
     background: rgba(245, 158, 11, 0.18);
     border: 1px solid rgba(245, 158, 11, 0.45);
     color: #fbbf24;

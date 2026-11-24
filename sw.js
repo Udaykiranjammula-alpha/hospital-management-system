@@ -53,7 +53,7 @@ self.addEventListener('activate', (event) => {
     );
 });
 
-// Fetch: Stale-While-Revalidate with robust offline fallback
+// Fetch: Stale-While-Revalidate with robust offline fallback and query param resilience
 self.addEventListener('fetch', (event) => {
     const { request } = event;
 
@@ -64,20 +64,32 @@ self.addEventListener('fetch', (event) => {
 
     event.respondWith(
         caches.open(CACHE_NAME).then(async (cache) => {
-            const cachedResponse = await cache.match(request);
+            const cachedResponse = await cache.match(request, { ignoreSearch: true });
 
-            const fetchPromise = fetch(request).then((networkResponse) => {
+            if (cachedResponse) {
+                // Background revalidation
+                fetch(request).then((networkResponse) => {
+                    if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+                        cache.put(request, networkResponse.clone());
+                    }
+                }).catch(() => {});
+                return cachedResponse;
+            }
+
+            try {
+                const networkResponse = await fetch(request);
                 if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
                     cache.put(request, networkResponse.clone());
                 }
                 return networkResponse;
-            }).catch(() => {
-                // Return cached response if network fails
-                return cachedResponse;
-            });
-
-            // Return cached response instantly for fast load, falling back to network
-            return cachedResponse || fetchPromise;
+            } catch (err) {
+                // Offline HTML navigation fallback
+                if (request.mode === 'navigate' || (request.headers.get('accept') && request.headers.get('accept').includes('text/html'))) {
+                    const fallback = await cache.match('./dashboard.html', { ignoreSearch: true }) || await cache.match('./index.html', { ignoreSearch: true });
+                    if (fallback) return fallback;
+                }
+                throw err;
+            }
         })
     );
 });

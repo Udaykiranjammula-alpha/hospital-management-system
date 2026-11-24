@@ -251,6 +251,22 @@
         </div>
     </div>
 
+    <!-- MODAL: Apple Wallet Pass Modal -->
+    <div class="modal-overlay" id="appleWalletPassModal" style="display:none;">
+        <div class="modal" style="max-width: 440px; padding: 0; background: transparent; border: none; box-shadow: none;">
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
+                <button class="btn-icon" onclick="closeModal('appleWalletPassModal')" style="background: rgba(0,0,0,0.6); color: #fff; width: 36px; height: 36px;"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="appleWalletPassContent">
+                <!-- Dynamically populated by renderAppleWalletPass() -->
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 14px;">
+                <button class="btn btn-outline" style="flex: 1; background: rgba(0,0,0,0.5); color: #fff;" onclick="closeModal('appleWalletPassModal')">Close</button>
+                <button class="btn btn-primary" style="flex: 1;" onclick="downloadAppleWalletPass(activeAbhaPatientId)"><i class="fas fa-download"></i> Download Pass</button>
+            </div>
+        </div>
+    </div>
+
     <div id="toast-container"></div>
     <div id="react-assistant-mount"></div>
     <script src="js/react-components.bundle.js"></script>

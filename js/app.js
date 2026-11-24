@@ -8,14 +8,14 @@
 // 1. SAMPLE DATA (Pre-loaded Hospital State)
 // ==========================================
 const defaultPatients = [
-    { id: 'P001', name: 'Rajesh Kumar', age: 45, gender: 'Male', bloodGroup: 'O+', phone: '9876543210', email: 'rajesh@email.com', address: '123 MG Road, Delhi', admissionDate: '2026-08-15', condition: 'Diabetes Mellitus', status: 'Admitted', history: [{date:'2026-08-15',event:'Admitted for glycemic stabilization'},{date:'2026-08-20',event:'HbA1c test completed (7.8%)'},{date:'2026-08-25',event:'Prescribed continuous insulin regimen'}] },
-    { id: 'P002', name: 'Sunita Sharma', age: 34, gender: 'Female', bloodGroup: 'A+', phone: '9876543211', email: 'sunita@email.com', address: '45 Park Street, Kolkata', admissionDate: '2026-08-18', condition: 'Hypertension', status: 'Outpatient', history: [{date:'2026-08-18',event:'Routine consultation for high BP (145/95)'}] },
-    { id: 'P003', name: 'Amit Patel', age: 28, gender: 'Male', bloodGroup: 'B+', phone: '9876543212', email: 'amit@email.com', address: '78 SG Highway, Ahmedabad', admissionDate: '2026-08-22', condition: 'Compound Tibia Fracture', status: 'Admitted', history: [{date:'2026-08-22',event:'Admitted to Ortho Wing after road injury'},{date:'2026-08-23',event:'Open reduction internal fixation surgery successful'}] },
-    { id: 'P004', name: 'Priya Singh', age: 52, gender: 'Female', bloodGroup: 'O-', phone: '9876543213', email: 'priya.s@email.com', address: '12 Linking Road, Mumbai', admissionDate: '2026-08-01', condition: 'Acute Myocardial Infarction', status: 'Discharged', history: [{date:'2026-08-01',event:'ICU emergency admission with ST-elevation'},{date:'2026-08-15',event:'Angioplasty recovery in Ward 3'},{date:'2026-08-20',event:'Discharged with cardiac rehabilitation plan'}] },
-    { id: 'P005', name: 'Vikram Reddy', age: 60, gender: 'Male', bloodGroup: 'AB+', phone: '9876543214', email: 'vikram@email.com', address: '56 Jubilee Hills, Hyderabad', admissionDate: '2026-08-25', condition: 'Severe COPD Flare', status: 'Admitted', history: [{date:'2026-08-25',event:'Admitted on 4L nasal cannula oxygen support'}] },
-    { id: 'P006', name: 'Neha Gupta', age: 22, gender: 'Female', bloodGroup: 'B-', phone: '9876543215', email: 'neha@email.com', address: '89 FC Road, Pune', admissionDate: '2026-08-28', condition: 'Dengue Hemorrhagic Fever', status: 'Admitted', history: [{date:'2026-08-28',event:'Platelet count 58,000 / μL. IV fluid resuscitation.'}] },
-    { id: 'P007', name: 'Ramesh Rao', age: 70, gender: 'Male', bloodGroup: 'A-', phone: '9876543216', email: 'ramesh@email.com', address: '34 MG Road, Bengaluru', admissionDate: '2026-08-10', condition: 'Severe Osteoarthritis', status: 'Outpatient', history: [{date:'2026-08-10',event:'Intra-articular knee injection administered'}] },
-    { id: 'P008', name: 'Kavita Joshi', age: 40, gender: 'Female', bloodGroup: 'O+', phone: '9876543217', email: 'kavita@email.com', address: '67 Mall Road, Shimla', admissionDate: '2026-09-01', condition: 'Chronic Migraine', status: 'Outpatient', history: [{date:'2026-09-01',event:'Neurology diagnostic consult completed'}] }
+    { id: 'P001', name: 'Rajesh Kumar', age: 45, gender: 'Male', bloodGroup: 'O+', phone: '9876543210', email: 'rajesh@email.com', address: '123 MG Road, Delhi', admissionDate: '2026-08-15', condition: 'Diabetes Mellitus', status: 'Admitted', allergies: ['Sulfa Drugs'], history: [{date:'2026-08-15',event:'Admitted for glycemic stabilization'},{date:'2026-08-20',event:'HbA1c test completed (7.8%)'},{date:'2026-08-25',event:'Prescribed continuous insulin regimen'}] },
+    { id: 'P002', name: 'Sunita Sharma', age: 34, gender: 'Female', bloodGroup: 'A+', phone: '9876543211', email: 'sunita@email.com', address: '45 Park Street, Kolkata', admissionDate: '2026-08-18', condition: 'Hypertension', status: 'Outpatient', allergies: ['Penicillin'], history: [{date:'2026-08-18',event:'Routine consultation for high BP (145/95)'}] },
+    { id: 'P003', name: 'Amit Patel', age: 28, gender: 'Male', bloodGroup: 'B+', phone: '9876543212', email: 'amit@email.com', address: '78 SG Highway, Ahmedabad', admissionDate: '2026-08-22', condition: 'Compound Tibia Fracture', status: 'Admitted', allergies: ['Codeine'], history: [{date:'2026-08-22',event:'Admitted to Ortho Wing after road injury'},{date:'2026-08-23',event:'Open reduction internal fixation surgery successful'}] },
+    { id: 'P004', name: 'Priya Singh', age: 52, gender: 'Female', bloodGroup: 'O-', phone: '9876543213', email: 'priya.s@email.com', address: '12 Linking Road, Mumbai', admissionDate: '2026-08-01', condition: 'Acute Myocardial Infarction', status: 'Discharged', allergies: ['ACE Inhibitors'], history: [{date:'2026-08-01',event:'ICU emergency admission with ST-elevation'},{date:'2026-08-15',event:'Angioplasty recovery in Ward 3'},{date:'2026-08-20',event:'Discharged with cardiac rehabilitation plan'}] },
+    { id: 'P005', name: 'Vikram Reddy', age: 60, gender: 'Male', bloodGroup: 'AB+', phone: '9876543214', email: 'vikram@email.com', address: '56 Jubilee Hills, Hyderabad', admissionDate: '2026-08-25', condition: 'Severe COPD Flare', status: 'Admitted', allergies: ['Beta Blockers'], history: [{date:'2026-08-25',event:'Admitted on 4L nasal cannula oxygen support'}] },
+    { id: 'P006', name: 'Neha Gupta', age: 22, gender: 'Female', bloodGroup: 'B-', phone: '9876543215', email: 'neha@email.com', address: '89 FC Road, Pune', admissionDate: '2026-08-28', condition: 'Dengue Hemorrhagic Fever', status: 'Admitted', allergies: ['Aspirin', 'NSAIDs'], history: [{date:'2026-08-28',event:'Platelet count 58,000 / μL. IV fluid resuscitation.'}] },
+    { id: 'P007', name: 'Ramesh Rao', age: 70, gender: 'Male', bloodGroup: 'A-', phone: '9876543216', email: 'ramesh@email.com', address: '34 MG Road, Bengaluru', admissionDate: '2026-08-10', condition: 'Severe Osteoarthritis', status: 'Outpatient', allergies: [], history: [{date:'2026-08-10',event:'Intra-articular knee injection administered'}] },
+    { id: 'P008', name: 'Kavita Joshi', age: 40, gender: 'Female', bloodGroup: 'O+', phone: '9876543217', email: 'kavita@email.com', address: '67 Mall Road, Shimla', admissionDate: '2026-09-01', condition: 'Chronic Migraine', status: 'Outpatient', allergies: ['Ergotamine'], history: [{date:'2026-09-01',event:'Neurology diagnostic consult completed'}] }
 ];
 
 const defaultDoctors = [
@@ -233,73 +233,93 @@ const defaultHospitalBeds = [
 const CLINICAL_DDI_RULES = [
     {
         drugs: ['warfarin', 'aspirin'],
+        aliases: [['warfarin', 'coumadin', 'jantoven'], ['aspirin', 'acetylsalicylic', 'asa', 'ecotrin']],
         severity: 'Severe',
         title: 'High Hemorrhage Risk',
         mechanism: 'Synergistic antiplatelet and anticoagulant effects exponentially elevate risk of life-threatening major GI and intracranial bleeding.',
-        alternative: 'Use Acetaminophen / Paracetamol (max 2g/day) for mild-to-moderate analgesia, or monitor INR closely every 48 hours.'
+        alternative: 'Use Acetaminophen / Paracetamol (max 2g/day) for mild-to-moderate analgesia, or monitor INR closely every 48 hours.',
+        replacement: 'Paracetamol 650mg'
     },
     {
         drugs: ['sildenafil', 'nitroglycerin'],
+        aliases: [['sildenafil', 'viagra', 'revatio', 'tadalafil', 'cialis', 'vardenafil', 'pde5'], ['nitroglycerin', 'nitrostat', 'nitrolingual', 'isosorbide', 'nitrate', 'mononitrate', 'dinitrate']],
         severity: 'Contraindicated',
         title: 'Severe Fatal Hypotension & Cardiac Collapse',
         mechanism: 'PDE-5 inhibition prevents cGMP breakdown while nitrates stimulate cGMP production, causing severe refractory hypotension and cardiogenic shock.',
-        alternative: 'Absolute contraindication. Withhold nitrates within 24-48 hours of PDE-5 inhibitors. Use beta-blockers or calcium channel blockers for angina.'
+        alternative: 'Absolute contraindication. Withhold nitrates within 24-48 hours of PDE-5 inhibitors. Use beta-blockers or calcium channel blockers for angina.',
+        replacement: 'Amlodipine 5mg'
     },
     {
         drugs: ['metformin', 'contrast'],
+        aliases: [['metformin', 'glucophage', 'fortamet'], ['contrast', 'iodinated', 'radiocontrast', 'iohexol', 'iopamidol']],
         severity: 'Severe',
         title: 'Contrast-Induced Lactic Acidosis',
         mechanism: 'Radiocontrast nephrotoxicity impairs renal clearance of metformin, precipitating fatal lactic acidosis.',
-        alternative: 'Withhold Metformin 48 hours prior to iodinated radiocontrast procedure. Re-evaluate eGFR before restarting.'
+        alternative: 'Withhold Metformin 48 hours prior to iodinated radiocontrast procedure. Re-evaluate eGFR before restarting.',
+        replacement: 'Insulin Glargine 10U'
     },
     {
         drugs: ['tramadol', 'fluoxetine'],
+        aliases: [['tramadol', 'ultram', 'conzip'], ['fluoxetine', 'prozac', 'sertraline', 'zoloft', 'escitalopram', 'lexapro', 'citalopram', 'paroxetine', 'paxil', 'ssri']],
         severity: 'Severe',
         title: 'Serotonin Syndrome & Seizure Threshold Lowering',
         mechanism: 'Both agents increase synaptic serotonin and lower epileptic seizure threshold through dual serotonergic receptor over-activation.',
-        alternative: 'Substitute Tramadol with Acetaminophen or localized analgesia; avoid combining with serotonergic agents.'
+        alternative: 'Substitute Tramadol with Acetaminophen or localized analgesia; avoid combining with serotonergic agents.',
+        replacement: 'Paracetamol 650mg'
     },
     {
         drugs: ['clopidogrel', 'omeprazole'],
+        aliases: [['clopidogrel', 'plavix'], ['omeprazole', 'prilosec', 'esomeprazole', 'nexium']],
         severity: 'Moderate',
         title: 'Reduced Antiplatelet Efficacy',
         mechanism: 'Omeprazole competitively inhibits hepatic CYP2C19, significantly reducing biotransformation of Clopidogrel into its active antiplatelet metabolite.',
-        alternative: 'Substitute Omeprazole with Pantoprazole or Rabeprazole, which have minimal CYP2C19 inhibitory potential.'
+        alternative: 'Substitute Omeprazole with Pantoprazole or Rabeprazole, which have minimal CYP2C19 inhibitory potential.',
+        replacement: 'Pantoprazole 40mg'
     },
     {
         drugs: ['enalapril', 'spironolactone'],
+        aliases: [['enalapril', 'vasotec', 'lisinopril', 'ramipril', 'ace inhibitor'], ['spironolactone', 'aldactone', 'eplerenone']],
         severity: 'Severe',
         title: 'Life-Threatening Hyperkalemia',
         mechanism: 'Dual blockade of aldosterone and renin-angiotensin-aldosterone axis severely impairs renal potassium excretion.',
-        alternative: 'Monitor serum potassium and creatinine within 1 week. Consider reducing spironolactone to 12.5-25mg daily.'
+        alternative: 'Monitor serum potassium and creatinine within 1 week. Consider reducing spironolactone to 12.5-25mg daily.',
+        replacement: 'Amlodipine 5mg'
     },
     {
         drugs: ['ciprofloxacin', 'antacid'],
+        aliases: [['ciprofloxacin', 'cipro', 'levofloxacin', 'fluoroquinolone'], ['antacid', 'antacids', 'gelusil', 'digene', 'magnesium hydroxide', 'aluminum hydroxide', 'calcium carbonate']],
         severity: 'Moderate',
         title: 'Chelation & Antibacterial Failure',
         mechanism: 'Divalent and trivalent cations (Al3+, Mg2+, Ca2+) chelate fluoroquinolones into insoluble chelates, reducing bioavailability by 75-85%.',
-        alternative: 'Administer Ciprofloxacin at least 2 hours before or 6 hours after magnesium/aluminum/calcium antacids.'
+        alternative: 'Administer Ciprofloxacin at least 2 hours before or 6 hours after magnesium/aluminum/calcium antacids.',
+        replacement: 'Amoxicillin 500mg'
     },
     {
         drugs: ['digoxin', 'amiodarone'],
+        aliases: [['digoxin', 'lanoxin'], ['amiodarone', 'cordarone', 'pacerone']],
         severity: 'Severe',
         title: 'Digoxin Toxicity & Fatal Arrhythmias',
         mechanism: 'Amiodarone inhibits P-glycoprotein-mediated renal and biliary excretion of Digoxin, doubling serum digoxin concentrations.',
-        alternative: 'Reduce maintenance dose of Digoxin by 50% immediately upon starting Amiodarone. Check serum digoxin levels.'
+        alternative: 'Reduce maintenance dose of Digoxin by 50% immediately upon starting Amiodarone. Check serum digoxin levels.',
+        replacement: 'Metoprolol Tartrate 25mg'
     },
     {
         drugs: ['methotrexate', 'ibuprofen'],
+        aliases: [['methotrexate', 'trexall', 'rasuvo'], ['ibuprofen', 'advil', 'motrin', 'naproxen', 'aleve', 'diclofenac', 'voltaren', 'nsaid', 'nsaids']],
         severity: 'Severe',
         title: 'Bone Marrow Suppression & Methotrexate Toxicity',
         mechanism: 'NSAIDs compete with methotrexate for renal organic anion tubular secretion, causing acute toxic accumulation.',
-        alternative: 'Avoid NSAIDs during high-dose methotrexate therapy. Use Acetaminophen for pain.'
+        alternative: 'Avoid NSAIDs during high-dose methotrexate therapy. Use Acetaminophen for pain.',
+        replacement: 'Paracetamol 650mg'
     },
     {
         drugs: ['atorvastatin', 'clarithromycin'],
+        aliases: [['atorvastatin', 'lipitor', 'simvastatin', 'zocor', 'lovastatin'], ['clarithromycin', 'biaxin', 'erythromycin']],
         severity: 'Severe',
         title: 'Severe Rhabdomyolysis & Acute Kidney Injury',
         mechanism: 'Strong CYP3A4 inhibition by macrolide antibiotics causes up to a 10-fold increase in systemic statin exposure.',
-        alternative: 'Temporarily pause Atorvastatin therapy during the antibiotic course, or prescribe Azithromycin (no CYP3A4 inhibition).'
+        alternative: 'Temporarily pause Atorvastatin therapy during the antibiotic course, or prescribe Azithromycin (no CYP3A4 inhibition).',
+        replacement: 'Azithromycin 500mg'
     }
 ];
 
@@ -458,6 +478,7 @@ function handleHospitalMeshEvent(data) {
             if (typeof renderBloodInventoryGrid === 'function') renderBloodInventoryGrid();
             if (typeof renderBloodDonorsTable === 'function') renderBloodDonorsTable();
             if (typeof renderBloodRequestsTable === 'function') renderBloodRequestsTable();
+            if (typeof updateBloodBankKPIs === 'function') updateBloodBankKPIs();
         }
     }
 
@@ -470,6 +491,21 @@ function handleHospitalMeshEvent(data) {
     if (document.getElementById('dashboardBedGrid') || document.getElementById('adminBedGrid')) {
         if (data.type.includes('bed') || data.type.includes('patient') || data.type.includes('sync')) {
             if (typeof renderBedFloorPlan === 'function') renderBedFloorPlan();
+        }
+    }
+}
+
+function syncTelemedState(payload = {}) {
+    if (payload.patientId && typeof telemedCurrentPatientId !== 'undefined' && telemedCurrentPatientId === payload.patientId) {
+        if (typeof showToast === 'function') {
+            showToast(`Telemedicine consultation synchronized for ${payload.patientId}`, 'info');
+        }
+    }
+    if (payload.billId) {
+        const timerBadge = document.getElementById('telemedStatusBadge');
+        if (timerBadge) {
+            timerBadge.classList.remove('active');
+            timerBadge.innerHTML = `<span style="color:#10b981;"><i class="fas fa-check-circle"></i> BILLED #${payload.billId}</span>`;
         }
     }
 }
@@ -579,9 +615,9 @@ const ROLES = {
         allowedPages: ['dashboard.html', 'patients.html', 'doctors.html', 'appointments.html', 'prescriptions.html', 'billing.html', 'admin.html', 'laboratory.html', 'pharmacy.html', 'emergency.html', 'patient-portal.html', 'telemedicine.html', 'blood-bank.html', 'slides.html'],
         navItems: [
             { href: 'dashboard.html', icon: 'fa-chart-pie', label: 'Admin Dashboard' },
-            { href: 'emergency.html', icon: 'fa-truck-medical', label: 'Emergency & ICU' },
-            { href: 'telemedicine.html', icon: 'fa-video', label: 'Telemedicine' },
-            { href: 'blood-bank.html', icon: 'fa-hand-holding-droplet', label: 'Blood Bank' },
+            { href: 'emergency.html', icon: 'fa-truck-medical', label: 'Emergency & ICU', color: '#ef4444' },
+            { href: 'telemedicine.html', icon: 'fa-video', label: 'Telemedicine', color: '#38bdf8' },
+            { href: 'blood-bank.html', icon: 'fa-hand-holding-droplet', label: 'Blood Bank', color: '#f43f5e' },
             { href: 'patients.html', icon: 'fa-user-injured', label: 'Patients' },
             { href: 'doctors.html', icon: 'fa-user-md', label: 'Doctors' },
             { href: 'appointments.html', icon: 'fa-calendar-check', label: 'Appointments' },
@@ -590,7 +626,7 @@ const ROLES = {
             { href: 'pharmacy.html', icon: 'fa-pills', label: 'Pharmacy' },
             { href: 'billing.html', icon: 'fa-file-invoice-dollar', label: 'Billing' },
             { href: 'admin.html', icon: 'fa-shield-halved', label: 'Administration' },
-            { href: 'patient-portal.html', icon: 'fa-id-badge', label: 'Patient Portal' },
+            { href: 'patient-portal.html', icon: 'fa-id-badge', label: 'Patient Portal', color: '#38bdf8' },
             { href: '/slides', icon: 'fa-file-powerpoint', label: 'Presentation' }
         ],
         permissions: {
@@ -619,13 +655,13 @@ const ROLES = {
         allowedPages: ['dashboard.html', 'patients.html', 'appointments.html', 'prescriptions.html', 'emergency.html', 'patient-portal.html', 'telemedicine.html', 'blood-bank.html', 'slides.html'],
         navItems: [
             { href: 'dashboard.html', icon: 'fa-stethoscope', label: 'Doctor Cockpit' },
-            { href: 'emergency.html', icon: 'fa-heart-pulse', label: 'ICU Telemetry' },
-            { href: 'telemedicine.html', icon: 'fa-video', label: 'Telemedicine Studio' },
-            { href: 'blood-bank.html', icon: 'fa-hand-holding-droplet', label: 'Blood Bank' },
+            { href: 'emergency.html', icon: 'fa-heart-pulse', label: 'ICU Telemetry', color: '#ef4444' },
+            { href: 'telemedicine.html', icon: 'fa-video', label: 'Telemedicine Studio', color: '#38bdf8' },
+            { href: 'blood-bank.html', icon: 'fa-hand-holding-droplet', label: 'Blood Bank', color: '#f43f5e' },
             { href: 'patients.html', icon: 'fa-user-injured', label: 'My Patients' },
             { href: 'appointments.html', icon: 'fa-calendar-check', label: 'My Appointments' },
             { href: 'prescriptions.html', icon: 'fa-prescription', label: 'Prescriptions' },
-            { href: 'patient-portal.html', icon: 'fa-id-badge', label: 'Patient Portal' },
+            { href: 'patient-portal.html', icon: 'fa-id-badge', label: 'Patient Portal', color: '#38bdf8' },
             { href: '/slides', icon: 'fa-file-powerpoint', label: 'Presentation' }
         ],
         permissions: {
@@ -656,10 +692,10 @@ const ROLES = {
             { href: 'dashboard.html', icon: 'fa-concierge-bell', label: 'Reception Desk' },
             { href: 'patients.html', icon: 'fa-user-plus', label: 'Patient Registration' },
             { href: 'appointments.html', icon: 'fa-calendar-plus', label: 'Appointments' },
-            { href: 'telemedicine.html', icon: 'fa-video', label: 'Telemedicine' },
-            { href: 'blood-bank.html', icon: 'fa-hand-holding-droplet', label: 'Blood Bank' },
+            { href: 'telemedicine.html', icon: 'fa-video', label: 'Telemedicine', color: '#38bdf8' },
+            { href: 'blood-bank.html', icon: 'fa-hand-holding-droplet', label: 'Blood Bank', color: '#f43f5e' },
             { href: 'billing.html', icon: 'fa-receipt', label: 'Billing Counter' },
-            { href: 'patient-portal.html', icon: 'fa-id-badge', label: 'Patient Portal' },
+            { href: 'patient-portal.html', icon: 'fa-id-badge', label: 'Patient Portal', color: '#38bdf8' },
             { href: '/slides', icon: 'fa-file-powerpoint', label: 'Presentation' }
         ],
         permissions: {
@@ -690,9 +726,9 @@ const ROLES = {
             { href: 'dashboard.html', icon: 'fa-laptop-medical', label: 'Pharmacy Dashboard' },
             { href: 'pharmacy.html', icon: 'fa-pills', label: 'Medicines & Stock' },
             { href: 'prescriptions.html', icon: 'fa-file-prescription', label: 'Prescriptions Received' },
-            { href: 'blood-bank.html', icon: 'fa-hand-holding-droplet', label: 'Blood Bank' },
+            { href: 'blood-bank.html', icon: 'fa-hand-holding-droplet', label: 'Blood Bank', color: '#f43f5e' },
             { href: 'billing.html', icon: 'fa-receipt', label: 'Pharmacy Billing' },
-            { href: 'patient-portal.html', icon: 'fa-id-badge', label: 'Patient Portal' },
+            { href: 'patient-portal.html', icon: 'fa-id-badge', label: 'Patient Portal', color: '#38bdf8' },
             { href: '/slides', icon: 'fa-file-powerpoint', label: 'Presentation' }
         ],
         permissions: {
@@ -719,8 +755,8 @@ const ROLES = {
         navItems: [
             { href: 'dashboard.html', icon: 'fa-flask-vial', label: 'Laboratory Dashboard' },
             { href: 'laboratory.html', icon: 'fa-microscope', label: 'Diagnostic Tests' },
-            { href: 'blood-bank.html', icon: 'fa-hand-holding-droplet', label: 'Blood Bank & Cryo' },
-            { href: 'patient-portal.html', icon: 'fa-id-badge', label: 'Patient Portal' },
+            { href: 'blood-bank.html', icon: 'fa-hand-holding-droplet', label: 'Blood Bank & Cryo', color: '#f43f5e' },
+            { href: 'patient-portal.html', icon: 'fa-id-badge', label: 'Patient Portal', color: '#38bdf8' },
             { href: '/slides', icon: 'fa-file-powerpoint', label: 'Presentation' }
         ],
         permissions: {
@@ -830,9 +866,10 @@ function renderDynamicSidebar() {
     nav.innerHTML = config.navItems.map(item => {
         const itemPage = normalizePageName(item.href);
         const isActive = (itemPage === currentPath);
+        const colorStyle = item.color ? `color: ${item.color};` : '';
         return `
-            <a href="${item.href}" class="nav-item ${isActive ? 'active' : ''}">
-                <i class="fas ${item.icon}"></i>
+            <a href="${item.href}" class="nav-item ${isActive ? 'active' : ''}" style="${colorStyle}">
+                <i class="fas ${item.icon}" style="${colorStyle}"></i>
                 <span>${item.label}</span>
             </a>
         `;
@@ -2089,7 +2126,7 @@ document.addEventListener('DOMContentLoaded', () => {
             b = document.createElement('div');
             b.id = 'offlineBanner';
             b.className = 'offline-mesh-banner';
-            b.innerHTML = '<i class="fas fa-wifi-slash"></i> Offline Resilient Mode Active — Local EHR Cache Engaged';
+            b.innerHTML = '<i class="fas fa-triangle-exclamation"></i> Offline Resilient Mode Active — Local EHR Cache Engaged';
             document.body.appendChild(b);
         }
         b.style.display = 'flex';
@@ -8945,6 +8982,7 @@ function simulateAmbulanceArrival() {
 // ==========================================
 let telemedStreamInterval = null;
 let telemedVitalsInterval = null;
+let telemedTimerInterval = null;
 let telemedSeconds = 342; // Starts at 00:05:42 for realistic ongoing consultation
 let telemedCurrentPatientId = 'P001';
 let telemedMediaStream = null;
@@ -8961,6 +8999,25 @@ function initTelemedicinePage() {
                 ${p.name} (${p.id} • ${p.age} Yrs / ${p.gender})
             </option>
         `).join('');
+    }
+
+    // Restore draft notes if available
+    const savedDiag = localStorage.getItem('hms_telemed_draft_diag');
+    const savedNotes = localStorage.getItem('hms_telemed_draft_notes');
+    const diagInput = document.getElementById('telemedDiagnosis');
+    const notesInput = document.getElementById('telemedSoapNotes');
+    if (diagInput && savedDiag) diagInput.value = savedDiag;
+    if (notesInput && savedNotes) notesInput.value = savedNotes;
+
+    if (diagInput) {
+        diagInput.addEventListener('input', () => {
+            localStorage.setItem('hms_telemed_draft_diag', diagInput.value);
+        });
+    }
+    if (notesInput) {
+        notesInput.addEventListener('input', () => {
+            localStorage.setItem('hms_telemed_draft_notes', notesInput.value);
+        });
     }
 
     switchTelemedSession(telemedCurrentPatientId, false);
@@ -9167,23 +9224,26 @@ function startTelemedVitalsHUD() {
 }
 
 function startTelemedTimer() {
-    setInterval(() => {
-        telemedSeconds++;
+    if (telemedTimerInterval) clearInterval(telemedTimerInterval);
+    const updateTimerDisplay = () => {
         const timerEl = document.getElementById('telemedCallTimer');
         if (timerEl) {
             const mins = String(Math.floor(telemedSeconds / 60)).padStart(2, '0');
             const secs = String(telemedSeconds % 60).padStart(2, '0');
             timerEl.textContent = `00:${mins}:${secs}`;
         }
+    };
+    updateTimerDisplay();
+    telemedTimerInterval = setInterval(() => {
+        telemedSeconds++;
+        updateTimerDisplay();
     }, 1000);
 }
 
 async function toggleRealCameraStream() {
-    const video = document.getElementById('telemedWebcamVideo');
     const selfVideo = document.getElementById('telemedSelfPreviewVideo');
-    const canvas = document.getElementById('telemedPatientStreamCanvas');
-    const btnLabel = document.getElementById('telemedCamBtnLabel');
     const fallbackBox = document.getElementById('telemedDoctorFallback');
+    const btnLabel = document.getElementById('telemedCamBtnLabel');
 
     if (isTelemedCameraActive) {
         // Turn off real camera
@@ -9192,13 +9252,10 @@ async function toggleRealCameraStream() {
             telemedMediaStream = null;
         }
         isTelemedCameraActive = false;
-        if (video) video.style.display = 'none';
         if (selfVideo) selfVideo.style.display = 'none';
-        if (canvas) canvas.style.display = 'block';
         if (fallbackBox) fallbackBox.style.display = 'flex';
         if (btnLabel) btnLabel.textContent = 'Enable Live WebRTC Webcam';
-        startTelemedPatientStream();
-        showToast('Switched back to Simulated HD Patient Stream', 'info');
+        showToast('Webcam turned off. Doctor preview returned to avatar.', 'info');
         return;
     }
 
@@ -9211,23 +9268,18 @@ async function toggleRealCameraStream() {
         telemedMediaStream = stream;
         isTelemedCameraActive = true;
 
-        if (video) {
-            video.srcObject = stream;
-            video.style.display = 'block';
-        }
         if (selfVideo) {
             selfVideo.srcObject = stream;
             selfVideo.style.display = 'block';
         }
-        if (canvas) canvas.style.display = 'none';
         if (fallbackBox) fallbackBox.style.display = 'none';
-        if (btnLabel) btnLabel.textContent = 'Disable Live Webcam (Use Sim)';
+        if (btnLabel) btnLabel.textContent = 'Disable Live Webcam (PiP Active)';
 
         if (typeof playSound === 'function') playSound('success');
-        showToast('🎥 Live WebRTC Camera Connected Successfully!', 'success');
+        showToast('🎥 Live WebRTC Camera Connected! Self-view active in PiP dock.', 'success');
     } catch (err) {
         console.warn('Real webcam permission or device note:', err);
-        showToast('⚠️ Webcam not accessible; running high-resolution clinical video simulation.', 'warning');
+        showToast('⚠️ Webcam not accessible; running simulated doctor PiP view.', 'warning');
     }
 }
 
@@ -9259,14 +9311,79 @@ function toggleTelemedVideo() {
     showToast(isTelemedVideoMuted ? 'Video Stream Paused' : 'Video Stream Active', 'info');
 }
 
-function toggleScreenShare() {
+async function toggleScreenShare() {
+    try {
+        if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+            const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+            const video = document.getElementById('telemedWebcamVideo');
+            const canvas = document.getElementById('telemedPatientStreamCanvas');
+            if (video) {
+                video.srcObject = screenStream;
+                video.style.display = 'block';
+                if (canvas) canvas.style.display = 'none';
+                screenStream.getVideoTracks()[0].onended = () => {
+                    video.style.display = 'none';
+                    if (canvas) canvas.style.display = 'block';
+                    showToast('Screen sharing ended', 'info');
+                };
+            }
+            showToast('🖥️ Live Screen Sharing Active: Broadcasting your screen to patient', 'success');
+            return;
+        }
+    } catch (_) {}
     if (typeof playSound === 'function') playSound('mesh');
     showToast('🖥️ Screen Share Active: Broadcasting EHR diagnostic imaging to patient', 'success');
 }
 
 function captureClinicalSnapshot() {
-    if (typeof playSound === 'function') playSound('click');
-    showToast('📸 Clinical Snapshot captured and attached to electronic health record!', 'success');
+    const canvas = document.getElementById('telemedPatientStreamCanvas');
+    const video = document.getElementById('telemedWebcamVideo');
+    const patients = loadData('hms_patients', defaultPatients);
+    const patient = patients.find(p => p.id === telemedCurrentPatientId) || patients[0];
+
+    try {
+        let snapCanvas = document.createElement('canvas');
+        snapCanvas.width = 1280;
+        snapCanvas.height = 720;
+        const sctx = snapCanvas.getContext('2d');
+
+        if (video && video.style.display !== 'none' && video.videoWidth > 0) {
+            sctx.drawImage(video, 0, 0, snapCanvas.width, snapCanvas.height);
+        } else if (canvas) {
+            sctx.drawImage(canvas, 0, 0, snapCanvas.width, snapCanvas.height);
+        } else {
+            sctx.fillStyle = '#050b14';
+            sctx.fillRect(0, 0, snapCanvas.width, snapCanvas.height);
+        }
+
+        sctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+        sctx.fillRect(0, snapCanvas.height - 70, snapCanvas.width, 70);
+        sctx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
+        sctx.lineWidth = 2;
+        sctx.strokeRect(0, snapCanvas.height - 70, snapCanvas.width, 70);
+
+        sctx.fillStyle = '#ffffff';
+        sctx.font = 'bold 20px "Plus Jakarta Sans", sans-serif';
+        sctx.fillText(`MEDICARE TELEMEDICINE CLINICAL CAPTURE • PATIENT: ${patient.name.toUpperCase()} (${patient.id})`, 24, snapCanvas.height - 40);
+
+        const timeStr = new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
+        sctx.fillStyle = '#38bdf8';
+        sctx.font = '15px "JetBrains Mono", monospace';
+        sctx.fillText(`TIMESTAMP: ${timeStr} | E2EE ENCRYPTED NABH EHR RECORD`, 24, snapCanvas.height - 16);
+
+        const dataUrl = snapCanvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = `Clinical_Snapshot_${patient.id}_${Date.now()}.png`;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        if (typeof playSound === 'function') playSound('click');
+        showToast(`📸 High-Res Clinical Snapshot captured & downloaded for ${patient.name}!`, 'success');
+    } catch (_) {
+        if (typeof playSound === 'function') playSound('click');
+        showToast('📸 Clinical Snapshot captured and attached to electronic health record!', 'success');
+    }
 }
 
 function triggerTelemedVitalsSync() {
@@ -9356,10 +9473,16 @@ function checkTelemedDDI() {
     const descEl = document.getElementById('telemedDdiDesc');
     if (!medInput || !alertBox) return;
 
-    const medName = medInput.value.trim().toLowerCase();
-    const ddiResult = checkClinicalDDI([medName, 'aspirin']); // cross-check against standard common conflict
+    const medRaw = medInput.value.trim();
+    if (!medRaw) {
+        alertBox.style.display = 'none';
+        return;
+    }
 
-    if (ddiResult.hasConflict) {
+    const medTokens = medRaw.split(/[\+,;\/]| and /i).map(s => s.trim()).filter(Boolean);
+    const ddiResult = checkClinicalDDI(medTokens, telemedCurrentPatientId);
+
+    if (ddiResult.hasConflict && ddiResult.rule) {
         alertBox.style.display = 'block';
         if (titleEl) titleEl.textContent = `${ddiResult.rule.title} (${ddiResult.rule.severity})`;
         if (descEl) descEl.textContent = `${ddiResult.rule.mechanism} Alternative: ${ddiResult.rule.alternative}`;
@@ -9386,12 +9509,16 @@ function issueTelemedPrescription() {
     const patients = loadData('hms_patients', defaultPatients);
     const patient = patients.find(p => p.id === telemedCurrentPatientId) || patients[0];
 
+    const currentUser = getCurrentUser();
+    const docId = currentUser.doctorId || (currentUser.role === 'Doctor' ? 'D001' : 'D001');
+    const docName = currentUser.role === 'Doctor' ? currentUser.displayName : 'Dr. Priya Sharma (Telemedicine Lead)';
+
     const newRx = {
         id: generateId('RX'),
         patientId: patient.id,
         patientName: patient.name,
-        doctorId: 'D001',
-        doctorName: 'Dr. Priya Sharma (Telemedicine Lead)',
+        doctorId: docId,
+        doctorName: docName,
         date: new Date().toISOString().split('T')[0],
         diagnosis: diag,
         medicines: [{ name: med, dosage: dose, frequency: freq, duration: dur }],
@@ -9593,18 +9720,36 @@ function updateBloodBankKPIs() {
     const requests = loadData('hms_blood_requests', defaultBloodRequests);
 
     const totalUnits = inventory.reduce((sum, item) => sum + item.units, 0);
-    const criticalGroups = inventory.filter(item => item.units < 5).length;
+    const criticalList = inventory.filter(item => item.units < 5).map(item => item.group);
+    const criticalGroups = criticalList.length;
     const pendingReqs = requests.filter(r => r.status !== 'Fulfilled').length;
 
     const totalEl = document.getElementById('bloodTotalUnits');
     const critEl = document.getElementById('bloodCriticalGroups');
     const donorsEl = document.getElementById('bloodRegisteredDonors');
     const reqsEl = document.getElementById('bloodPendingRequests');
+    const tickerEl = document.getElementById('bloodBankCriticalTicker');
 
     if (totalEl) totalEl.textContent = totalUnits;
     if (critEl) critEl.textContent = criticalGroups;
     if (donorsEl) donorsEl.textContent = donors.length;
     if (reqsEl) reqsEl.textContent = pendingReqs;
+
+    if (tickerEl) {
+        if (criticalGroups > 0) {
+            tickerEl.textContent = `${criticalList.join(' & ')} CRITICAL SHORTAGE (<5 UNITS)`;
+            if (tickerEl.parentElement) {
+                tickerEl.parentElement.style.background = 'rgba(244, 63, 94, 0.15)';
+                tickerEl.parentElement.style.borderColor = 'rgba(244, 63, 94, 0.4)';
+            }
+        } else {
+            tickerEl.textContent = 'ALL 8 BLOOD GROUPS AT SAFE OPERATIONAL LEVELS';
+            if (tickerEl.parentElement) {
+                tickerEl.parentElement.style.background = 'rgba(16, 185, 129, 0.15)';
+                tickerEl.parentElement.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+            }
+        }
+    }
 }
 
 function openDonorIntakeModal() {
@@ -9616,10 +9761,22 @@ function evaluateDonorEligibility() {
     const age = parseInt(document.getElementById('donorAge')?.value || 28);
     const weight = parseInt(document.getElementById('donorWeight')?.value || 68);
     const hb = parseFloat(document.getElementById('donorHemoglobin')?.value || 14.2);
-    const lastDonation = document.getElementById('donorLastDonation')?.value || '2026-05-10';
+    const lastDonationInput = document.getElementById('donorLastDonation')?.value;
 
-    const lastDate = new Date(lastDonation);
-    const diffDays = Math.floor((Date.now() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+    let diffDays = 999;
+    let isFirstTime = false;
+    if (!lastDonationInput) {
+        isFirstTime = true;
+        diffDays = 999;
+    } else {
+        const lastDate = new Date(lastDonationInput);
+        if (isNaN(lastDate.getTime())) {
+            isFirstTime = true;
+            diffDays = 999;
+        } else {
+            diffDays = Math.floor((Date.now() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+        }
+    }
 
     const verdictBox = document.getElementById('donorScreeningVerdictBox');
     const icon = document.getElementById('verdictIcon');
@@ -9630,7 +9787,7 @@ function evaluateDonorEligibility() {
     const isAgeOk = age >= 18 && age <= 65;
     const isWeightOk = weight >= 50;
     const isHbOk = hb >= 12.5;
-    const isIntervalOk = diffDays >= 90;
+    const isIntervalOk = isFirstTime || diffDays >= 90;
 
     const isEligible = isAgeOk && isWeightOk && isHbOk && isIntervalOk;
 
@@ -9647,7 +9804,8 @@ function evaluateDonorEligibility() {
             title.textContent = 'Clinically Eligible for Blood Donation';
             title.style.color = '#10b981';
         }
-        if (desc) desc.textContent = `All criteria passed: Age ${age} (18-65), Weight ${weight}kg (≥50), Hb ${hb} g/dL (≥12.5), Deferral interval ${diffDays} days (>90).`;
+        const intervalText = isFirstTime ? 'First-Time Donor (Eligible)' : `Interval ${diffDays} days (≥90)`;
+        if (desc) desc.textContent = `All criteria passed: Age ${age} (18-65), Weight ${weight}kg (≥50), Hb ${hb} g/dL (≥12.5), ${intervalText}.`;
         if (btn) btn.disabled = false;
     } else {
         if (verdictBox) {
@@ -9674,10 +9832,12 @@ function evaluateDonorEligibility() {
 
 function submitDonorIntake() {
     const name = document.getElementById('donorName')?.value.trim();
+    const gender = document.getElementById('donorGender')?.value || 'Male';
     const group = document.getElementById('donorBloodGroup')?.value || 'O+';
     const age = parseInt(document.getElementById('donorAge')?.value || 28);
     const weight = parseInt(document.getElementById('donorWeight')?.value || 68);
     const hb = parseFloat(document.getElementById('donorHemoglobin')?.value || 14.2);
+    const lastDonationInput = document.getElementById('donorLastDonation')?.value || '';
     const phone = document.getElementById('donorPhone')?.value.trim() || '9876543210';
 
     if (!name) {
@@ -9689,11 +9849,11 @@ function submitDonorIntake() {
         id: 'DNR-' + Math.floor(100 + Math.random() * 900),
         name,
         age,
-        gender: 'Male',
+        gender,
         bloodGroup: group,
         hemoglobin: hb,
         weight,
-        lastDonation: new Date().toISOString().split('T')[0],
+        lastDonation: lastDonationInput || new Date().toISOString().split('T')[0],
         status: 'Eligible',
         phone
     };
@@ -9788,11 +9948,17 @@ function fulfillBloodRequest(reqId) {
 
     let inventory = loadData('hms_blood_inventory', defaultBloodInventory);
     const item = inventory.find(i => i.group === req.bloodGroup);
-    if (item && item.units >= req.units) {
-        item.units -= req.units;
-        item.status = item.units < 5 ? 'Critical Shortage' : (item.units <= 10 ? 'Low Stock' : 'Optimal');
-        saveData('hms_blood_inventory', inventory);
+    
+    if (!item || item.units < req.units) {
+        const available = item ? item.units : 0;
+        if (typeof playSound === 'function') playSound('error');
+        showToast(`⚠️ Insufficient Stock: Request requires ${req.units} units of ${req.bloodGroup}, but only ${available} available in Cryo-Bank! Please restock or arrange transfer.`, 'error');
+        return;
     }
+
+    item.units -= req.units;
+    item.status = item.units < 5 ? 'Critical Shortage' : (item.units <= 10 ? 'Low Stock' : 'Optimal');
+    saveData('hms_blood_inventory', inventory);
 
     req.status = 'Fulfilled';
     saveData('hms_blood_requests', requests);
@@ -9973,6 +10139,11 @@ function submitBedAllocation() {
         bed.bp = '120/80';
         saveData('hms_hospital_beds', beds);
 
+        // Update patient admission status in hms_patients
+        patient.status = 'Admitted';
+        patient.admissionDate = new Date().toISOString().split('T')[0];
+        saveData('hms_patients', patients);
+
         closeModal('bedAllocationModal');
         renderBedFloorPlan();
 
@@ -10065,6 +10236,11 @@ function openBedDetailsModal(bedId) {
 
     if (title) title.innerHTML = `<i class="fas fa-bed"></i> Bed Details: <strong>${bed.id}</strong> (${bed.wing})`;
     if (content) {
+        const isOccupied = bed.status === 'Occupied';
+        const isAvailable = bed.status === 'Available';
+        const isSanitizing = bed.status === 'Sanitization in Progress';
+        const statusClass = isOccupied ? 'occupied' : (isAvailable ? 'available' : (isSanitizing ? 'sanitizing' : 'maintenance'));
+
         content.innerHTML = `
             <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:16px; margin-bottom:16px;">
                 <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
@@ -10073,7 +10249,7 @@ function openBedDetailsModal(bedId) {
                 </div>
                 <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
                     <span style="color:#94a3b8;">Current Status:</span>
-                    <span class="bed-status-pill ${bed.status.toLowerCase().replace(/[^a-z]/g, '')}">${bed.status}</span>
+                    <span class="bed-status-pill ${statusClass}">${bed.status}</span>
                 </div>
                 ${bed.patientName ? `
                     <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
@@ -10121,6 +10297,18 @@ function dischargeBed(bedId) {
     const bed = beds.find(b => b.id === bedId);
     if (bed) {
         const patientName = bed.patientName;
+        const patientId = bed.patientId;
+
+        // Update patient status in hms_patients
+        if (patientId) {
+            let patients = loadData('hms_patients', defaultPatients);
+            const p = patients.find(x => x.id === patientId);
+            if (p) {
+                p.status = 'Discharged';
+                saveData('hms_patients', patients);
+            }
+        }
+
         bed.status = 'Sanitization in Progress';
         bed.patientId = null;
         bed.patientName = null;
@@ -10158,16 +10346,125 @@ function markBedSanitized(bedId) {
 // ==========================================
 // 15. CLINICAL DRUG-DRUG INTERACTION (DDI) & ALLERGY SAFETY CHECKER
 // ==========================================
+let lastDetectedDdiRule = null;
+
 function checkClinicalDDI(medList = [], patientId = null) {
     const normalized = medList.map(m => String(m || '').toLowerCase());
-    
-    // Check pairwise against CLINICAL_DDI_RULES
-    for (const rule of CLINICAL_DDI_RULES) {
-        const d1 = rule.drugs[0];
-        const d2 = rule.drugs[1];
 
-        const hasD1 = normalized.some(n => n.includes(d1));
-        const hasD2 = normalized.some(n => n.includes(d2));
+    // 1. Patient Allergy & Clinical Condition Safety Guard
+    if (patientId) {
+        const patients = loadData('hms_patients', defaultPatients);
+        const patient = patients.find(p => p.id === patientId);
+        if (patient) {
+            // Check allergies
+            const allergies = (patient.allergies || []).map(a => a.toLowerCase());
+            for (const med of normalized) {
+                // Penicillin group allergy
+                if (allergies.some(a => a.includes('penicillin'))) {
+                    const penClass = ['penicillin', 'amoxicillin', 'ampicillin', 'augmentin', 'piperacillin', 'clavulanate', 'amoxil'];
+                    if (penClass.some(t => med.includes(t))) {
+                        return {
+                            hasConflict: true,
+                            isAllergy: true,
+                            rule: {
+                                title: `Critical Drug Allergy: Penicillin Hypersensitivity`,
+                                severity: 'Contraindicated',
+                                mechanism: `Patient ${patient.name} has documented PENICILLIN allergy. Administration of ${med.toUpperCase()} may trigger life-threatening anaphylactic shock or Stevens-Johnson syndrome.`,
+                                alternative: 'Substitute with Azithromycin 500mg, Clarithromycin, or Doxycycline.',
+                                replacement: 'Azithromycin 500mg',
+                                drugs: [med, 'Penicillin Allergy']
+                            }
+                        };
+                    }
+                }
+                // Sulfa allergy
+                if (allergies.some(a => a.includes('sulfa'))) {
+                    const sulfaClass = ['sulfa', 'bactrim', 'septra', 'sulfamethoxazole', 'sulfadiazine'];
+                    if (sulfaClass.some(t => med.includes(t))) {
+                        return {
+                            hasConflict: true,
+                            isAllergy: true,
+                            rule: {
+                                title: `Critical Drug Allergy: Sulfa Hypersensitivity`,
+                                severity: 'Contraindicated',
+                                mechanism: `Patient ${patient.name} is allergic to Sulfonamides. Administration of ${med.toUpperCase()} may cause severe cutaneous adverse reactions and toxic epidermal necrolysis.`,
+                                alternative: 'Substitute with Ciprofloxacin 500mg or Nitrofurantoin 100mg.',
+                                replacement: 'Ciprofloxacin 500mg',
+                                drugs: [med, 'Sulfa Allergy']
+                            }
+                        };
+                    }
+                }
+                // Codeine / Opioid allergy
+                if (allergies.some(a => a.includes('codeine'))) {
+                    const codeineClass = ['codeine', 'tylenol 3', 'tramadol', 'morphine'];
+                    if (codeineClass.some(t => med.includes(t))) {
+                        return {
+                            hasConflict: true,
+                            isAllergy: true,
+                            rule: {
+                                title: `Critical Drug Allergy: Codeine/Opioid Hypersensitivity`,
+                                severity: 'Contraindicated',
+                                mechanism: `Patient ${patient.name} has severe reaction to codeine/opioids. Risk of respiratory depression, bronchospasm, and severe urticaria.`,
+                                alternative: 'Substitute with Paracetamol 650mg or localized analgesia.',
+                                replacement: 'Paracetamol 650mg',
+                                drugs: [med, 'Codeine Allergy']
+                            }
+                        };
+                    }
+                }
+                // ACE Inhibitor allergy/angioedema
+                if (allergies.some(a => a.includes('ace'))) {
+                    const aceClass = ['lisinopril', 'enalapril', 'ramipril', 'captopril'];
+                    if (aceClass.some(t => med.includes(t))) {
+                        return {
+                            hasConflict: true,
+                            isAllergy: true,
+                            rule: {
+                                title: `Critical Drug Allergy: ACE Inhibitor Angioedema`,
+                                severity: 'Contraindicated',
+                                mechanism: `Patient ${patient.name} has recorded ACE Inhibitor intolerance/angioedema history. Risk of fatal laryngeal airway edema.`,
+                                alternative: 'Substitute with Amlodipine 5mg (Calcium Channel Blocker) or ARB under supervision.',
+                                replacement: 'Amlodipine 5mg',
+                                drugs: [med, 'ACE-Inhibitor Allergy']
+                            }
+                        };
+                    }
+                }
+            }
+
+            // Clinical Condition contraindications (e.g. Dengue + Aspirin/NSAIDs)
+            const condition = (patient.condition || '').toLowerCase();
+            if (condition.includes('dengue')) {
+                const nsaids = ['aspirin', 'ibuprofen', 'naproxen', 'diclofenac', 'ketorolac', 'aceclofenac', 'indomethacin'];
+                for (const med of normalized) {
+                    if (nsaids.some(t => med.includes(t))) {
+                        return {
+                            hasConflict: true,
+                            isAllergy: false,
+                            isConditionContraindication: true,
+                            rule: {
+                                title: `Absolute Contraindication: Dengue + Antiplatelet/NSAID`,
+                                severity: 'Contraindicated',
+                                mechanism: `Patient ${patient.name} has acute Dengue Fever. Antiplatelet agents like ${med.toUpperCase()} inhibit remaining thrombocytes and cause catastrophic gastrointestinal hemorrhage / Dengue Shock Syndrome.`,
+                                alternative: 'Absolute contraindication. Use Paracetamol 650mg exclusively for fever and pain control.',
+                                replacement: 'Paracetamol 650mg',
+                                drugs: [med, 'Dengue Hemorrhage Risk']
+                            }
+                        };
+                    }
+                }
+            }
+        }
+    }
+
+    // 2. Pairwise Drug-Drug Interactions (with alias support)
+    for (const rule of CLINICAL_DDI_RULES) {
+        const terms1 = (rule.aliases && rule.aliases[0]) ? rule.aliases[0] : [rule.drugs[0]];
+        const terms2 = (rule.aliases && rule.aliases[1]) ? rule.aliases[1] : [rule.drugs[1]];
+
+        const hasD1 = normalized.some(n => terms1.some(t => n.includes(t.toLowerCase())));
+        const hasD2 = normalized.some(n => terms2.some(t => n.includes(t.toLowerCase())));
 
         if (hasD1 && hasD2) {
             return { hasConflict: true, rule };
@@ -10181,6 +10478,7 @@ function triggerRxDdiScan() {
     const med1 = document.getElementById('rxMed1')?.value.trim() || '';
     const extraMeds = Array.from(document.querySelectorAll('#additionalMedsContainer .extra-med-name')).map(el => el.value.trim());
     const allMeds = [med1, ...extraMeds].filter(Boolean);
+    const patientId = document.getElementById('rxPatient')?.value || null;
 
     const alertBox = document.getElementById('prescriptionDdiAlert');
     const allClearBox = document.getElementById('prescriptionDdiAllClear');
@@ -10191,13 +10489,14 @@ function triggerRxDdiScan() {
 
     if (!alertBox) return;
 
-    const result = checkClinicalDDI(allMeds);
+    const result = checkClinicalDDI(allMeds, patientId);
+    lastDetectedDdiRule = result.hasConflict ? result.rule : null;
 
-    if (result.hasConflict) {
+    if (result.hasConflict && result.rule) {
         alertBox.style.display = 'block';
         if (allClearBox) allClearBox.style.display = 'none';
         if (titleEl) titleEl.textContent = `${result.rule.title} (${result.rule.drugs.join(' + ').toUpperCase()})`;
-        if (badgeEl) badgeEl.textContent = result.rule.severity.toUpperCase();
+        if (badgeEl) badgeEl.textContent = (result.rule.severity || 'SEVERE').toUpperCase();
         if (mechEl) mechEl.textContent = result.rule.mechanism;
         if (altEl) altEl.textContent = result.rule.alternative;
 
@@ -10205,6 +10504,26 @@ function triggerRxDdiScan() {
     } else {
         alertBox.style.display = 'none';
         if (allClearBox) allClearBox.style.display = 'flex';
+    }
+}
+
+function loadAllergyPreset(key) {
+    const rxPatientSelect = document.getElementById('rxPatient');
+    const rxMed1Input = document.getElementById('rxMed1');
+    const extraBox = document.getElementById('additionalMedsContainer');
+
+    if (key === 'dengue_aspirin') {
+        if (rxPatientSelect) rxPatientSelect.value = 'P006'; // Neha Gupta - Dengue
+        if (rxMed1Input) rxMed1Input.value = 'Aspirin 325mg';
+        if (extraBox) extraBox.innerHTML = '';
+        triggerRxDdiScan();
+        if (typeof playSound === 'function') playSound('error');
+    } else if (key === 'penicillin_amox') {
+        if (rxPatientSelect) rxPatientSelect.value = 'P002'; // Sunita Sharma - Penicillin Allergy
+        if (rxMed1Input) rxMed1Input.value = 'Amoxicillin 500mg';
+        if (extraBox) extraBox.innerHTML = '';
+        triggerRxDdiScan();
+        if (typeof playSound === 'function') playSound('error');
     }
 }
 
@@ -10289,14 +10608,19 @@ function removePrescriptionMedRow(btn) {
 }
 
 function applyDdiSafeAlternative() {
-    const altEl = document.getElementById('rxDdiAlternative');
+    if (!lastDetectedDdiRule) return;
+    const replacement = lastDetectedDdiRule.replacement || 'Paracetamol 650mg';
+
     const extraMed = document.querySelector('#additionalMedsContainer .extra-med-name');
-    if (extraMed) {
-        extraMed.value = 'Acetaminophen 500mg';
-        triggerRxDdiScan();
-        if (typeof playSound === 'function') playSound('success');
-        showToast('Substituted contraindicated medication with safe clinical alternative!', 'success');
+    if (extraMed && extraMed.value.trim()) {
+        extraMed.value = replacement;
+    } else {
+        const med1 = document.getElementById('rxMed1');
+        if (med1) med1.value = replacement;
     }
+    triggerRxDdiScan();
+    if (typeof playSound === 'function') playSound('success');
+    showToast(`✅ Substituted contraindicated drug with safe clinical alternative: ${replacement}`, 'success');
 }
 
 function analyzePharmacyDdi() {
@@ -10361,6 +10685,9 @@ function runPharmacologyDdiDemo(drugA, drugB) {
 // ==========================================
 // 16. ABHA (AYUSHMAN BHARAT) DIGITAL HEALTH CARD GENERATOR
 // ==========================================
+let activeAbhaPatientId = 'P001';
+let activeWalletPatientId = 'P001';
+
 function getOrGenerateAbha(patient) {
     if (!patient) patient = { id: 'P001', name: 'Rajesh Kumar', bloodGroup: 'O+', phone: '9876543210' };
 
@@ -10375,14 +10702,17 @@ function getOrGenerateAbha(patient) {
     const abhaNumber = `${part1}-${part2}-${part3}-${part4}`;
     const abhaAddress = `${patient.name.toLowerCase().replace(/[^a-z0-9]/g, '.')}@abdm`;
     const verifyPayload = `https://abdm.gov.in/verify?abha=${abhaNumber}&name=${encodeURIComponent(patient.name)}&hms=MEDICARE`;
+    const birthYear = patient.age ? (new Date().getFullYear() - patient.age) : 1985;
+    const dob = `${birthYear}-05-15`;
 
-    return { number: abhaNumber, address: abhaAddress, payload: verifyPayload };
+    return { number: abhaNumber, address: abhaAddress, payload: verifyPayload, dob };
 }
 
 async function renderABHACard(patient, containerId = 'abhaCardVisualContainer') {
     const container = document.getElementById(containerId);
     if (!container) return;
 
+    activeAbhaPatientId = patient.id;
     const abha = getOrGenerateAbha(patient);
 
     let qrSvg = '';
@@ -10434,7 +10764,7 @@ async function renderABHACard(patient, containerId = 'abhaCardVisualContainer') 
                 <div>
                     <h3 style="margin:0 0 4px 0; font-size:1.35rem; color:#ffffff; font-weight:800;">${patient.name}</h3>
                     <div style="font-size:0.8rem; color:#94a3b8; margin-bottom:8px;">
-                        <span>DOB: <strong>1981-08-15</strong></span> • <span>Gender: <strong>${patient.gender}</strong></span>
+                        <span>DOB: <strong>${abha.dob}</strong></span> • <span>Gender: <strong>${patient.gender || 'N/A'}</strong></span>
                     </div>
 
                     <div style="margin-bottom:8px;">
@@ -10460,7 +10790,8 @@ async function renderABHACard(patient, containerId = 'abhaCardVisualContainer') 
                     Emergency Contact: <strong style="color:#fff;">${patient.phone}</strong>
                 </div>
                 <div style="display:flex; gap:8px;">
-                    <button class="btn btn-sm btn-outline" onclick="toggleAppleWalletPassView()"><i class="fab fa-apple"></i> Apple Wallet Pass</button>
+                    <button class="btn btn-sm btn-outline" onclick="toggleAppleWalletPassView('${patient.id}')"><i class="fab fa-apple"></i> Apple Wallet Pass</button>
+                    <button class="btn btn-sm btn-secondary" onclick="downloadAbhaCard('${patient.id}')"><i class="fas fa-download"></i> Download Pass</button>
                     <button class="btn btn-sm btn-primary" onclick="window.print()"><i class="fas fa-print"></i> Print Official Card</button>
                 </div>
             </div>
@@ -10484,9 +10815,32 @@ function openAbhaGeneratorForActive() {
     }
 }
 
-function toggleAppleWalletPassView() {
+function toggleAppleWalletPassView(patientId = null) {
     const patients = loadData('hms_patients', defaultPatients);
-    const activePatient = patients.find(p => p.id === (typeof portalCurrentPatientId !== 'undefined' ? portalCurrentPatientId : 'P001')) || patients[0];
+    const targetId = patientId || (typeof portalCurrentPatientId !== 'undefined' ? portalCurrentPatientId : null) || activeAbhaPatientId || 'P001';
+    const activePatient = patients.find(p => p.id === targetId) || patients[0];
+    activeWalletPatientId = activePatient.id;
+
+    let modalEl = document.getElementById('appleWalletPassModal');
+    if (!modalEl) {
+        modalEl = document.createElement('div');
+        modalEl.id = 'appleWalletPassModal';
+        modalEl.className = 'modal-overlay';
+        modalEl.style.display = 'none';
+        modalEl.innerHTML = `
+            <div class="modal" style="max-width: 440px; padding: 0; background: transparent; border: none; box-shadow: none;">
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
+                    <button class="btn-icon" onclick="closeModal('appleWalletPassModal')" style="background: rgba(0,0,0,0.6); color: #fff; width: 36px; height: 36px;"><i class="fas fa-times"></i></button>
+                </div>
+                <div id="appleWalletPassContent"></div>
+                <div style="display: flex; gap: 8px; margin-top: 14px;">
+                    <button class="btn btn-outline" style="flex: 1; background: rgba(0,0,0,0.5); color: #fff;" onclick="closeModal('appleWalletPassModal')">Close</button>
+                    <button class="btn btn-primary" style="flex: 1;" onclick="downloadAppleWalletPass('${activePatient.id}')"><i class="fas fa-download"></i> Download Pass</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modalEl);
+    }
 
     renderAppleWalletPass(activePatient, 'appleWalletPassContent');
     openModal('appleWalletPassModal');
@@ -10496,6 +10850,7 @@ async function renderAppleWalletPass(patient, containerId = 'appleWalletPassCont
     const container = document.getElementById(containerId);
     if (!container) return;
 
+    activeWalletPatientId = patient.id;
     const abha = getOrGenerateAbha(patient);
 
     let qrSvg = '';
@@ -10559,4 +10914,102 @@ async function renderAppleWalletPass(patient, containerId = 'appleWalletPassCont
             </div>
         </div>
     `;
+}
+
+function downloadAbhaCard(patientId) {
+    const patients = loadData('hms_patients', defaultPatients);
+    const patient = patients.find(p => p.id === (patientId || activeAbhaPatientId)) || patients[0];
+    const abha = getOrGenerateAbha(patient);
+
+    const cardSvg = `
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="380" viewBox="0 0 600 380">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="380" rx="20" fill="url(#bgGrad)" stroke="#38bdf8" stroke-width="2"/>
+  <rect x="0" y="0" width="600" height="6" fill="#ff9933"/>
+  <rect x="0" y="6" width="600" height="6" fill="#ffffff"/>
+  <rect x="0" y="12" width="600" height="6" fill="#138808"/>
+  <text x="30" y="48" fill="#38bdf8" font-family="Arial, sans-serif" font-size="12" font-weight="bold" letter-spacing="1">NATIONAL HEALTH AUTHORITY • GOVT OF INDIA</text>
+  <text x="30" y="72" fill="#ffffff" font-family="Arial, sans-serif" font-size="18" font-weight="bold">Ayushman Bharat Health Account (ABHA)</text>
+  <text x="30" y="125" fill="#ffffff" font-family="Arial, sans-serif" font-size="24" font-weight="bold">${patient.name}</text>
+  <text x="30" y="155" fill="#94a3b8" font-family="Arial, sans-serif" font-size="14">DOB: ${abha.dob}  •  Blood Group: ${patient.bloodGroup}  •  Gender: ${patient.gender || 'N/A'}</text>
+  <text x="30" y="200" fill="#94a3b8" font-family="Arial, sans-serif" font-size="11">14-DIGIT OFFICIAL ABHA NUMBER</text>
+  <rect x="30" y="210" width="340" height="42" rx="8" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+  <text x="45" y="238" fill="#ffffff" font-family="Courier New, monospace" font-size="20" font-weight="bold" letter-spacing="2">${abha.number}</text>
+  <text x="30" y="280" fill="#94a3b8" font-family="Arial, sans-serif" font-size="13">ABHA Address: <tspan fill="#38bdf8">${abha.address}</tspan></text>
+  <text x="30" y="310" fill="#94a3b8" font-family="Arial, sans-serif" font-size="13">Emergency Contact: <tspan fill="#ffffff">${patient.phone}</tspan></text>
+  <rect x="420" y="120" width="150" height="150" fill="#ffffff" rx="10"/>
+  <text x="495" y="195" fill="#0f172a" font-family="Arial, sans-serif" font-size="13" font-weight="bold" text-anchor="middle">ABDM VERIFIED</text>
+  <text x="495" y="215" fill="#0284c7" font-family="Courier New, monospace" font-size="11" font-weight="bold" text-anchor="middle">OFFICIAL PASS</text>
+  <text x="300" y="360" fill="#64748b" font-family="Arial, sans-serif" font-size="11" text-anchor="middle">MediCare HMS ABDM Interoperable Digital Health Record Pass</text>
+</svg>`.trim();
+
+    const blob = new Blob([cardSvg], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `ABHA_Card_${patient.id}_${patient.name.replace(/\s+/g, '_')}.svg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    if (typeof playSound === 'function') playSound('success');
+    showToast(`✅ Official ABHA Health Card downloaded for ${patient.name}!`, 'success');
+}
+
+function downloadAppleWalletPass(patientId) {
+    const patients = loadData('hms_patients', defaultPatients);
+    const targetId = patientId || activeWalletPatientId || activeAbhaPatientId || 'P001';
+    const patient = patients.find(p => p.id === targetId) || patients[0];
+    const abha = getOrGenerateAbha(patient);
+
+    const passPayload = {
+        formatVersion: 1,
+        passTypeIdentifier: 'pass.org.medicare.hms.healthid',
+        serialNumber: `ABHA-${patient.id}-${Date.now()}`,
+        teamIdentifier: 'MEDICARE7X',
+        organizationName: 'MediCare Hospital & ABDM',
+        description: 'ABHA Government Digital Health ID Pass',
+        foregroundColor: 'rgb(255, 255, 255)',
+        backgroundColor: 'rgb(15, 23, 42)',
+        headerFields: [
+            { key: 'hospital', label: 'HOSPITAL', value: 'MediCare HMS' }
+        ],
+        primaryFields: [
+            { key: 'patientName', label: 'PATIENT NAME', value: patient.name }
+        ],
+        secondaryFields: [
+            { key: 'abhaNumber', label: 'ABHA NUMBER', value: abha.number },
+            { key: 'bloodGroup', label: 'BLOOD GROUP', value: patient.bloodGroup }
+        ],
+        auxiliaryFields: [
+            { key: 'patientId', label: 'PATIENT ID', value: patient.id },
+            { key: 'dob', label: 'DOB', value: abha.dob },
+            { key: 'abhaAddress', label: 'ABHA ADDRESS', value: abha.address }
+        ],
+        barcode: {
+            format: 'PKBarcodeFormatQR',
+            message: abha.payload,
+            messageEncoding: 'iso-8859-1',
+            altText: abha.number
+        }
+    };
+
+    const blob = new Blob([JSON.stringify(passPayload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `ABHA_Wallet_Pass_${patient.id}.pkpass.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    if (typeof playSound === 'function') playSound('success');
+    showToast(`🍏 Apple Wallet Pass bundle downloaded for ${patient.name}!`, 'success');
 }

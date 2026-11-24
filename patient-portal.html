@@ -153,8 +153,8 @@
             </div>
             <div style="margin-top: 14px; display: flex; gap: 10px; justify-content: center;">
                 <button class="btn btn-outline" onclick="closeModal('appleWalletPassModal')">Close Pass</button>
-                <button class="btn btn-primary" onclick="showToast('Pass added to Apple Wallet / Google Pay!', 'success'); closeModal('appleWalletPassModal');">
-                    <i class="fab fa-apple"></i> Save to Apple Wallet
+                <button class="btn btn-primary" onclick="downloadAppleWalletPass(typeof portalCurrentPatientId !== 'undefined' ? portalCurrentPatientId : 'P001')">
+                    <i class="fab fa-apple"></i> Save & Download Pass
                 </button>
             </div>
         </div>
