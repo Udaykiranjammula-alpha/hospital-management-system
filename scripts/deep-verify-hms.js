@@ -406,6 +406,51 @@ async function runAllTests() {
     sandbox.updateAIChatbotConnectionStatus();
     assert(typeof sandbox.updateAIChatbotConnectionStatus === 'function', 'updateAIChatbotConnectionStatus executes safely in sandbox');
 
+    // Test buildGeminiContents multi-turn normalization
+    assert(typeof sandbox.buildGeminiContents === 'function', 'app.js defines buildGeminiContents for multi-turn schema normalization');
+    const dummyHistory = [
+        { role: 'model', parts: [{ text: 'Hello! I am your AI assistant' }] },
+        { role: 'user', parts: [{ text: 'I have severe chest pain' }] },
+        { role: 'model', parts: [{ text: 'Triage: Red' }] },
+        { role: 'user', parts: [{ text: 'What medicine stat?' }] }
+    ];
+    const builtContents = sandbox.buildGeminiContents(dummyHistory, 'What medicine stat?');
+    assert(builtContents[0].role === 'user', 'buildGeminiContents strictly begins with role: user');
+    assert(builtContents[0].parts[0].text === 'I have severe chest pain', 'buildGeminiContents filters out model welcome greetings');
+    assert(builtContents[builtContents.length - 1].parts[0].text === 'What medicine stat?', 'buildGeminiContents includes latest query');
+    assert(builtContents.length === 3, 'buildGeminiContents deduplicates trailing user query and strictly alternates roles (user -> model -> user)');
+
+    // Test generateAppEnhancedLocalTriage across all 6 specialties and languages
+    assert(typeof sandbox.generateAppEnhancedLocalTriage === 'function', 'app.js implements generateAppEnhancedLocalTriage');
+    const chestPainTriage = sandbox.generateAppEnhancedLocalTriage('Severe chest pain and shortness of breath', 'en-IN');
+    assert(chestPainTriage.includes('[TRIAGE: RED') && chestPainTriage.includes('appointments.html?doctor=D001'), 'Chest pain triage classifies as RED and routes to Dr. Priya Sharma D001');
+
+    const strokeTriage = sandbox.generateAppEnhancedLocalTriage('Numbness on left side and slurred speech', 'en-IN');
+    assert(strokeTriage.includes('[TRIAGE: RED') && strokeTriage.includes('appointments.html?doctor=D003'), 'Stroke triage classifies as RED and routes to Dr. Sneha Desai D003');
+
+    const fractureTriage = sandbox.generateAppEnhancedLocalTriage('Knee joint fracture after fall', 'en-IN');
+    assert(fractureTriage.includes('[TRIAGE: YELLOW') && fractureTriage.includes('appointments.html?doctor=D002'), 'Fracture triage classifies as YELLOW and routes to Dr. Rahul Verma D002');
+
+    const feverTriage = sandbox.generateAppEnhancedLocalTriage('High fever and severe chills with dengue suspected', 'en-IN');
+    assert(feverTriage.includes('[TRIAGE: YELLOW') && feverTriage.includes('appointments.html?doctor=D005'), 'Fever/Dengue triage classifies as YELLOW and routes to Dr. Meera Iyer D005');
+
+    const pediatricTriage = sandbox.generateAppEnhancedLocalTriage('Child has cough and fever', 'en-IN');
+    assert(pediatricTriage.includes('[TRIAGE: YELLOW') && pediatricTriage.includes('appointments.html?doctor=D004'), 'Pediatric triage classifies as YELLOW and routes to Dr. Anil Kumar D004');
+
+    const dermatologyTriage = sandbox.generateAppEnhancedLocalTriage('Severe skin rash and allergic itch', 'en-IN');
+    assert(dermatologyTriage.includes('appointments.html?doctor=D006'), 'Dermatology triage routes to Dr. Sanjay Kapoor D006');
+
+    const hindiTriage = sandbox.generateAppEnhancedLocalTriage('सीने में तेज दर्द', 'hi-IN');
+    assert(hindiTriage.includes('आपातकालीन ट्राइएज: रेड') && hindiTriage.includes('appointments.html?doctor=D001'), 'Hindi triage returns authentic Devanagari triage and Dr. Priya Sharma D001');
+
+    const teluguTriage = sandbox.generateAppEnhancedLocalTriage('గుండె నొప్పి మరియు శ్వాస ఆడటం లేదు', 'te-IN');
+    assert(teluguTriage.includes('అత్యవసర ట్రయాజ్: రెడ్') && teluguTriage.includes('appointments.html?doctor=D001'), 'Telugu triage returns authentic Telugu script triage and Dr. Priya Sharma D001');
+
+    // Test 1-click specialist routing links and URL parameter integration
+    assert(appJs.includes("urlParams.get('doctor')"), 'app.js inspects ?doctor= query param for 1-click doctor routing');
+    assert(appJs.includes('showBookAppointmentModal(selectedDoctorId)'), 'showBookAppointmentModal supports direct physician pre-selection');
+    assert(appJs.includes('handleSpecialistAppointmentLink'), 'app.js defines handleSpecialistAppointmentLink for instant modal popup without reload');
+
 
     console.log(`\n====================================================`);
     console.log(`TOTAL TESTS: ${totalTests} | PASSED: ${passedTests} | FAILED: ${failedTests}`);

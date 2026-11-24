@@ -2139,7 +2139,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typeof showToast === 'function') showToast('Clinical Connection Restored — Cloud Synced', 'success');
     });
 
-    // 7. Auto-trigger creation modals if navigated with ?action=new or QR verification ?verify=ID
+    // 7. Auto-trigger creation modals if navigated with ?action=new, ?doctor=ID, or QR verification ?verify=ID
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('action') === 'new') {
         setTimeout(() => {
@@ -2149,6 +2149,21 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (document.getElementById('patientModal')) showAddPatientModal();
             else if (document.getElementById('doctorModal')) showAddDoctorModal();
         }, 200);
+    }
+    if (urlParams.get('doctor')) {
+        const doctorParam = urlParams.get('doctor');
+        setTimeout(() => {
+            if (typeof showBookAppointmentModal === 'function') {
+                showBookAppointmentModal(doctorParam);
+                const docSelect = document.getElementById('apptDoctor') || document.getElementById('appointmentDoctor');
+                if (docSelect) docSelect.value = doctorParam;
+                if (typeof showToast === 'function') {
+                    const doctors = loadData('hms_doctors', defaultDoctors);
+                    const doc = doctors.find(d => d.id === doctorParam);
+                    showToast(`📅 Routing to ${doc ? doc.name : doctorParam} for consultation booking!`, 'info');
+                }
+            }
+        }, 250);
     }
     if (urlParams.get('verify')) {
         const verifyRxId = urlParams.get('verify');
@@ -3765,7 +3780,7 @@ function populateAppointmentDropdowns() {
     }
 }
 
-function showBookAppointmentModal() {
+function showBookAppointmentModal(selectedDoctorId) {
     populateAppointmentDropdowns();
     const form = document.getElementById('appointmentForm') || document.getElementById('appointment-form');
     if (form) form.reset();
@@ -3774,6 +3789,13 @@ function showBookAppointmentModal() {
     if (dateEl) dateEl.value = new Date().toISOString().split('T')[0];
     const timeEl = document.getElementById('apptTime');
     if (timeEl) timeEl.value = '10:00';
+
+    if (selectedDoctorId) {
+        const docSelect = document.getElementById('apptDoctor') || document.getElementById('appointmentDoctor');
+        if (docSelect) {
+            docSelect.value = selectedDoctorId;
+        }
+    }
 
     openModal('appointmentModal');
     openModal('appointment-modal');
@@ -6321,14 +6343,29 @@ function updateAIChatbotConnectionStatus() {
     }
 }
 
+function handleSpecialistAppointmentLink(event, url) {
+    if (window.location.pathname.endsWith('appointments.html')) {
+        const match = (url || '').match(/doctor=([^&]+)/);
+        if (match && match[1]) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            showBookAppointmentModal(match[1]);
+            return false;
+        }
+    }
+}
+
 function formatGeminiResponseToHtml(text) {
     if (!text) return '';
     let html = text
         .replace(/^### (.*$)/gim, '<h5 style="color:#38bdf8; margin:8px 0 4px 0; font-size:13px;">$1</h5>')
         .replace(/^## (.*$)/gim, '<h4 style="color:#38bdf8; margin:10px 0 4px 0; font-size:14px;">$1</h4>')
         .replace(/^# (.*$)/gim, '<h3 style="color:#38bdf8; margin:12px 0 6px 0; font-size:15px;">$1</h3>')
-        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="ai-action-link"><i class="fas fa-calendar-check" style="font-size:10px; margin-right:4px;"></i>$1 &rarr;</a>')
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" onclick="return handleSpecialistAppointmentLink(event, \'$2\')" class="ai-action-link"><i class="fas fa-calendar-check" style="font-size:10px; margin-right:4px;"></i>$1 &rarr;</a>')
         .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/^(\d+)\.\s+(.*$)/gim, '<div style="margin:2px 0; padding-left:4px;"><strong>$1.</strong> $2</div>')
         .replace(/^[•*]\s+(.*$)/gim, '<div style="margin:2px 0; padding-left:4px;">• $1</div>')
         .replace(/\n\n/g, '<br><br>')
         .replace(/\n/g, '<br>');
@@ -6336,13 +6373,175 @@ function formatGeminiResponseToHtml(text) {
     return html;
 }
 
+function buildGeminiContents(history = [], currentQuery = '') {
+    const turns = [];
+
+    for (const item of (history || [])) {
+        if (!item) continue;
+        let role = null;
+        if (item.role === 'user' || item.sender === 'user') role = 'user';
+        else if (item.role === 'model' || item.sender === 'ai' || item.sender === 'bot') role = 'model';
+        if (!role) continue;
+
+        const text = (item.parts?.[0]?.text || item.text || '').trim();
+        if (!text) continue;
+
+        if (role === 'model' && (
+            item.id === 'welcome' ||
+            (typeof item.id === 'string' && item.id.startsWith('lang-switch')) ||
+            text.startsWith('Hello!') ||
+            text.startsWith('Namaste') ||
+            text.startsWith('नमस्ते') ||
+            text.startsWith('నమస్కారం') ||
+            text.startsWith('Chat cleared')
+        )) {
+            continue;
+        }
+
+        turns.push({ role, text });
+    }
+
+    if (turns.length > 0 && turns[turns.length - 1].role === 'user') {
+        if (turns[turns.length - 1].text === (currentQuery || '').trim()) {
+            turns.pop();
+        }
+    }
+
+    const sanitized = [];
+    for (const turn of turns) {
+        if (sanitized.length === 0) {
+            if (turn.role === 'user') {
+                sanitized.push({ role: 'user', parts: [{ text: turn.text }] });
+            }
+        } else {
+            const prevRole = sanitized[sanitized.length - 1].role;
+            if (turn.role !== prevRole) {
+                sanitized.push({ role: turn.role, parts: [{ text: turn.text }] });
+            } else if (turn.role === 'user') {
+                sanitized[sanitized.length - 1].parts[0].text += `\n${turn.text}`;
+            }
+        }
+    }
+
+    if (currentQuery && currentQuery.trim()) {
+        if (sanitized.length > 0 && sanitized[sanitized.length - 1].role === 'user') {
+            sanitized[sanitized.length - 1] = {
+                role: 'user',
+                parts: [{ text: currentQuery.trim() }]
+            };
+        } else {
+            sanitized.push({
+                role: 'user',
+                parts: [{ text: currentQuery.trim() }]
+            });
+        }
+    }
+
+    let bounded = sanitized.slice(-8);
+    while (bounded.length > 1 && bounded[0].role !== 'user') {
+        bounded.shift();
+    }
+
+    return bounded;
+}
+
+function generateAppEnhancedLocalTriage(query, lang) {
+    const q = (query || '').toLowerCase();
+
+    // Hindi
+    if (lang === 'hi-IN' || /[\u0900-\u097F]/.test(query)) {
+        if (q.includes('stemi') || q.includes('सीने') || q.includes('दर्द') || q.includes('दिल') || q.includes('heart') || q.includes('छाती')) {
+            return `🔴 **[आपातकालीन ट्राइएज: रेड - तीव्र कार्डियक आपातकाल]**\n\n• **प्राथमिक निदान:** एक्यूट कोरोनरी सिंड्रोम (STEMI का उच्च संदेह)\n• **तत्काल निर्देश:** तुरंत 108 डायल करें या हमारे 24/7 कैथ लैब ट्रॉमा सेंटर पहुंचें।\n• **विशेषज्ञ डॉक्टर:** [डॉ. प्रिया शर्मा से परामर्श लें](appointments.html?doctor=D001)\n• **दवा सावधानी:** यदि रक्तस्राव का इतिहास न हो तो एस्पिरिन 325 mg चबाएं। नाइट्रोग्लिसरीन तभी लें जब बीपी 90 से ऊपर हो।`;
+        }
+        if (q.includes('स्ट्रोक') || q.includes('सिरदर्द') || q.includes('चक्कर') || q.includes('सुन्न') || q.includes('stroke')) {
+            return `🔴 **[आपातकालीन ट्राइएज: रेड - कोड स्ट्रोक]**\n\n• **प्राथमिक निदान:** एक्यूट इस्केमिक स्ट्रोक (गोल्डन आवर < 4.5 घंटे)।\n• **न्यूरोलॉजिस्ट:** [डॉ. स्नेहा देसाई से संपर्क करें](appointments.html?doctor=D003)`;
+        }
+        if (q.includes('हड्डी') || q.includes('फ्रैक्चर') || q.includes('जोड़') || q.includes('घुटने') || q.includes('bone') || q.includes('fracture')) {
+            return `🟡 **[ट्राइएज: यलो - ऑर्थोपेडिक आपातकाल]**\n\n• **प्राथमिक उपचार:** RICE प्रोटोकॉल। बर्फ लगाएं और वजन न डालें।\n• **ऑर्थोपेडिक सर्जन:** [डॉ. राहुल वर्मा से मिलें](appointments.html?doctor=D002)`;
+        }
+        if (q.includes('बुखार') || q.includes('डेंगू') || q.includes('सेप्सिस') || q.includes('fever') || q.includes('dengue')) {
+            return `🟡 **[ट्राइएज: यलो - इंटरनल मेडिसिन]**\n\n• **चेतावनी:** डेंगू में एस्पिरिन या ब्रूफेन न लें, केवल पैरासिटामोल लें।\n• **विशेषज्ञ डॉक्टर:** [डॉ. मीरा अय्यर से संपर्क करें](appointments.html?doctor=D005)`;
+        }
+        if (q.includes('बच्चा') || q.includes('शिशु') || q.includes('child') || q.includes('pediatric')) {
+            return `🟡 **[ट्राइएज: यलो - बाल रोग विभाग]**\n\n• **बाल रोग विशेषज्ञ:** [डॉ. अनिल कुमार से अपॉइंटमेंट लें](appointments.html?doctor=D004)`;
+        }
+        if (q.includes('त्वचा') || q.includes('दाने') || q.includes('खुजली') || q.includes('skin') || q.includes('rash')) {
+            return `🟢 **[ट्राइएज: ग्रीन - डर्मेटोलॉजी परामर्श]**\n\n• **डर्मेटोलॉजिस्ट:** [डॉ. संजय कपूर से परामर्श लें](appointments.html?doctor=D006)`;
+        }
+        if (q.includes('दवा') || q.includes('वारफारिन') || q.includes('interaction')) {
+            return `🟡 **[ट्राइएज: यलो - दवा परस्पर क्रिया चेतावनी]**\n\n• **गंभीर इंटरेक्शन:** वारफारिन + फ्लुकोनाज़ोल (रक्तस्राव का बड़ा खतरा)।\n• **परामर्श:** [डॉ. मीरा अय्यर से संपर्क करें](appointments.html?doctor=D005)`;
+        }
+        return `🟡 **[क्लिनिकल ट्राइएज: यलो - विशेषज्ञ मूल्यांकन]**\n\n• आपकी क्वेरी: "${query}"\n• विशेषज्ञ डॉक्टर की सलाह के लिए: [डॉक्टर अपॉइंटमेंट बुक करें](appointments.html)`;
+    }
+
+    // Telugu
+    if (lang === 'te-IN' || /[\u0C00-\u0C7F]/.test(query)) {
+        if (q.includes('గుండె') || q.includes('ఛాతీ') || q.includes('నొప్పి') || q.includes('stemi') || q.includes('heart')) {
+            return `🔴 **[అత్యవసర ట్రయాజ్: రెడ్ - అత్యవసర గుండె చికిత్స]**\n\n• **రోగ నిర్ధారణ:** తీవ్రమైన కార్డియాక్ ఎమర్జెన్సీ (STEMI అనుమానం)\n• **తక్షణ చర్య:** వెంటనే 108 నంబరుకు కాల్ చేయండి.\n• **స్పెషలిస్ట్:** [డాక్టర్ ప్రియా శర్మతో అపాయింట్‌మెంట్](appointments.html?doctor=D001)`;
+        }
+        if (q.includes('పక్షవాతం') || q.includes('మెదడు') || q.includes('stroke')) {
+            return `🔴 **[అత్యవసర ట్రయాజ్: రెడ్ - కోడ్ స్ట్రోక్]**\n\n• **న్యూరాలజిస్ట్:** [డాక్టర్ స్నేహా దేశాయ్‌తో సంప్రదించండి](appointments.html?doctor=D003)`;
+        }
+        if (q.includes('ఎముక') || q.includes('కీళ్ల') || q.includes('ఫ్రాక్చర్') || q.includes('fracture') || q.includes('bone')) {
+            return `🟡 **[ట్రయాజ్: ఎల్లో - ఆర్థోపెడిక్ కేర్]**\n\n• **ఆర్థోపెడిక్ సర్జన్:** [డాక్టర్ రాహుల్ వర్మతో అపాయింట్‌మెంట్](appointments.html?doctor=D002)`;
+        }
+        if (q.includes('జ్వరం') || q.includes('డెంగ్యూ') || q.includes('fever') || q.includes('dengue')) {
+            return `🟡 **[ట్రయాజ్: ఎల్లో - జనరల్ మెడిసిన్]**\n\n• **స్పెషలిస్ట్ డాక్టర్:** [డాక్టర్ మీరా అయ్యర్‌తో సంప్రదించండి](appointments.html?doctor=D005)`;
+        }
+        if (q.includes('పిల్లలు') || q.includes('శిశువు') || q.includes('child') || q.includes('pediatric')) {
+            return `🟡 **[ట్రయాజ్: ఎల్లో - పీడియాట్రిక్ వింగ్]**\n\n• **పీడియాట్రిషియన్:** [డాక్టర్ అనిల్ కుమార్‌తో అపాయింట్‌మెంట్](appointments.html?doctor=D004)`;
+        }
+        if (q.includes('చర్మ') || q.includes('అలర్జీ') || q.includes('skin') || q.includes('rash')) {
+            return `🟢 **[ట్రయాజ్: గ్రీన్ - డెర్మటాలజీ కేర్]**\n\n• **డెర్మటాలజిస్ట్:** [డాక్టర్ సంజయ్ కపూర్‌తో సంప్రదించండి](appointments.html?doctor=D006)`;
+        }
+        if (q.includes('మందులు') || q.includes('వార్ఫరిన్') || q.includes('interaction')) {
+            return `🟡 **[ట్రయాజ్: ఎల్లో - ఔషధ విరుద్ధ చర్యల హెచ్చరిక]**\n\n• **వైద్యుల సమీక్ష:** [డాక్టర్ మీరా అయ్యర్‌తో సంప్రదించండి](appointments.html?doctor=D005)`;
+        }
+        return `🟡 **[క్లినికల్ ట్రయాజ్: ఎల్లో - నిపుణుల సలహా]**\n\n• మీ సమస్య: "${query}"\n• వైద్యుల సంప్రదింపుల కోసం: [వైద్యుల అపాయింట్‌మెంట్ బుక్ చేయండి](appointments.html)`;
+    }
+
+    // English
+    if (q.includes('chest pain') || q.includes('heart') || q.includes('stemi') || q.includes('cardio') || q.includes('palpitation')) {
+        return `🔴 **[TRIAGE: RED - EMERGENT / CODE BLUE]**\n\n• **Differential Diagnoses:** Acute Myocardial Infarction (STEMI), Unstable Angina, Aortic Dissection.\n• **Immediate Action:** MANDATORY DOOR-TO-BALLOON < 90 MINS. Dial 108 immediately or report to MediCare Resuscitation Wing.\n• **Attending Specialist:** [Book with Dr. Priya Sharma](appointments.html?doctor=D001) (Chief Interventional Cardiologist)\n• **Pharmacotherapy:** Aspirin 325mg stat chewed + Ticagrelor 180mg. Hold Nitrates if SBP < 90 mmHg.`;
+    }
+
+    if (q.includes('fracture') || q.includes('bone') || q.includes('joint') || q.includes('knee') || q.includes('back pain') || q.includes('ortho')) {
+        return `🟡 **[TRIAGE: YELLOW - URGENT ORTHOPEDIC]**\n\n• **Differential Diagnoses:** Bone Fracture, Acute Ligament Tear, Severe Osteoarthritis.\n• **Home Care:** RICE protocol (Rest, Ice, Compression, Elevation). Do not bear weight.\n• **Attending Surgeon:** [Book with Dr. Rahul Verma](appointments.html?doctor=D002) (Senior Orthopedic Surgeon)`;
+    }
+
+    if (q.includes('stroke') || q.includes('headache') || q.includes('dizzy') || q.includes('dizziness') || q.includes('numb') || q.includes('migraine')) {
+        return `🔴 **[TRIAGE: RED - CODE STROKE]**\n\n• **Differential Diagnoses:** Acute Ischemic Stroke (LVO), Intracranial Hemorrhage, Hemiplegic Migraine.\n• **Protocol:** FAST check (Facial droop, Arm weakness, Slurred speech, Time). Stat Head CT within 20 mins.\n• **Attending Neurologist:** [Consult Dr. Sneha Desai](appointments.html?doctor=D003) (Senior Neuro Physician)`;
+    }
+
+    if (q.includes('child') || q.includes('baby') || q.includes('infant') || q.includes('pediatric') || q.includes('kid')) {
+        return `🟡 **[TRIAGE: YELLOW - PEDIATRIC ASSESSMENT]**\n\n• **Clinical Focus:** Pediatric hydration, febrile seizure watch, immunization updates.\n• **Attending Physician:** [Book with Dr. Anil Kumar](appointments.html?doctor=D004) (Chief Pediatrician)`;
+    }
+
+    if (q.includes('fever') || q.includes('dengue') || q.includes('sepsis') || q.includes('infection') || q.includes('shiver') || q.includes('cold') || q.includes('cough')) {
+        return `🟡 **[TRIAGE: YELLOW - URGENT INTERNAL MEDICINE]**\n\n• **Differential Diagnoses:** Dengue Viral Fever, Severe Sepsis (qSOFA), Acute Respiratory Tract Infection.\n• **Critical Safety Warning:** In Dengue fever, Aspirin & NSAIDs are strictly contraindicated due to platelet drop; use Paracetamol only.\n• **Attending Physician:** [Consult Dr. Meera Iyer](appointments.html?doctor=D005) (Internal Medicine Specialist)`;
+    }
+
+    if (q.includes('skin') || q.includes('rash') || q.includes('acne') || q.includes('allergy') || q.includes('itch') || q.includes('dermatology')) {
+        return `🟢 **[TRIAGE: GREEN - DERMATOLOGY EVALUATION]**\n\n• **Differential Diagnoses:** Contact Dermatitis, Acute Urticaria, Cutaneous Drug Eruption.\n• **Clinical Care:** Avoid harsh soaps, apply cool compresses, document any newly started medications.\n• **Attending Specialist:** [Consult Dr. Sanjay Kapoor](appointments.html?doctor=D006) (Clinical Dermatologist)`;
+    }
+
+    if (q.includes('drug') || q.includes('interaction') || q.includes('warfarin') || q.includes('aspirin') || q.includes('fluconazole') || q.includes('sildenafil')) {
+        return `🟡 **[TRIAGE: YELLOW - DRUG MATRIX SAFETY]**\n\n• **Alert:** Warfarin + Fluconazole / Aspirin elevates INR > 5.5, risking severe internal hemorrhage.\n• **Nitrate Conflict:** Sildenafil + Nitroglycerin causes catastrophic fatal hypotension.\n• **Contraindication:** Dengue fever with Aspirin/NSAIDs is strictly prohibited; Paracetamol only.\n• **Attending Physician:** [Consult Dr. Meera Iyer](appointments.html?doctor=D005) (Internal Medicine Specialist)`;
+    }
+
+    if (q.includes('icu') || q.includes('bed') || q.includes('ventilator') || q.includes('capacity')) {
+        return `🟢 **[TRIAGE: GREEN - SYSTEM CAPACITY]**\n\n• **MICU:** 14 / 16 Beds Occupied (2 Isolation Beds Available)\n• **CCU (Cardiac):** 11 / 12 Beds Occupied (Bed 08 open for Cath lab post-op)\n• **Mechanical Ventilators:** 7 Available in Central Depot\n• [View Live Bed Plan](emergency.html)`;
+    }
+
+    return `🟢 **[TRIAGE: GREEN - CLINICAL ADVICE]**\n\n• **Assessment of query:** "${query}"\n• **Clinical Recommendation:** Cross-referenced with Hospital EHR and Evidence-based Guidelines.\n• **Doctor Consultation:** [Book with Specialist Physician](appointments.html)`;
+}
+
 async function callGeminiAPIFromApp(userQuery, history = [], lang = 'en-IN', apiKey = '', model = 'gemini-1.5-flash') {
     if (!apiKey || !apiKey.trim()) throw new Error('No API Key');
 
     const cleanKey = apiKey.trim();
     if (cleanKey.toLowerCase().startsWith('demo-') || cleanKey.toLowerCase() === 'demo') {
-        const local = generateAIClinicalResponse(userQuery);
-        return `🟢 **[TRIAGE: CLINICAL DEMO MODE]**\n\n${local.text}\n\n[Book Specialist Visit](${local.link || 'appointments.html'})`;
+        return generateAppEnhancedLocalTriage(userQuery, lang);
     }
 
     const langNames = {
@@ -6385,24 +6584,19 @@ Identify dangerous drug-drug interactions (DDI) and contraindications:
 - Detail patient home care precautions and red-flag symptoms to watch.
 
 5. MULTILINGUAL RESPONSES:
-Active Target Language: ${targetLangStr}.
-You MUST generate the entire clinical triage response fluently in ${targetLangStr}.
+Active Target Language: {TARGET_LANG}.
+You MUST generate the entire clinical triage response fluently in {TARGET_LANG}.
 If Hindi (hi-IN), respond completely in Hindi Devanagari script (हिन्दी).
 If Telugu (te-IN), respond completely in Telugu script (తెలుగు).
 If English (en-IN), maintain crisp professional clinical English.`;
 
-    const pastTurns = (history || []).slice(-8);
+    const systemPromptText = systemPrompt.replace(/\{TARGET_LANG\}/g, targetLangStr);
+    const pastTurns = buildGeminiContents(history, userQuery);
 
     const payload = {
-        contents: [
-            ...pastTurns,
-            {
-                role: 'user',
-                parts: [{ text: userQuery }]
-            }
-        ],
+        contents: pastTurns,
         systemInstruction: {
-            parts: [{ text: systemPrompt }]
+            parts: [{ text: systemPromptText }]
         },
         generationConfig: {
             temperature: 0.3,
@@ -6412,7 +6606,7 @@ If English (en-IN), maintain crisp professional clinical English.`;
         }
     };
 
-    const endpointModel = model || 'gemini-1.5-flash';
+    const endpointModel = (model || 'gemini-1.5-flash').replace(/^models\//, '');
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${endpointModel}:generateContent?key=${cleanKey}`;
 
     const response = await fetch(url, {
@@ -6551,16 +6745,18 @@ let activeAISpeechButton = null;
 function speakAIMessage(text, btnElement) {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
 
-    if (window.speechSynthesis.speaking) {
+    if (window.speechSynthesis.speaking && activeAISpeechButton === btnElement) {
         window.speechSynthesis.cancel();
-        if (activeAISpeechButton) {
-            activeAISpeechButton.innerHTML = '<i class="fas fa-volume-high"></i>';
-            activeAISpeechButton = null;
-        }
+        btnElement.innerHTML = '<i class="fas fa-volume-high"></i>';
+        activeAISpeechButton = null;
         return;
     }
 
     window.speechSynthesis.cancel();
+    if (activeAISpeechButton) {
+        activeAISpeechButton.innerHTML = '<i class="fas fa-volume-high"></i>';
+        activeAISpeechButton = null;
+    }
 
     // Strip markdown formatting and html tags
     const clean = (text || '')
