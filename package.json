@@ -2,6 +2,7 @@
   "name": "medicare-hospital-management-system",
   "version": "2.0.0",
   "private": true,
+  "type": "module",
   "description": "MediCare HMS - Apple Design Healthcare Platform with React 18, Vite & RBAC",
   "main": "index.html",
   "scripts": {
