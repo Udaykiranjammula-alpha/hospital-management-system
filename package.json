@@ -6,7 +6,7 @@
   "description": "MediCare HMS - Apple Design Healthcare Platform with React 18, Vite & RBAC",
   "main": "index.html",
   "scripts": {
-    "start": "npx serve .",
+    "start": "node scripts/serve.js",
     "dev": "vite build --config vite.react.config.js --watch",
     "build:react": "vite build --config vite.react.config.js",
     "test": "node scripts/deep-verify-hms.js"
