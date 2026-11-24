@@ -27,18 +27,23 @@ const STATIC_ASSETS = [
     './manifest.json'
 ];
 
-// Install: Cache critical core static assets
+// Install: Cache critical core static assets safely without failing on redirects
 self.addEventListener('install', (event) => {
     event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(STATIC_ASSETS).catch((err) => {
-                console.warn('[MediCare SW] Static asset pre-caching warning:', err);
-            });
+        caches.open(CACHE_NAME).then(async (cache) => {
+            for (const asset of STATIC_ASSETS) {
+                try {
+                    const response = await fetch(asset, { redirect: 'follow' });
+                    if (response && response.status === 200) {
+                        await cache.put(asset, response);
+                    }
+                } catch (_) {}
+            }
         }).then(() => self.skipWaiting())
     );
 });
 
-// Activate: Prune outdated legacy caches
+// Activate: Prune outdated legacy caches and claim clients immediately
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) => {
@@ -53,7 +58,7 @@ self.addEventListener('activate', (event) => {
     );
 });
 
-// Fetch: Stale-While-Revalidate with robust offline fallback and query param resilience
+// Fetch: Network First with graceful fallback — NEVER throws or rejects navigation
 self.addEventListener('fetch', (event) => {
     const { request } = event;
 
@@ -62,34 +67,46 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    event.respondWith(
-        caches.open(CACHE_NAME).then(async (cache) => {
-            const cachedResponse = await cache.match(request, { ignoreSearch: true });
+    // For HTML navigation requests, let browser network handle redirects seamlessly
+    if (request.mode === 'navigate' || (request.headers.get('accept') && request.headers.get('accept').includes('text/html'))) {
+        event.respondWith(
+            fetch(request).catch(async () => {
+                const cache = await caches.open(CACHE_NAME);
+                const fallback = (await cache.match('./dashboard.html', { ignoreSearch: true })) ||
+                                 (await cache.match('./index.html', { ignoreSearch: true }));
+                if (fallback) return fallback;
+                return new Response(
+                    '<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><title>MediCare HMS Offline</title></head><body style=\"font-family:system-ui;background:#090d16;color:#f8fafc;padding:40px;text-align:center;\"><h1>MediCare HMS Offline Resilient Mode</h1><p>Connection lost. Please refresh when connectivity is restored.</p><a href=\"./dashboard.html\" style=\"color:#38bdf8;\">Return to Dashboard</a></body></html>',
+                    { status: 200, headers: { 'Content-Type': 'text/html' } }
+                );
+            })
+        );
+        return;
+    }
 
+    // For assets (CSS, JS, images, fonts): Cache-first with network fallback
+    event.respondWith(
+        caches.match(request, { ignoreSearch: true }).then((cachedResponse) => {
             if (cachedResponse) {
                 // Background revalidation
-                fetch(request).then((networkResponse) => {
-                    if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+                fetch(request).then(async (networkResponse) => {
+                    if (networkResponse && networkResponse.status === 200) {
+                        const cache = await caches.open(CACHE_NAME);
                         cache.put(request, networkResponse.clone());
                     }
                 }).catch(() => {});
                 return cachedResponse;
             }
 
-            try {
-                const networkResponse = await fetch(request);
-                if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+            return fetch(request).then(async (networkResponse) => {
+                if (networkResponse && networkResponse.status === 200) {
+                    const cache = await caches.open(CACHE_NAME);
                     cache.put(request, networkResponse.clone());
                 }
                 return networkResponse;
-            } catch (err) {
-                // Offline HTML navigation fallback
-                if (request.mode === 'navigate' || (request.headers.get('accept') && request.headers.get('accept').includes('text/html'))) {
-                    const fallback = await cache.match('./dashboard.html', { ignoreSearch: true }) || await cache.match('./index.html', { ignoreSearch: true });
-                    if (fallback) return fallback;
-                }
-                throw err;
-            }
+            }).catch(() => {
+                return new Response('', { status: 408 });
+            });
         })
     );
 });

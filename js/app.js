@@ -2115,7 +2115,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // PWA Service Worker Registration & Offline Resilient Handling
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator && (window.location.protocol.startsWith('http') || window.location.protocol.startsWith('https'))) {
-        navigator.serviceWorker.register('./sw.js').catch(err => {
+        navigator.serviceWorker.register('./sw.js').then(reg => { if (reg && reg.update) reg.update().catch(() => {}); }).catch(err => {
             console.log('[MediCare HMS] SW note:', err);
         });
     }
