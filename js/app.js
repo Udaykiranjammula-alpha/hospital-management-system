@@ -5746,11 +5746,13 @@ function updateGlobalUserHUD() {
         // 2. User Info Avatar Widget
         const userInfo = right.querySelector('.user-info');
         if (userInfo) {
+            const shortName = (user.displayName === 'System Administrator' || user.displayName === 'Administrator') ? 'Dr. Admin' : user.displayName;
+            const shortDept = (user.department === 'Executive Operations' || user.department === 'Hospital Operations') ? 'Super User' : (user.department || user.role);
             userInfo.innerHTML = `
-                <img src="${user.avatar}" alt="${user.displayName}" class="avatar">
+                <img src="${user.avatar}" alt="${shortName}" class="avatar">
                 <div>
-                    <strong style="font-size: 0.88rem; display: block; line-height: 1.2;">${user.displayName}</strong>
-                    <span style="font-size: 0.72rem; color: var(--text-muted); font-family: 'JetBrains Mono';">${user.department || user.role}</span>
+                    <strong>${shortName}</strong>
+                    <span>${shortDept}</span>
                 </div>
             `;
         }
