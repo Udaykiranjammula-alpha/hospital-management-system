@@ -1,0 +1,42 @@
+{
+  "name": "MediCare HMS - Super Specialty Hospital Management System",
+  "short_name": "MediCare HMS",
+  "description": "Next-Gen Apple Glassmorphic Hospital Management Platform with Telemedicine, Blood Bank, Smart Bed Allocation, and ABHA Health Passports",
+  "start_url": "./dashboard.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#000000",
+  "theme_color": "#0a84ff",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='128' fill='%230a84ff'/%3E%3Cpath fill='white' d='M220 120h72v100h100v72H292v100h-72V292H120v-72h100z'/%3E%3C/svg%3E",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["medical", "health", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Emergency & Trauma",
+      "url": "./emergency.html",
+      "description": "Level-1 Trauma & Critical Care Cockpit"
+    },
+    {
+      "name": "Telemedicine",
+      "url": "./telemedicine.html",
+      "description": "Virtual Tele-Consultation Studio"
+    },
+    {
+      "name": "Blood Bank",
+      "url": "./blood-bank.html",
+      "description": "Blood Inventory & Donor Registry"
+    },
+    {
+      "name": "Patient Self-Service Portal",
+      "url": "./patient-portal.html",
+      "description": "ABHA Health Passports & Records"
+    }
+  ]
+}

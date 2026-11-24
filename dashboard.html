@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MediCare HMS - Live Executive Operations Dashboard</title>
+    <link rel="manifest" href="manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css?v=9.0">
@@ -26,6 +27,9 @@
             </div>
             <nav class="sidebar-nav">
                 <a href="dashboard.html" class="nav-item active"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+                <a href="emergency.html" class="nav-item" style="color: #ef4444;"><i class="fas fa-truck-medical" style="color: #ef4444;"></i><span>Emergency / ICU</span></a>
+                <a href="telemedicine.html" class="nav-item" style="color: #38bdf8;"><i class="fas fa-video" style="color: #38bdf8;"></i><span>Telemedicine</span></a>
+                <a href="blood-bank.html" class="nav-item" style="color: #f43f5e;"><i class="fas fa-hand-holding-droplet" style="color: #f43f5e;"></i><span>Blood Bank</span></a>
                 <a href="patients.html" class="nav-item"><i class="fas fa-user-injured"></i><span>Patients</span></a>
                 <a href="doctors.html" class="nav-item"><i class="fas fa-user-md"></i><span>Doctors</span></a>
                 <a href="appointments.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>Appointments</span></a>
@@ -34,6 +38,7 @@
                 <a href="pharmacy.html" class="nav-item"><i class="fas fa-pills"></i><span>Pharmacy</span></a>
                 <a href="billing.html" class="nav-item"><i class="fas fa-file-invoice-dollar"></i><span>Billing</span></a>
                 <a href="admin.html" class="nav-item"><i class="fas fa-cogs"></i><span>Administration</span></a>
+                <a href="patient-portal.html" class="nav-item" style="color: #38bdf8;"><i class="fas fa-id-badge" style="color: #38bdf8;"></i><span>Patient Portal</span></a>
                 <a href="/slides" target="_blank" class="nav-item" style="color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.25); background: rgba(56, 189, 248, 0.08);"><i class="fas fa-file-powerpoint" style="color: #38bdf8;"></i><span>Presentation</span></a>
             </nav>
             <div class="sidebar-footer">
@@ -161,6 +166,58 @@
                     </div>
                 </div>
 
+                <!-- FACILITY 3: SMART VISUAL HOSPITAL BED & WARD MANAGEMENT FLOOR PLAN -->
+                <div class="card" style="margin-top: 24px; border: 1px solid rgba(56, 189, 248, 0.35);">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(56, 189, 248, 0.2); border: 1px solid var(--primary); display: flex; align-items: center; justify-content: center; color: var(--primary);">
+                                    <i class="fas fa-hospital-user"></i>
+                                </div>
+                                <div>
+                                    <h3 class="card-title" style="margin: 0; font-size: 1.12rem;">Smart Visual Hospital Bed & Ward Management Floor Plan</h3>
+                                    <p style="font-size: 0.76rem; color: var(--text-muted); margin: 2px 0 0 0;">Interactive 2D Ward Matrix • Real-Time Occupancy • 1-Click Bed Allocation & Transfer</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <button class="btn btn-sm btn-outline" onclick="openBedAllocationModal()">
+                                <i class="fas fa-bed-pulse"></i> 1-Click Bed Allocation
+                            </button>
+                            <button class="btn btn-sm btn-primary" onclick="openPatientTransferModal()">
+                                <i class="fas fa-right-left"></i> Transfer Patient
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Ward & Wing Tabs + Bed Status Legend Bar -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--glass-border);">
+                        <!-- Wing Filter Pills -->
+                        <div class="bed-wing-pills" id="bedWingPills" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button class="btn-wing-pill active" data-wing="all" onclick="filterBedFloorPlan('all', this)">All Wings (18)</button>
+                            <button class="btn-wing-pill" data-wing="ICU" onclick="filterBedFloorPlan('ICU', this)"><i class="fas fa-lungs"></i> ICU</button>
+                            <button class="btn-wing-pill" data-wing="CCU" onclick="filterBedFloorPlan('CCU', this)"><i class="fas fa-heart-pulse"></i> Cardiac CCU</button>
+                            <button class="btn-wing-pill" data-wing="Pediatric" onclick="filterBedFloorPlan('Pediatric', this)"><i class="fas fa-child"></i> Pediatric</button>
+                            <button class="btn-wing-pill" data-wing="Emergency" onclick="filterBedFloorPlan('Emergency', this)"><i class="fas fa-truck-medical"></i> ER Bays</button>
+                            <button class="btn-wing-pill" data-wing="General" onclick="filterBedFloorPlan('General', this)"><i class="fas fa-bed"></i> General Ward</button>
+                            <button class="btn-wing-pill" data-wing="Executive" onclick="filterBedFloorPlan('Executive', this)"><i class="fas fa-crown"></i> Executive Suites</button>
+                        </div>
+
+                        <!-- Status Legend Pills -->
+                        <div style="display: flex; gap: 10px; align-items: center; font-size: 0.75rem; flex-wrap: wrap;">
+                            <span class="bed-status-pill occupied"><i class="fas fa-circle-dot"></i> Occupied</span>
+                            <span class="bed-status-pill available"><i class="fas fa-circle-check"></i> Available</span>
+                            <span class="bed-status-pill sanitizing"><i class="fas fa-spray-can-sparkles"></i> Sanitizing</span>
+                            <span class="bed-status-pill maintenance"><i class="fas fa-wrench"></i> Maintenance</span>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Bed Matrix Grid -->
+                    <div class="bed-floorplan-grid" id="dashboardBedGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 14px; margin-top: 18px;">
+                        <!-- Rendered dynamically by js/app.js -->
+                    </div>
+                </div>
+
                 <!-- Consultations & Department Roster Grid -->
                 <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; margin-top: 24px;">
                     <!-- Recent Appointments -->
@@ -268,6 +325,99 @@
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- MODAL: 1-Click Bed Allocation -->
+    <div class="modal-overlay" id="bedAllocationModal" style="display: none;">
+        <div class="modal" style="max-width: 520px;">
+            <div class="modal-header">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-bed-pulse" style="color: var(--primary); font-size: 20px;"></i>
+                    <h3 style="margin: 0; font-size: 1.15rem;">1-Click Inpatient Bed Allocation</h3>
+                </div>
+                <button class="btn-icon" onclick="closeModal('bedAllocationModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <form onsubmit="event.preventDefault(); submitBedAllocation();">
+                    <div class="form-group">
+                        <label class="form-label">Selected Inpatient Bed *</label>
+                        <select id="allocBedSelect" class="form-control form-select" required>
+                            <!-- Populated with available beds -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Admitted Patient *</label>
+                        <select id="allocPatientSelect" class="form-control form-select" required>
+                            <!-- Populated with admitted patients -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Clinical Admission Reason / Department Notes</label>
+                        <input type="text" id="allocNotes" class="form-control" placeholder="e.g. Post-Op surgical observation, Glycemic stabilization" value="Urgent Clinical Stabilization">
+                    </div>
+                    <div class="modal-footer" style="padding-bottom: 0; padding-right: 0;">
+                        <button type="button" class="btn btn-outline" onclick="closeModal('bedAllocationModal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-check"></i> Allocate Bed & Sync</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: 1-Click Patient Bed Transfer -->
+    <div class="modal-overlay" id="patientTransferModal" style="display: none;">
+        <div class="modal" style="max-width: 540px;">
+            <div class="modal-header">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-right-left" style="color: #38bdf8; font-size: 20px;"></i>
+                    <h3 style="margin: 0; font-size: 1.15rem;">1-Click Patient Bed & Ward Transfer</h3>
+                </div>
+                <button class="btn-icon" onclick="closeModal('patientTransferModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <form onsubmit="event.preventDefault(); submitPatientTransfer();">
+                    <div class="form-group">
+                        <label class="form-label">Current Occupied Bed & Patient *</label>
+                        <select id="transferSourceBedSelect" class="form-control form-select" required onchange="updateTransferSourceInfo()">
+                            <!-- Populated with occupied beds -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Destination Bed (Target Wing) *</label>
+                        <select id="transferTargetBedSelect" class="form-control form-select" required>
+                            <!-- Populated with available beds -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Clinical Justification for Transfer *</label>
+                        <select id="transferReasonSelect" class="form-control form-select" required>
+                            <option value="Escalation to Intensive Care Unit (ICU)">Escalation to Intensive Care Unit (ICU)</option>
+                            <option value="Step-down from ICU to General Ward">Step-down from ICU to General Ward</option>
+                            <option value="Transfer to Cardiac Care Unit (CCU)">Transfer to Cardiac Care Unit (CCU)</option>
+                            <option value="Transition to Pediatric Specialized Pavilion">Transition to Pediatric Specialized Pavilion</option>
+                            <option value="Upgrade to Executive Presidential Sky Suite">Upgrade to Executive Presidential Sky Suite</option>
+                        </select>
+                    </div>
+                    <div class="modal-footer" style="padding-bottom: 0; padding-right: 0;">
+                        <button type="button" class="btn btn-outline" onclick="closeModal('patientTransferModal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);"><i class="fas fa-arrow-right-arrow-left"></i> Execute Transfer & Broadcast</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Bed Details & Direct Bed Actions -->
+    <div class="modal-overlay" id="bedDetailsModal" style="display: none;">
+        <div class="modal" style="max-width: 480px;">
+            <div class="modal-header">
+                <h3 style="margin: 0; font-size: 1.15rem;" id="bedDetailTitle">Bed Details</h3>
+                <button class="btn-icon" onclick="closeModal('bedDetailsModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body" id="bedDetailContent">
+                <!-- Rendered dynamically -->
+            </div>
+        </div>
     </div>
 
     <div id="toast-container"></div>

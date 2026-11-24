@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MediCare HMS - Digital Prescription Records</title>
+    <title>MediCare HMS - Digital Prescription Records & DDI Safety</title>
+    <link rel="manifest" href="manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css?v=9.0">
 </head>
 <body>
     <div class="ambient-background">
+        <canvas id="liveWallpaperCanvas"></canvas>
         <div class="ambient-orb orb-1"></div>
         <div class="ambient-orb orb-2"></div>
         <div class="ambient-orb orb-3"></div>
@@ -25,6 +27,9 @@
             </div>
             <nav class="sidebar-nav">
                 <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+                <a href="emergency.html" class="nav-item" style="color: #ef4444;"><i class="fas fa-truck-medical" style="color: #ef4444;"></i><span>Emergency / ICU</span></a>
+                <a href="telemedicine.html" class="nav-item" style="color: #38bdf8;"><i class="fas fa-video" style="color: #38bdf8;"></i><span>Telemedicine</span></a>
+                <a href="blood-bank.html" class="nav-item" style="color: #f43f5e;"><i class="fas fa-hand-holding-droplet" style="color: #f43f5e;"></i><span>Blood Bank</span></a>
                 <a href="patients.html" class="nav-item"><i class="fas fa-user-injured"></i><span>Patients</span></a>
                 <a href="doctors.html" class="nav-item"><i class="fas fa-user-md"></i><span>Doctors</span></a>
                 <a href="appointments.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>Appointments</span></a>
@@ -33,6 +38,7 @@
                 <a href="pharmacy.html" class="nav-item"><i class="fas fa-pills"></i><span>Pharmacy</span></a>
                 <a href="billing.html" class="nav-item"><i class="fas fa-file-invoice-dollar"></i><span>Billing</span></a>
                 <a href="admin.html" class="nav-item"><i class="fas fa-cogs"></i><span>Administration</span></a>
+                <a href="patient-portal.html" class="nav-item" style="color: #38bdf8;"><i class="fas fa-id-badge" style="color: #38bdf8;"></i><span>Patient Portal</span></a>
                 <a href="/slides" target="_blank" class="nav-item" style="color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.25); background: rgba(56, 189, 248, 0.08);"><i class="fas fa-file-powerpoint" style="color: #38bdf8;"></i><span>Presentation</span></a>
             </nav>
             <div class="sidebar-footer">
@@ -48,7 +54,7 @@
                     <button class="btn-icon sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar"><i class="fas fa-bars"></i></button>
                     <div>
                         <h1 style="font-size: 1.35rem; font-weight: 700;">Digital Prescriptions (Rx)</h1>
-                        <span style="font-size: 0.76rem; color: var(--text-muted); font-family: 'JetBrains Mono';">Medication Orders, Dosages & Pharmacy Dispatch</span>
+                        <span style="font-size: 0.76rem; color: var(--text-muted); font-family: 'JetBrains Mono';">Real-Time DDI Contraindication Engine • Verifiable ABDM QR • Pharmacy Dispatch</span>
                     </div>
                 </div>
                 <div class="header-right">
@@ -57,8 +63,8 @@
                         <span>Search</span>
                         <kbd>Ctrl K</kbd>
                     </div>
-                    <div class="live-emergency-ticker">
-                        <i class="fas fa-pills"></i> <span>PHARMACY: DISPENSING</span>
+                    <div class="live-emergency-ticker" style="border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.15);">
+                        <i class="fas fa-shield-halved" style="color: #10b981;"></i> <span style="color: #a7f3d0;">DDI ENGINE: ACTIVE</span>
                     </div>
                     <div class="live-clock-widget">
                         <span class="clock-dot"></span>
@@ -132,11 +138,14 @@
         </main>
     </div>
 
-    <!-- Create Prescription Modal -->
+    <!-- Create Prescription Modal with Live Drug-Drug Interaction Safety Engine -->
     <div class="modal-overlay" id="prescriptionModal" style="display:none;">
-        <div class="modal" style="max-width: 680px;">
+        <div class="modal" style="max-width: 720px;">
             <div class="modal-header">
-                <h3>Issue Digital Prescription</h3>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-file-prescription" style="color: var(--primary); font-size: 20px;"></i>
+                    <h3 style="margin: 0;">Issue Digital Prescription & Safety Review</h3>
+                </div>
                 <button class="btn-icon" onclick="closeModal('prescriptionModal')"><i class="fas fa-times"></i></button>
             </div>
             <div class="modal-body">
@@ -144,7 +153,7 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Patient *</label>
-                            <select id="rxPatient" class="form-control form-select" required></select>
+                            <select id="rxPatient" class="form-control form-select" required onchange="triggerRxDdiScan()"></select>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Consulting Doctor *</label>
@@ -153,29 +162,87 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Clinical Diagnosis *</label>
-                        <input type="text" class="form-control" id="rxDiagnosis" placeholder="e.g. Acute Bronchitis" required>
+                        <input type="text" id="rxDiagnosis" class="form-control" placeholder="e.g. Acute Bronchitis" required>
                     </div>
 
-                    <h4 style="margin: 16px 0 8px 0; font-size: 0.95rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 4px;">Prescribed Medication</h4>
-                    <div class="form-row">
-                        <div class="form-group" style="flex:2;">
-                            <label class="form-label">Medicine Name & Strength</label>
-                            <input type="text" class="form-control" id="rxMed1" placeholder="e.g. Amoxicillin 500mg" value="Amoxicillin 500mg">
-                        </div>
-                        <div class="form-group" style="flex:1;">
-                            <label class="form-label">Dosage</label>
-                            <input type="text" class="form-control" id="rxDose1" placeholder="e.g. 1 capsule" value="1 capsule">
+                    <!-- Test Preset Conflict Quick Chips for Judges -->
+                    <div style="margin: 12px 0 8px 0; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 14px;">
+                        <span style="font-size: 0.74rem; font-weight: 700; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">
+                            <i class="fas fa-vial-circle-check"></i> Test Clinical DDI Interaction Engine (Click to Load):
+                        </span>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button type="button" class="telemed-chip" onclick="loadDdiPreset('warfarin_aspirin')">Warfarin + Aspirin (Bleeding)</button>
+                            <button type="button" class="telemed-chip" onclick="loadDdiPreset('sildenafil_nitro')">Sildenafil + Nitroglycerin (Hypotension)</button>
+                            <button type="button" class="telemed-chip" onclick="loadDdiPreset('tramadol_fluoxetine')">Tramadol + SSRI (Serotonin)</button>
+                            <button type="button" class="telemed-chip" onclick="loadDdiPreset('clopidogrel_omeprazole')">Clopidogrel + Omeprazole</button>
                         </div>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">Frequency</label>
-                            <input type="text" class="form-control" id="rxFreq1" placeholder="e.g. Twice daily" value="Twice daily after meals">
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin: 16px 0 8px 0; border-bottom: 1px solid var(--glass-border); padding-bottom: 4px;">
+                        <h4 style="margin: 0; font-size: 0.95rem;">Prescribed Medications</h4>
+                        <button type="button" class="btn btn-sm btn-outline" onclick="addPrescriptionMedRow()">
+                            <i class="fas fa-plus"></i> Add Another Drug
+                        </button>
+                    </div>
+
+                    <!-- Primary Medication -->
+                    <div class="rx-med-block" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); padding: 12px; border-radius: 10px; margin-bottom: 10px;">
+                        <div class="form-row">
+                            <div class="form-group" style="flex:2;">
+                                <label class="form-label">Medicine 1 Name & Strength *</label>
+                                <input type="text" class="form-control rx-med-input" id="rxMed1" placeholder="e.g. Warfarin 5mg or Amoxicillin 500mg" value="Amoxicillin 500mg" oninput="triggerRxDdiScan()">
+                            </div>
+                            <div class="form-group" style="flex:1;">
+                                <label class="form-label">Dosage</label>
+                                <input type="text" class="form-control" id="rxDose1" placeholder="e.g. 1 capsule" value="1 capsule">
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Duration</label>
-                            <input type="text" class="form-control" id="rxDur1" placeholder="e.g. 7 days" value="7 days">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Frequency</label>
+                                <input type="text" class="form-control" id="rxFreq1" placeholder="e.g. Twice daily" value="Twice daily after meals">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Duration</label>
+                                <input type="text" class="form-control" id="rxDur1" placeholder="e.g. 7 days" value="7 days">
+                            </div>
                         </div>
+                    </div>
+
+                    <!-- Additional Medications Container -->
+                    <div id="additionalMedsContainer">
+                        <!-- Populated dynamically when clicking Add Another Drug -->
+                    </div>
+
+                    <!-- Real-Time Clinical DDI & Allergy Warning Banner -->
+                    <div id="prescriptionDdiAlert" style="display: none; margin: 14px 0; border-radius: 12px; padding: 14px 18px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.45); box-shadow: 0 4px 20px rgba(239, 68, 68, 0.2);">
+                        <div style="display: flex; align-items: flex-start; gap: 12px;">
+                            <div style="width: 38px; height: 38px; border-radius: 50%; background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; display: flex; align-items: center; justify-content: center; color: #ef4444; font-size: 18px; flex-shrink: 0;">
+                                <i class="fas fa-triangle-exclamation"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
+                                    <strong style="color: #ffffff; font-size: 0.95rem;" id="rxDdiWarningTitle">Severe Clinical Contraindication Detected!</strong>
+                                    <span class="badge badge-danger" id="rxDdiSeverityBadge">SEVERE</span>
+                                </div>
+                                <p style="margin: 6px 0; color: #cbd5e1; font-size: 0.82rem; line-height: 1.5;" id="rxDdiMechanism">
+                                    Synergistic antiplatelet and anticoagulant effects exponentially elevate risk of life-threatening major GI and intracranial bleeding.
+                                </p>
+                                <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 12px; margin-top: 8px;">
+                                    <span style="color: #38bdf8; font-weight: 700; font-size: 0.78rem;"><i class="fas fa-lightbulb"></i> Recommended Clinical Alternative:</span>
+                                    <span style="color: #f1f5f9; font-size: 0.8rem; display: block; margin-top: 2px;" id="rxDdiAlternative">Substitute with Acetaminophen / Paracetamol.</span>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline" id="btnApplyDdiAlternative" onclick="applyDdiSafeAlternative()" style="margin-top: 10px; border-color: #38bdf8; color: #38bdf8;">
+                                    <i class="fas fa-wand-magic-sparkles"></i> Apply Recommended Safe Alternative
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- All Clear DDI Banner -->
+                    <div id="prescriptionDdiAllClear" style="display: block; margin: 10px 0; border-radius: 10px; padding: 10px 14px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); color: #34d399; font-size: 0.8rem; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-circle-check"></i>
+                        <span>Clinical DDI Safety Engine: <strong>Zero Drug Interactions or Allergy Conflicts</strong> detected.</span>
                     </div>
 
                     <div class="form-group">
@@ -223,6 +290,7 @@
     </div>
 
     <div id="toast-container"></div>
+    <div id="react-assistant-mount"></div>
     <script src="js/react-components.bundle.js"></script>
     <script src="js/app.js?v=9.0"></script>
 </body>

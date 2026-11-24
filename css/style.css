@@ -5032,3 +5032,285 @@ body[data-theme="frost-light"] .progress-track {
     right: 24px !important;
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), 0 0 24px rgba(10, 132, 255, 0.3) !important;
 }
+
+
+/* ==========================================================================
+   9. Virtual Telemedicine Studio & Picture-in-Picture Vitals HUD
+   ========================================================================== */
+.telemed-call-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 9999px;
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: #38bdf8;
+    backdrop-filter: blur(12px);
+}
+
+.pulse-rec-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ef4444;
+    box-shadow: 0 0 10px #ef4444;
+    animation: ppgHeartbeatAnim 1.2s infinite;
+}
+
+.telemed-chip {
+    padding: 6px 12px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #e2e8f0;
+    font-size: 0.76rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.telemed-chip:hover {
+    background: rgba(56, 189, 248, 0.16);
+    border-color: #38bdf8;
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25);
+}
+
+.telemed-btn:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: var(--primary) !important;
+    color: var(--primary) !important;
+    transform: scale(1.06);
+}
+
+/* ==========================================================================
+   10. Blood Bank 8-Group Stock Visualizer & Liquid Cylinders
+   ========================================================================== */
+.blood-group-card {
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(244, 63, 94, 0.25);
+    border-radius: 16px;
+    padding: 16px;
+    text-align: center;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.blood-group-card:hover {
+    transform: translateY(-3px);
+    border-color: #f43f5e;
+    box-shadow: 0 12px 28px rgba(244, 63, 94, 0.25);
+}
+
+.blood-group-letter {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #ffffff;
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1;
+}
+
+.blood-cylinder-wrap {
+    width: 32px;
+    height: 70px;
+    border-radius: 16px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1.5px solid rgba(255, 255, 255, 0.15);
+    margin: 12px auto;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.blood-cylinder-fill {
+    width: 100%;
+    border-radius: 0 0 14px 14px;
+    background: linear-gradient(180deg, #f43f5e 0%, #be123c 100%);
+    box-shadow: 0 0 14px rgba(244, 63, 94, 0.5);
+    transition: height 0.8s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.blood-cylinder-fill.critical {
+    background: linear-gradient(180deg, #ef4444 0%, #991b1b 100%);
+    animation: ppgHeartbeatAnim 1.4s infinite;
+}
+
+/* ==========================================================================
+   11. Smart Visual Hospital Bed & Ward Management Floor Plan
+   ========================================================================== */
+.btn-wing-pill {
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-wing-pill:hover,
+.btn-wing-pill.active {
+    background: rgba(14, 165, 233, 0.2);
+    border-color: #38bdf8;
+    color: #ffffff;
+    box-shadow: 0 0 14px rgba(56, 189, 248, 0.3);
+}
+
+.bed-status-pill {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.bed-status-pill.occupied {
+    background: rgba(239, 68, 68, 0.18);
+    border: 1px solid rgba(239, 68, 68, 0.45);
+    color: #f87171;
+}
+
+.bed-status-pill.available {
+    background: rgba(16, 185, 129, 0.18);
+    border: 1px solid rgba(16, 185, 129, 0.45);
+    color: #34d399;
+}
+
+.bed-status-pill.sanitizing {
+    background: rgba(245, 158, 11, 0.18);
+    border: 1px solid rgba(245, 158, 11, 0.45);
+    color: #fbbf24;
+}
+
+.bed-status-pill.maintenance {
+    background: rgba(148, 163, 184, 0.18);
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    color: #cbd5e1;
+}
+
+.bed-matrix-card {
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 14px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.bed-matrix-card:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 16px rgba(56, 189, 248, 0.25);
+    border-color: rgba(56, 189, 248, 0.5);
+}
+
+.bed-matrix-card.status-occupied {
+    border-left: 4px solid #ef4444;
+}
+
+.bed-matrix-card.status-available {
+    border-left: 4px solid #10b981;
+}
+
+.bed-matrix-card.status-sanitizing {
+    border-left: 4px solid #f59e0b;
+}
+
+.bed-matrix-card.status-maintenance {
+    border-left: 4px solid #94a3b8;
+}
+
+/* ==========================================================================
+   12. Ayushman Bharat ABHA Digital Health Card & Apple Wallet Pass
+   ========================================================================== */
+.abha-card-wrap {
+    background: linear-gradient(135deg, #091322 0%, #0d213a 100%);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    border-radius: 20px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), inset 0 0 40px rgba(56, 189, 248, 0.1);
+}
+
+.abha-tricolor-bar {
+    height: 5px;
+    width: 100%;
+    background: linear-gradient(90deg, #ff9933 33.3%, #ffffff 33.3%, #ffffff 66.6%, #138808 66.6%);
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.abha-number-pill {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: #ffffff;
+    text-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
+}
+
+.abha-chip-icon {
+    width: 36px;
+    height: 28px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #fcd34d 0%, #b45309 100%);
+    border: 1px solid #f59e0b;
+    display: inline-block;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+}
+
+.apple-wallet-pass-card {
+    background: linear-gradient(145deg, #18181b 0%, #09090b 100%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 22px;
+    padding: 24px;
+    color: #ffffff;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+    position: relative;
+}
+
+/* ==========================================================================
+   13. Offline Resilient Banner & PWA Badges
+   ========================================================================== */
+.offline-mesh-banner {
+    position: fixed;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 99999;
+    background: rgba(245, 158, 11, 0.95);
+    color: #000000;
+    font-weight: 700;
+    font-size: 0.82rem;
+    padding: 8px 20px;
+    border-radius: 9999px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(245, 158, 11, 0.5);
+    display: none;
+    align-items: center;
+    gap: 8px;
+}

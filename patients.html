@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MediCare HMS - Patient Management</title>
+    <title>MediCare HMS - Patient Directory & ABHA Health Card</title>
+    <link rel="manifest" href="manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css?v=9.0">
 </head>
 <body>
     <div class="ambient-background">
+        <canvas id="liveWallpaperCanvas"></canvas>
         <div class="ambient-orb orb-1"></div>
         <div class="ambient-orb orb-2"></div>
         <div class="ambient-orb orb-3"></div>
@@ -25,6 +27,9 @@
             </div>
             <nav class="sidebar-nav">
                 <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+                <a href="emergency.html" class="nav-item" style="color: #ef4444;"><i class="fas fa-truck-medical" style="color: #ef4444;"></i><span>Emergency / ICU</span></a>
+                <a href="telemedicine.html" class="nav-item" style="color: #38bdf8;"><i class="fas fa-video" style="color: #38bdf8;"></i><span>Telemedicine</span></a>
+                <a href="blood-bank.html" class="nav-item" style="color: #f43f5e;"><i class="fas fa-hand-holding-droplet" style="color: #f43f5e;"></i><span>Blood Bank</span></a>
                 <a href="patients.html" class="nav-item active"><i class="fas fa-user-injured"></i><span>Patients</span></a>
                 <a href="doctors.html" class="nav-item"><i class="fas fa-user-md"></i><span>Doctors</span></a>
                 <a href="appointments.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>Appointments</span></a>
@@ -33,6 +38,7 @@
                 <a href="pharmacy.html" class="nav-item"><i class="fas fa-pills"></i><span>Pharmacy</span></a>
                 <a href="billing.html" class="nav-item"><i class="fas fa-file-invoice-dollar"></i><span>Billing</span></a>
                 <a href="admin.html" class="nav-item"><i class="fas fa-cogs"></i><span>Administration</span></a>
+                <a href="patient-portal.html" class="nav-item" style="color: #38bdf8;"><i class="fas fa-id-badge" style="color: #38bdf8;"></i><span>Patient Portal</span></a>
                 <a href="/slides" target="_blank" class="nav-item" style="color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.25); background: rgba(56, 189, 248, 0.08);"><i class="fas fa-file-powerpoint" style="color: #38bdf8;"></i><span>Presentation</span></a>
             </nav>
             <div class="sidebar-footer">
@@ -47,8 +53,8 @@
                 <div class="header-left">
                     <button class="btn-icon sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar"><i class="fas fa-bars"></i></button>
                     <div>
-                        <h1 style="font-size: 1.35rem; font-weight: 700;">Patient Registry & Care</h1>
-                        <span style="font-size: 0.76rem; color: var(--text-muted); font-family: 'JetBrains Mono';">Inpatient Admissions & Clinical Records</span>
+                        <h1 style="font-size: 1.35rem; font-weight: 700;">Patient Registry & ABHA Digital Health</h1>
+                        <span style="font-size: 0.76rem; color: var(--text-muted); font-family: 'JetBrains Mono';">Ayushman Bharat Digital Mission (ABDM) • Clinical EHR Profiles</span>
                     </div>
                 </div>
                 <div class="header-right">
@@ -58,7 +64,7 @@
                         <kbd>Ctrl K</kbd>
                     </div>
                     <div class="live-emergency-ticker">
-                        <i class="fas fa-heartbeat"></i> <span>WING: INPATIENT NORMAL</span>
+                        <i class="fas fa-id-card"></i> <span>ABDM: CONNECTED</span>
                     </div>
                     <div class="live-clock-widget">
                         <span class="clock-dot"></span>
@@ -81,14 +87,17 @@
 
             <div class="content-wrapper">
                 <!-- Actions Bar -->
-                <div class="actions-bar">
-                    <div class="search-box">
+                <div class="actions-bar" style="flex-wrap: wrap; gap: 12px;">
+                    <div class="search-box" style="flex: 1; min-width: 260px;">
                         <i class="fas fa-search"></i>
                         <input type="text" id="patientSearch" placeholder="Search patients by name, ID, phone, condition..." oninput="filterPatients()">
                     </div>
-                    <div style="display: flex; gap: 10px;">
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <button class="btn btn-outline" onclick="exportPatientsToCSV()" title="Export Patients Directory to CSV">
                             <i class="fas fa-file-csv"></i> Export CSV
+                        </button>
+                        <button class="btn btn-outline" onclick="openAbhaGeneratorForActive()" style="border-color: #38bdf8; color: #38bdf8;">
+                            <i class="fas fa-id-card"></i> Generate ABHA Digital Card
                         </button>
                         <button class="btn btn-primary" onclick="showAddPatientModal()">
                             <i class="fas fa-user-plus"></i> Register New Patient
@@ -109,12 +118,12 @@
                                     <tr>
                                         <th>Patient ID</th>
                                         <th>Full Name</th>
-                                        <th>Age</th>
-                                        <th>Gender</th>
+                                        <th>Age / Gender</th>
                                         <th>Blood</th>
                                         <th>Contact Phone</th>
                                         <th>Primary Diagnosis</th>
                                         <th>Care Status</th>
+                                        <th>ABHA Health ID</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -206,14 +215,44 @@
                     </div>
                     <div class="modal-footer" style="padding-right:0; padding-bottom:0;">
                         <button type="button" class="btn btn-outline" onclick="closeModal('patientModal')">Cancel</button>
-                        <button type="button" class="btn btn-primary" onclick="savePatient()">Save Patient Record</button>
+                        <button type="submit" class="btn btn-primary" onclick="savePatient()">Save Patient Record</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
+    <!-- MODAL: Government-Compliant ABHA Digital Health Card Generator & Viewer -->
+    <div class="modal-overlay" id="abhaCardModal" style="display:none;">
+        <div class="modal" style="max-width: 620px; background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(40px); border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 24px; padding: 0; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.85), 0 0 40px rgba(56,189,248,0.25);">
+            <div class="modal-header no-print" style="padding: 16px 24px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; display: flex; align-items: center; justify-content: center; color: #38bdf8;">
+                        <i class="fas fa-id-card"></i>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.05rem; color: #fff;">Ayushman Bharat Digital Health ID Card</h3>
+                        <span style="font-size: 0.72rem; color: #94a3b8;">National Health Authority • Government of India (ABDM)</span>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button class="btn btn-sm btn-outline no-print" onclick="toggleAppleWalletPassView()"><i class="fab fa-apple"></i> Apple Wallet</button>
+                    <button class="btn btn-sm btn-primary no-print" onclick="window.print()"><i class="fas fa-print"></i> Print Card</button>
+                    <button class="btn-icon no-print" onclick="closeModal('abhaCardModal')"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+
+            <div class="modal-body" style="padding: 24px;">
+                <!-- Authentic ABHA Card Container -->
+                <div id="abhaCardVisualContainer">
+                    <!-- Dynamically rendered by renderABHACard() in js/app.js -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="toast-container"></div>
+    <div id="react-assistant-mount"></div>
     <script src="js/react-components.bundle.js"></script>
     <script src="js/app.js?v=9.0"></script>
 </body>

@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediCare HMS - National Blood Bank & Donor Registry</title>
+    <link rel="manifest" href="manifest.json">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css?v=9.0">
+</head>
+<body>
+    <div class="ambient-background">
+        <canvas id="liveWallpaperCanvas"></canvas>
+        <div class="ambient-orb orb-1" style="background: radial-gradient(circle, rgba(244, 63, 94, 0.25) 0%, transparent 70%);"></div>
+        <div class="ambient-orb orb-2"></div>
+        <div class="ambient-orb orb-3"></div>
+        <div class="ambient-grid"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Glass Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-hospital brand-icon"></i>
+                <h2>MediCare HMS</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+                <a href="emergency.html" class="nav-item" style="color: #ef4444;"><i class="fas fa-truck-medical" style="color: #ef4444;"></i><span>Emergency / ICU</span></a>
+                <a href="telemedicine.html" class="nav-item" style="color: #38bdf8;"><i class="fas fa-video" style="color: #38bdf8;"></i><span>Telemedicine</span></a>
+                <a href="blood-bank.html" class="nav-item active" style="color: #f43f5e;"><i class="fas fa-hand-holding-droplet" style="color: #f43f5e;"></i><span>Blood Bank</span></a>
+                <a href="patients.html" class="nav-item"><i class="fas fa-user-injured"></i><span>Patients</span></a>
+                <a href="doctors.html" class="nav-item"><i class="fas fa-user-md"></i><span>Doctors</span></a>
+                <a href="appointments.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>Appointments</span></a>
+                <a href="prescriptions.html" class="nav-item"><i class="fas fa-prescription"></i><span>Prescriptions</span></a>
+                <a href="laboratory.html" class="nav-item"><i class="fas fa-flask"></i><span>Laboratory</span></a>
+                <a href="pharmacy.html" class="nav-item"><i class="fas fa-pills"></i><span>Pharmacy</span></a>
+                <a href="billing.html" class="nav-item"><i class="fas fa-file-invoice-dollar"></i><span>Billing</span></a>
+                <a href="admin.html" class="nav-item"><i class="fas fa-cogs"></i><span>Administration</span></a>
+                <a href="patient-portal.html" class="nav-item" style="color: #38bdf8;"><i class="fas fa-id-badge" style="color: #38bdf8;"></i><span>Patient Portal</span></a>
+                <a href="/slides" target="_blank" class="nav-item" style="color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.25); background: rgba(56, 189, 248, 0.08);"><i class="fas fa-file-powerpoint" style="color: #38bdf8;"></i><span>Presentation</span></a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="index.html" class="nav-item" onclick="logout()"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header HUD -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="btn-icon sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar"><i class="fas fa-bars"></i></button>
+                    <div>
+                        <h1 style="font-size: 1.35rem; font-weight: 700; color: #f43f5e;"><i class="fas fa-droplet fa-fade" style="margin-right: 8px;"></i> National Blood Bank Command</h1>
+                        <span style="font-size: 0.76rem; color: var(--text-muted); font-family: 'JetBrains Mono';">Live 8-Group Inventory Visualizer • Donor Registry • Emergency Transfusion Broadcast</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="header-search-pill" onclick="toggleCommandPalette(true)" title="Universal Search (Ctrl + K)">
+                        <i class="fas fa-search" style="font-size: 0.8rem; color: var(--primary);"></i>
+                        <span>Search</span>
+                        <kbd>Ctrl K</kbd>
+                    </div>
+
+                    <!-- Critical Shortage Warning Ticker -->
+                    <div class="live-emergency-ticker" style="border-color: rgba(244, 63, 94, 0.4); background: rgba(244, 63, 94, 0.15);">
+                        <i class="fas fa-triangle-exclamation" style="color: #f43f5e;"></i>
+                        <span style="color: #fecdd3;" id="bloodBankCriticalTicker">O- & AB- CRITICAL SHORTAGE</span>
+                    </div>
+
+                    <div class="live-clock-widget">
+                        <span class="clock-dot"></span>
+                        <span class="clock-time" id="liveTime">--:--:--</span>
+                    </div>
+
+                    <button class="btn-icon notification-bell-btn" onclick="toggleNotificationCenter()" title="Notifications & Alerts"><i class="fas fa-bell"></i></button>
+                    <button class="btn-icon sound-toggle" onclick="toggleSound()" title="Toggle Audio"><i class="fas fa-volume-up"></i></button>
+                    <button class="btn-icon wallpaper-toggle" onclick="cycleWallpaperMode()" title="Switch Wallpaper"><i class="fas fa-magic"></i></button>
+                    <button class="btn-icon theme-toggle" onclick="toggleTheme()" title="Switch Theme"><i class="fas fa-moon"></i></button>
+                    <div id="react-badge-mount"></div>
+                    <div class="user-info" id="globalUserBadge"></div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <!-- Top Actions Bar -->
+                <div class="actions-bar" style="margin-bottom: 24px; flex-wrap: wrap; gap: 14px; justify-content: space-between;">
+                    <div>
+                        <h2 style="font-size: 1.25rem; font-weight: 800; color: #fff; margin: 0;">Transfusion Medicine & Inventory Center</h2>
+                        <p style="font-size: 0.82rem; color: var(--text-muted); margin: 2px 0 0 0;">Cryopreservation storage: 2°C to 6°C • Real-time temperature & batch compliance</p>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <button class="btn btn-outline" onclick="openModal('quickAddUnitsModal')">
+                            <i class="fas fa-plus"></i> Intake Blood Units
+                        </button>
+                        <button class="btn btn-outline" onclick="openDonorIntakeModal()">
+                            <i class="fas fa-user-plus"></i> Donor Intake & Screening
+                        </button>
+                        <button class="btn btn-primary" onclick="openEmergencyBloodRequestModal()" style="background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%); border-color: #e11d48; box-shadow: 0 4px 14px rgba(244, 63, 94, 0.4);">
+                            <i class="fas fa-bullhorn"></i> Broadcast Emergency Blood Request
+                        </button>
+                    </div>
+                </div>
+
+                <!-- KPI Metric Highlights -->
+                <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin-bottom: 24px;">
+                    <div class="stat-card blue">
+                        <div class="stat-icon"><i class="fas fa-droplet"></i></div>
+                        <div class="stat-details">
+                            <h3 class="stat-number" id="bloodTotalUnits">135</h3>
+                            <p class="stat-label">Total Units in Cryo-Bank</p>
+                        </div>
+                    </div>
+                    <div class="stat-card red">
+                        <div class="stat-icon"><i class="fas fa-triangle-exclamation"></i></div>
+                        <div class="stat-details">
+                            <h3 class="stat-number" id="bloodCriticalGroups">3</h3>
+                            <p class="stat-label">Critical Shortage Groups</p>
+                        </div>
+                    </div>
+                    <div class="stat-card green">
+                        <div class="stat-icon"><i class="fas fa-user-check"></i></div>
+                        <div class="stat-details">
+                            <h3 class="stat-number" id="bloodRegisteredDonors">48</h3>
+                            <p class="stat-label">Active Screened Donors</p>
+                        </div>
+                    </div>
+                    <div class="stat-card orange">
+                        <div class="stat-icon"><i class="fas fa-truck-fast"></i></div>
+                        <div class="stat-details">
+                            <h3 class="stat-number" id="bloodPendingRequests">2</h3>
+                            <p class="stat-label">Active Transfusion Requests</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 1: LIVE 8-GROUP BLOOD INVENTORY STOCK VISUALIZER -->
+                <div class="card" style="margin-bottom: 28px;">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h3 class="card-title"><i class="fas fa-boxes-stacked" style="color: #f43f5e;"></i> Live Blood Inventory Stock Visualizer</h3>
+                            <p style="font-size: 0.78rem; color: var(--text-muted); margin: 2px 0 0 0;">8 ABO / RhD Blood Groups with capacity thresholds and expiration monitoring</p>
+                        </div>
+                        <div style="display: flex; gap: 8px; font-size: 0.75rem; align-items: center;">
+                            <span style="display: flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; border-radius: 50%; background: #ef4444; display: inline-block;"></span> Critical &lt; 5</span>
+                            <span style="display: flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; border-radius: 50%; background: #f59e0b; display: inline-block;"></span> Low 5-10</span>
+                            <span style="display: flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; border-radius: 50%; background: #10b981; display: inline-block;"></span> Optimal &gt; 10</span>
+                        </div>
+                    </div>
+
+                    <!-- 8 Blood Group Visual Grid -->
+                    <div class="blood-inventory-grid" id="bloodInventoryGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 16px; margin-top: 14px;">
+                        <!-- Rendered dynamically by js/app.js -->
+                    </div>
+                </div>
+
+                <!-- SECTION 2 & 3: SPLIT GRID - EMERGENCY REQUEST BROADCAST TRACKER & DONOR REGISTRY -->
+                <div style="display: grid; grid-template-columns: 1.1fr 1.3fr; gap: 24px; align-items: start;">
+                    
+                    <!-- Emergency Blood Transfusion Requests -->
+                    <div class="card">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3 class="card-title"><i class="fas fa-siren-on" style="color: #ef4444;"></i> Active Transfusion Requests</h3>
+                            <span class="badge badge-danger"><i class="fas fa-circle-dot"></i> BROADCAST MESH</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Req ID</th>
+                                        <th>Dept / Patient</th>
+                                        <th>Group</th>
+                                        <th>Units</th>
+                                        <th>Urgency</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bloodRequestsTableBody">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Donor Registry & Eligibility Screening Table -->
+                    <div class="card">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3 class="card-title"><i class="fas fa-id-card-clip" style="color: #10b981;"></i> Screened Blood Donor Registry</h3>
+                            <button class="btn btn-sm btn-outline" onclick="openDonorIntakeModal()"><i class="fas fa-user-plus"></i> New Donor</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Donor</th>
+                                        <th>Blood</th>
+                                        <th>Hb (g/dL)</th>
+                                        <th>Last Donated</th>
+                                        <th>Eligibility</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bloodDonorsTableBody">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL: Donor Intake & Clinical Eligibility Screening -->
+    <div class="modal-overlay" id="donorIntakeModal" style="display: none;">
+        <div class="modal" style="max-width: 640px;">
+            <div class="modal-header">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-heart-pulse" style="color: #f43f5e; font-size: 20px;"></i>
+                    <h3 style="margin: 0; font-size: 1.15rem;">Donor Intake & Eligibility Screening</h3>
+                </div>
+                <button class="btn-icon" onclick="closeModal('donorIntakeModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="donorIntakeForm" onsubmit="event.preventDefault(); submitDonorIntake();">
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 2;">
+                            <label class="form-label">Donor Full Name *</label>
+                            <input type="text" id="donorName" class="form-control" placeholder="e.g. Ramesh Verma" required>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Blood Group *</label>
+                            <select id="donorBloodGroup" class="form-control form-select" required>
+                                <option value="O+">O+</option>
+                                <option value="O-">O-</option>
+                                <option value="A+">A+</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B-">B-</option>
+                                <option value="AB+">AB+</option>
+                                <option value="AB-">AB-</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Age (Yrs, Min 18) *</label>
+                            <input type="number" id="donorAge" class="form-control" min="18" max="65" value="28" required oninput="evaluateDonorEligibility()">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Weight (Kg, Min 50kg) *</label>
+                            <input type="number" id="donorWeight" class="form-control" min="40" max="150" value="68" required oninput="evaluateDonorEligibility()">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Hemoglobin (g/dL) *</label>
+                            <input type="number" step="0.1" id="donorHemoglobin" class="form-control" min="8" max="20" value="14.2" required oninput="evaluateDonorEligibility()">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Contact Phone *</label>
+                            <input type="tel" id="donorPhone" class="form-control" placeholder="9876543210" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Last Donation Date</label>
+                            <input type="date" id="donorLastDonation" class="form-control" value="2026-05-10" onchange="evaluateDonorEligibility()">
+                        </div>
+                    </div>
+
+                    <!-- Clinical Screening Verdict Card -->
+                    <div id="donorScreeningVerdictBox" style="padding: 12px 16px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); margin: 16px 0; display: flex; align-items: center; gap: 12px;">
+                        <i class="fas fa-circle-check" style="color: #10b981; font-size: 22px;" id="verdictIcon"></i>
+                        <div>
+                            <strong style="color: #10b981; font-size: 0.9rem;" id="verdictTitle">Clinically Eligible for Blood Donation</strong>
+                            <p style="margin: 2px 0 0 0; font-size: 0.78rem; color: #cbd5e1;" id="verdictDesc">Criteria passed: Hb &ge; 12.5 g/dL, Weight &ge; 50 kg, Age 18-65, Deferral interval &gt; 90 days.</p>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer" style="padding-bottom: 0; padding-right: 0;">
+                        <button type="button" class="btn btn-outline" onclick="closeModal('donorIntakeModal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="btnConfirmDonorIntake"><i class="fas fa-check"></i> Register & Intake Donation</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Emergency Blood Request Broadcaster -->
+    <div class="modal-overlay" id="emergencyBloodRequestModal" style="display: none;">
+        <div class="modal" style="max-width: 540px;">
+            <div class="modal-header">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-siren" style="color: #ef4444; font-size: 20px;"></i>
+                    <h3 style="margin: 0; font-size: 1.15rem;">Broadcast Emergency Blood Request</h3>
+                </div>
+                <button class="btn-icon" onclick="closeModal('emergencyBloodRequestModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="emergencyBloodRequestForm" onsubmit="event.preventDefault(); broadcastEmergencyBloodRequest();">
+                    <div class="form-group">
+                        <label class="form-label">Requesting Department / Theatre *</label>
+                        <select id="reqDept" class="form-control form-select" required>
+                            <option value="Emergency & Trauma Resuscitation">Emergency & Trauma Resuscitation</option>
+                            <option value="Cardiac Surgery OT-1">Cardiac Surgery OT-1</option>
+                            <option value="Neuro Intensive Care Unit">Neuro Intensive Care Unit</option>
+                            <option value="Labor & Delivery OT">Labor & Delivery OT</option>
+                            <option value="Orthopedic Trauma Theatre">Orthopedic Trauma Theatre</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 2;">
+                            <label class="form-label">Patient Name / Hospital ID</label>
+                            <input type="text" id="reqPatient" class="form-control" placeholder="e.g. Priya Singh (P004)" value="Trauma Code Alpha (Emergency Bay 1)">
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Blood Group *</label>
+                            <select id="reqBloodGroup" class="form-control form-select" required>
+                                <option value="O-">O- (Universal Red Cell)</option>
+                                <option value="O+">O+</option>
+                                <option value="A+">A+</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B-">B-</option>
+                                <option value="AB+">AB+</option>
+                                <option value="AB-">AB-</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Units Required *</label>
+                            <input type="number" id="reqUnits" class="form-control" min="1" max="6" value="2" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Clinical Urgency Priority *</label>
+                            <select id="reqUrgency" class="form-control form-select" required>
+                                <option value="STAT Emergency">STAT Emergency (Instant Dispatch)</option>
+                                <option value="Urgent">Urgent (&lt; 30 Mins)</option>
+                                <option value="Routine">Routine Pre-Op Standby</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer" style="padding-bottom: 0; padding-right: 0;">
+                        <button type="button" class="btn btn-outline" onclick="closeModal('emergencyBloodRequestModal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); border-color: #b91c1c;">
+                            <i class="fas fa-tower-broadcast"></i> Transmit Urgent Broadcast
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Quick Add Units -->
+    <div class="modal-overlay" id="quickAddUnitsModal" style="display: none;">
+        <div class="modal" style="max-width: 480px;">
+            <div class="modal-header">
+                <h3 style="margin: 0; font-size: 1.15rem;">Intake / Restock Cryo-Units</h3>
+                <button class="btn-icon" onclick="closeModal('quickAddUnitsModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <form onsubmit="event.preventDefault(); submitQuickAddUnits();">
+                    <div class="form-group">
+                        <label class="form-label">Blood Group *</label>
+                        <select id="quickAddGroup" class="form-control form-select" required>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Units to Add *</label>
+                        <input type="number" id="quickAddUnitsNum" class="form-control" min="1" max="20" value="4" required>
+                    </div>
+                    <div class="modal-footer" style="padding-bottom: 0; padding-right: 0;">
+                        <button type="button" class="btn btn-outline" onclick="closeModal('quickAddUnitsModal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add to Inventory</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+    <div id="react-assistant-mount"></div>
+    <script src="js/react-components.bundle.js"></script>
+    <script src="js/app.js?v=9.0"></script>
+</body>
+</html>

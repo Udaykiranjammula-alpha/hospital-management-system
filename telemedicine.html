@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediCare HMS - Virtual Telemedicine & Video Consultation</title>
+    <link rel="manifest" href="manifest.json">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css?v=9.0">
+</head>
+<body>
+    <div class="ambient-background">
+        <canvas id="liveWallpaperCanvas"></canvas>
+        <div class="ambient-orb orb-1" style="background: radial-gradient(circle, rgba(14, 165, 233, 0.25) 0%, transparent 70%);"></div>
+        <div class="ambient-orb orb-2"></div>
+        <div class="ambient-orb orb-3"></div>
+        <div class="ambient-grid"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Glass Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-hospital brand-icon"></i>
+                <h2>MediCare HMS</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+                <a href="emergency.html" class="nav-item" style="color: #ef4444;"><i class="fas fa-truck-medical" style="color: #ef4444;"></i><span>Emergency / ICU</span></a>
+                <a href="telemedicine.html" class="nav-item active" style="color: #38bdf8;"><i class="fas fa-video" style="color: #38bdf8;"></i><span>Telemedicine</span></a>
+                <a href="blood-bank.html" class="nav-item" style="color: #f43f5e;"><i class="fas fa-hand-holding-droplet" style="color: #f43f5e;"></i><span>Blood Bank</span></a>
+                <a href="patients.html" class="nav-item"><i class="fas fa-user-injured"></i><span>Patients</span></a>
+                <a href="doctors.html" class="nav-item"><i class="fas fa-user-md"></i><span>Doctors</span></a>
+                <a href="appointments.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>Appointments</span></a>
+                <a href="prescriptions.html" class="nav-item"><i class="fas fa-prescription"></i><span>Prescriptions</span></a>
+                <a href="laboratory.html" class="nav-item"><i class="fas fa-flask"></i><span>Laboratory</span></a>
+                <a href="pharmacy.html" class="nav-item"><i class="fas fa-pills"></i><span>Pharmacy</span></a>
+                <a href="billing.html" class="nav-item"><i class="fas fa-file-invoice-dollar"></i><span>Billing</span></a>
+                <a href="admin.html" class="nav-item"><i class="fas fa-cogs"></i><span>Administration</span></a>
+                <a href="patient-portal.html" class="nav-item" style="color: #38bdf8;"><i class="fas fa-id-badge" style="color: #38bdf8;"></i><span>Patient Portal</span></a>
+                <a href="/slides" target="_blank" class="nav-item" style="color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.25); background: rgba(56, 189, 248, 0.08);"><i class="fas fa-file-powerpoint" style="color: #38bdf8;"></i><span>Presentation</span></a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="index.html" class="nav-item" onclick="logout()"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header HUD -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="btn-icon sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar"><i class="fas fa-bars"></i></button>
+                    <div>
+                        <h1 style="font-size: 1.35rem; font-weight: 700; color: #38bdf8;"><i class="fas fa-video fa-fade" style="margin-right: 8px;"></i> Virtual Telemedicine Studio</h1>
+                        <span style="font-size: 0.76rem; color: var(--text-muted); font-family: 'JetBrains Mono';">WebRTC HD Stream • Real-Time Vitals HUD • Instant Rx Pad • Automated Billing Handoff</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="header-search-pill" onclick="toggleCommandPalette(true)" title="Universal Search (Ctrl + K)">
+                        <i class="fas fa-search" style="font-size: 0.8rem; color: var(--primary);"></i>
+                        <span>Search</span>
+                        <kbd>Ctrl K</kbd>
+                    </div>
+
+                    <!-- Call Active Status Badge -->
+                    <div class="telemed-call-indicator active" id="telemedStatusBadge">
+                        <span class="pulse-rec-dot"></span>
+                        <span id="telemedCallTimer">00:05:42</span>
+                        <span style="opacity:0.4;">|</span>
+                        <span style="font-size: 0.72rem; letter-spacing: 0.5px;">E2EE SECURE</span>
+                    </div>
+
+                    <div class="live-clock-widget">
+                        <span class="clock-dot"></span>
+                        <span class="clock-time" id="liveTime">--:--:--</span>
+                    </div>
+
+                    <button class="btn-icon notification-bell-btn" onclick="toggleNotificationCenter()" title="Notifications & Clinical Alerts"><i class="fas fa-bell"></i></button>
+                    <button class="btn-icon sound-toggle" onclick="toggleSound()" title="Toggle UI Audio"><i class="fas fa-volume-up"></i></button>
+                    <button class="btn-icon wallpaper-toggle" onclick="cycleWallpaperMode()" title="Switch Wallpaper"><i class="fas fa-magic"></i></button>
+                    <button class="btn-icon theme-toggle" onclick="toggleTheme()" title="Switch Theme"><i class="fas fa-moon"></i></button>
+                    <div id="react-badge-mount"></div>
+                    <div class="user-info" id="globalUserBadge"></div>
+                </div>
+            </header>
+
+            <div class="content-wrapper" id="telemedicineConsole">
+                <!-- Top Patient Session Switcher Bar -->
+                <div class="telemed-session-bar card" style="padding: 14px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+                    <div style="display: flex; align-items: center; gap: 14px;">
+                        <span style="font-size: 0.82rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px;">Consultation Target:</span>
+                        <select id="telemedPatientSelect" class="form-control" style="width: auto; min-width: 240px; font-weight: 700; color: #fff; background: rgba(15, 23, 42, 0.7);" onchange="switchTelemedSession(this.value)">
+                            <!-- Populated dynamically -->
+                        </select>
+                        <span class="badge badge-info" id="telemedPatientBadge" style="padding: 5px 10px; font-size: 0.75rem;">Admitted</span>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button class="btn btn-sm btn-outline" onclick="simulateIncomingCallModal()">
+                            <i class="fas fa-phone-volume"></i> Simulate Incoming Patient Call
+                        </button>
+                        <button class="btn btn-sm btn-outline" onclick="toggleRealCameraStream()" id="telemedCameraToggleBtn">
+                            <i class="fas fa-camera"></i> <span id="telemedCamBtnLabel">Enable Live WebRTC Webcam</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Main Video & Clinical Cockpit 2-Column Grid -->
+                <div class="telemed-grid" style="display: grid; grid-template-columns: 1.55fr 1fr; gap: 24px; align-items: start;">
+                    
+                    <!-- Left Column: Video Arena & Vitals HUD Overlay -->
+                    <div class="telemed-video-card card" style="padding: 0; overflow: hidden; position: relative; background: #050811; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.7);">
+                        
+                        <!-- Video Display Container -->
+                        <div class="telemed-video-stage" id="telemedVideoStage" style="position: relative; width: 100%; aspect-ratio: 16/10; min-height: 440px; background: #020617; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                            <!-- Real webcam video element (used when webcam enabled) -->
+                            <video id="telemedWebcamVideo" autoplay playsinline muted style="display: none; width: 100%; height: 100%; object-fit: cover;"></video>
+                            
+                            <!-- High-Tech Animated Patient Video Stream Canvas (Fallback/Simulation) -->
+                            <canvas id="telemedPatientStreamCanvas" style="width: 100%; height: 100%; object-fit: cover; display: block;"></canvas>
+
+                            <!-- Live Telemetry Picture-in-Picture (PiP) Doctor/Self Preview -->
+                            <div class="telemed-pip-box" id="telemedDoctorPip" style="position: absolute; bottom: 84px; right: 20px; width: 140px; height: 100px; border-radius: 14px; background: rgba(15, 23, 42, 0.9); border: 2px solid var(--primary); overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.6); z-index: 20;">
+                                <video id="telemedSelfPreviewVideo" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover; display: none;"></video>
+                                <div id="telemedDoctorFallback" style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(2, 132, 199, 0.4) 0%, rgba(15, 23, 42, 0.9) 100%);">
+                                    <i class="fas fa-user-md" style="font-size: 26px; color: #38bdf8;"></i>
+                                    <span style="font-size: 10px; font-weight: 700; color: #fff; margin-top: 4px;">Dr. Admin (You)</span>
+                                </div>
+                                <span class="badge badge-primary" style="position: absolute; top: 4px; left: 4px; font-size: 8px; padding: 1px 4px;">HOST</span>
+                            </div>
+
+                            <!-- Recording Pulse Tag -->
+                            <div class="telemed-recording-badge" style="position: absolute; top: 18px; left: 20px; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); border: 1px solid rgba(239, 68, 68, 0.5); padding: 6px 14px; border-radius: 20px; display: flex; align-items: center; gap: 8px; z-index: 15;">
+                                <span class="telemed-rec-pulse" style="width: 10px; height: 10px; border-radius: 50%; background: #ef4444; box-shadow: 0 0 10px #ef4444; animation: ppgHeartbeatAnim 1.2s infinite;"></span>
+                                <span style="font-size: 11px; font-weight: 700; color: #fca5a5; letter-spacing: 0.5px;">REC 4K ENCRYPTED</span>
+                            </div>
+
+                            <!-- Picture-in-Picture Vitals HUD Overlay -->
+                            <div class="telemed-vitals-hud" id="telemedVitalsHud" style="position: absolute; top: 18px; right: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 15;">
+                                <!-- Heart Rate -->
+                                <div class="hud-vital-pill" style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 12px; padding: 6px 12px; display: flex; align-items: center; gap: 10px;">
+                                    <i class="fas fa-heart-pulse fa-beat" style="color: #ef4444; font-size: 15px;"></i>
+                                    <div>
+                                        <div style="font-size: 9px; color: var(--text-muted); text-transform: uppercase;">Heart Rate</div>
+                                        <div style="font-size: 13px; font-weight: 800; color: #fff; font-family: 'JetBrains Mono';" id="hudVitalHr">74 <span style="font-size: 9px; font-weight: 500; color: #94a3b8;">BPM</span></div>
+                                    </div>
+                                </div>
+                                <!-- SpO2 -->
+                                <div class="hud-vital-pill" style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(14, 165, 233, 0.4); border-radius: 12px; padding: 6px 12px; display: flex; align-items: center; gap: 10px;">
+                                    <i class="fas fa-lungs" style="color: #38bdf8; font-size: 15px;"></i>
+                                    <div>
+                                        <div style="font-size: 9px; color: var(--text-muted); text-transform: uppercase;">Blood Oxygen</div>
+                                        <div style="font-size: 13px; font-weight: 800; color: #fff; font-family: 'JetBrains Mono';" id="hudVitalSpo2">98 <span style="font-size: 9px; font-weight: 500; color: #94a3b8;">%</span></div>
+                                    </div>
+                                </div>
+                                <!-- Blood Pressure -->
+                                <div class="hud-vital-pill" style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 12px; padding: 6px 12px; display: flex; align-items: center; gap: 10px;">
+                                    <i class="fas fa-stethoscope" style="color: #10b981; font-size: 15px;"></i>
+                                    <div>
+                                        <div style="font-size: 9px; color: var(--text-muted); text-transform: uppercase;">Blood Pressure</div>
+                                        <div style="font-size: 13px; font-weight: 800; color: #fff; font-family: 'JetBrains Mono';" id="hudVitalBp">120/80 <span style="font-size: 9px; font-weight: 500; color: #94a3b8;">mmHg</span></div>
+                                    </div>
+                                </div>
+                                <!-- Temperature -->
+                                <div class="hud-vital-pill" style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 12px; padding: 6px 12px; display: flex; align-items: center; gap: 10px;">
+                                    <i class="fas fa-temperature-half" style="color: #f59e0b; font-size: 15px;"></i>
+                                    <div>
+                                        <div style="font-size: 9px; color: var(--text-muted); text-transform: uppercase;">Core Temp</div>
+                                        <div style="font-size: 13px; font-weight: 800; color: #fff; font-family: 'JetBrains Mono';" id="hudVitalTemp">98.6 <span style="font-size: 9px; font-weight: 500; color: #94a3b8;">°F</span></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Patient Identity Label in Video -->
+                            <div style="position: absolute; bottom: 84px; left: 20px; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); padding: 8px 16px; border-radius: 12px; z-index: 15;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span class="clock-dot"></span>
+                                    <strong style="color: #ffffff; font-size: 13px;" id="telemedPatientNameLabel">Rajesh Kumar</strong>
+                                    <span style="font-size: 11px; color: var(--text-muted);" id="telemedPatientMetaLabel">(45 M • O+)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Integrated In-Call Floating Control Dock -->
+                        <div class="telemed-control-dock" style="background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); border-top: 1px solid rgba(255, 255, 255, 0.1); padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn-icon telemed-btn" id="btnToggleAudio" onclick="toggleTelemedAudio()" title="Toggle Microphone" style="width: 44px; height: 44px; border-radius: 50%; font-size: 16px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15);">
+                                    <i class="fas fa-microphone"></i>
+                                </button>
+                                <button class="btn-icon telemed-btn" id="btnToggleVideo" onclick="toggleTelemedVideo()" title="Toggle Video Feed" style="width: 44px; height: 44px; border-radius: 50%; font-size: 16px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15);">
+                                    <i class="fas fa-video"></i>
+                                </button>
+                                <button class="btn-icon telemed-btn" id="btnShareScreen" onclick="toggleScreenShare()" title="Share Screen / Diagnostics" style="width: 44px; height: 44px; border-radius: 50%; font-size: 16px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15);">
+                                    <i class="fas fa-display"></i>
+                                </button>
+                                <button class="btn-icon telemed-btn" onclick="captureClinicalSnapshot()" title="Capture High-Res Clinical Snapshot" style="width: 44px; height: 44px; border-radius: 50%; font-size: 16px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15);">
+                                    <i class="fas fa-camera-retro"></i>
+                                </button>
+                            </div>
+
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <button class="btn btn-outline btn-sm" onclick="triggerTelemedVitalsSync()" title="Refresh Synchronized Telemetry">
+                                    <i class="fas fa-arrows-rotate"></i> Sync Vitals
+                                </button>
+                                <button class="btn btn-danger" onclick="endTelemedCallModal()" style="border-radius: 24px; padding: 10px 22px; font-weight: 700; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);">
+                                    <i class="fas fa-phone-slash" style="margin-right: 6px;"></i> End Call
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: In-Call Clinical Cockpit & Digital Rx Pad -->
+                    <div class="telemed-clinical-cockpit">
+                        
+                        <!-- Quick Diagnosis Presets -->
+                        <div class="card" style="margin-bottom: 20px;">
+                            <div class="card-header" style="padding-bottom: 8px;">
+                                <h3 class="card-title" style="font-size: 0.95rem;"><i class="fas fa-bolt" style="color: #f59e0b;"></i> Quick Clinical Diagnosis Presets</h3>
+                            </div>
+                            <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 10px;">Click any preset chip to load clinical evaluation & therapeutic regime:</p>
+                            <div class="telemed-chips-container" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                <button class="telemed-chip" onclick="applyDiagnosisPreset('uri')"><i class="fas fa-head-side-cough"></i> Acute URI / Bronchitis</button>
+                                <button class="telemed-chip" onclick="applyDiagnosisPreset('htn')"><i class="fas fa-heart-pulse"></i> Hypertension Stage-1</button>
+                                <button class="telemed-chip" onclick="applyDiagnosisPreset('diabetes')"><i class="fas fa-droplet"></i> Type 2 Diabetes Glycemic Review</button>
+                                <button class="telemed-chip" onclick="applyDiagnosisPreset('migraine')"><i class="fas fa-brain"></i> Chronic Migraine Attack</button>
+                                <button class="telemed-chip" onclick="applyDiagnosisPreset('postop')"><i class="fas fa-bone"></i> Post-Operative Ortho Follow-Up</button>
+                                <button class="telemed-chip" onclick="applyDiagnosisPreset('allergy')"><i class="fas fa-shield-virus"></i> Allergic Dermatitis</button>
+                            </div>
+                        </div>
+
+                        <!-- In-Call Clinical Notepad -->
+                        <div class="card" style="margin-bottom: 20px;">
+                            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                                <h3 class="card-title" style="font-size: 0.95rem;"><i class="fas fa-notes-medical" style="color: #38bdf8;"></i> In-Call Clinical Notepad</h3>
+                                <span style="font-size: 0.72rem; color: #10b981;"><i class="fas fa-check-circle"></i> Auto-Saving</span>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 12px;">
+                                <label class="form-label" style="font-size: 0.78rem;">Diagnosis / Clinical Impression *</label>
+                                <input type="text" id="telemedDiagnosis" class="form-control" placeholder="e.g. Acute Viral Bronchitis" value="Routine Cardiodiabetic Tele-Evaluation">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" style="font-size: 0.78rem;">Consultation SOAP Notes & Findings</label>
+                                <textarea id="telemedSoapNotes" class="form-control" rows="3" placeholder="Subjective complaints, objective physical signs, assessment & counseling plan...">Patient reports stable morning fasting blood glucose (126 mg/dL). No exertional dyspnea or peripheral edema. Advised to maintain low-glycemic Mediterranean diet and regular 30-min walking routine.</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Instant Digital Prescription Pad -->
+                        <div class="card" style="margin-bottom: 20px;">
+                            <div class="card-header">
+                                <h3 class="card-title" style="font-size: 0.95rem;"><i class="fas fa-prescription" style="color: #10b981;"></i> Instant Digital Prescription Pad</h3>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group" style="flex: 2;">
+                                    <label class="form-label" style="font-size: 0.75rem;">Medicine Name</label>
+                                    <input type="text" id="telemedMedName" class="form-control" placeholder="e.g. Metformin 1000mg ER" value="Metformin 1000mg ER" oninput="checkTelemedDDI()">
+                                </div>
+                                <div class="form-group" style="flex: 1;">
+                                    <label class="form-label" style="font-size: 0.75rem;">Dosage</label>
+                                    <input type="text" id="telemedMedDose" class="form-control" placeholder="1 tablet" value="1 tablet">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" style="font-size: 0.75rem;">Frequency</label>
+                                    <input type="text" id="telemedMedFreq" class="form-control" placeholder="Twice daily after meals" value="Twice daily after meals">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" style="font-size: 0.75rem;">Duration</label>
+                                    <input type="text" id="telemedMedDur" class="form-control" placeholder="30 days" value="30 days">
+                                </div>
+                            </div>
+
+                            <!-- Live DDI Warning Alert Box (Shows if contraindicated) -->
+                            <div id="telemedDdiAlertBox" style="display: none; margin-bottom: 12px; padding: 10px 14px; border-radius: 10px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; font-size: 0.78rem;">
+                                <div style="display: flex; align-items: center; gap: 8px; font-weight: 700;">
+                                    <i class="fas fa-triangle-exclamation" style="color: #ef4444;"></i>
+                                    <span id="telemedDdiTitle">Drug Interaction Warning</span>
+                                </div>
+                                <p id="telemedDdiDesc" style="margin: 4px 0 0 0; color: #cbd5e1; font-size: 0.75rem;"></p>
+                            </div>
+
+                            <button class="btn btn-outline" style="width: 100%; border-color: #10b981; color: #10b981;" onclick="issueTelemedPrescription()">
+                                <i class="fas fa-file-signature"></i> Issue & Dispatch Digital Rx to Patient Portal
+                            </button>
+                        </div>
+
+                        <!-- 1-Click Consultation Completion with Billing Handoff -->
+                        <div class="card" style="background: linear-gradient(135deg, rgba(14, 165, 233, 0.12) 0%, rgba(30, 41, 59, 0.7) 100%); border: 1px solid rgba(56, 189, 248, 0.4);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <div>
+                                    <h4 style="font-size: 1rem; font-weight: 800; color: #fff; margin: 0;">Automated Billing Handoff</h4>
+                                    <p style="font-size: 0.78rem; color: var(--text-muted); margin: 2px 0 0 0;">Tele-consult fee: <strong style="color: #38bdf8;">₹800.00</strong> • Auto-invoices patient</p>
+                                </div>
+                                <span class="badge badge-success"><i class="fas fa-bolt"></i> 1-CLICK DISPATCH</span>
+                            </div>
+                            <button class="btn btn-primary" onclick="completeTelemedConsultation()" style="width: 100%; padding: 14px; font-weight: 800; font-size: 0.98rem; box-shadow: 0 4px 20px rgba(14, 165, 233, 0.4);">
+                                <i class="fas fa-check-circle" style="margin-right: 8px;"></i> Complete Consultation & Route to Billing
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL: Consultation Complete Summary & Invoice Generated Receipt -->
+    <div class="modal-overlay" id="telemedCompleteModal" style="display: none;">
+        <div class="modal" style="max-width: 580px; text-align: center; background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(30px); border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 24px;">
+            <div style="width: 70px; height: 70px; border-radius: 50%; background: rgba(16, 185, 129, 0.2); border: 2px solid #10b981; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 32px; color: #10b981; box-shadow: 0 0 30px rgba(16, 185, 129, 0.35);">
+                <i class="fas fa-circle-check"></i>
+            </div>
+            <h2 style="font-size: 1.4rem; font-weight: 800; color: #fff; margin-bottom: 6px;">Consultation Completed Successfully!</h2>
+            <p style="color: #94a3b8; font-size: 0.88rem; margin-bottom: 20px;">The virtual video consultation has terminated and a digital invoice has been automatically routed to the billing counter and patient self-service portal.</p>
+            
+            <div id="telemedCompleteReceiptContent" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px; padding: 16px; text-align: left; font-size: 0.85rem; margin-bottom: 24px;">
+                <!-- Populated dynamically -->
+            </div>
+
+            <div style="display: flex; gap: 12px;">
+                <button class="btn btn-outline" onclick="closeModal('telemedCompleteModal')" style="flex: 1;">Close</button>
+                <a href="billing.html" class="btn btn-primary" style="flex: 1;"><i class="fas fa-file-invoice-dollar"></i> View in Billing</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Simulated Incoming Patient Call Notification -->
+    <div class="modal-overlay" id="simulatedIncomingCallModal" style="display: none;">
+        <div class="modal" style="max-width: 440px; text-align: center; background: rgba(15, 23, 42, 0.98); border: 1px solid rgba(56, 189, 248, 0.5); border-radius: 24px; padding: 32px;">
+            <div style="width: 80px; height: 80px; border-radius: 50%; background: rgba(14, 165, 233, 0.2); border: 2px solid #38bdf8; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 36px; color: #38bdf8; animation: ppgHeartbeatAnim 1s infinite;">
+                <i class="fas fa-video"></i>
+            </div>
+            <span class="badge badge-info" style="margin-bottom: 8px;">Incoming WebRTC Tele-Consultation</span>
+            <h3 style="color: #fff; font-size: 1.3rem; margin: 6px 0;">Sunita Sharma (P002)</h3>
+            <p style="color: #94a3b8; font-size: 0.82rem; margin-bottom: 24px;">Chief Complaint: Hypertension Stage 1 Review • Requested Priority Tele-Visit</p>
+            <div style="display: flex; gap: 12px;">
+                <button class="btn btn-danger" onclick="closeModal('simulatedIncomingCallModal')" style="flex: 1; padding: 12px;"><i class="fas fa-phone-slash"></i> Decline</button>
+                <button class="btn btn-primary" onclick="acceptIncomingCall('P002')" style="flex: 1; padding: 12px; background: #10b981; border-color: #10b981;"><i class="fas fa-phone"></i> Accept Call</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+    <div id="react-assistant-mount"></div>
+    <script src="js/react-components.bundle.js"></script>
+    <script src="js/app.js?v=9.0"></script>
+</body>
+</html>

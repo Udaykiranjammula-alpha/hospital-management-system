@@ -183,6 +183,126 @@ const defaultResources = [
     { id: 'R008', name: 'Central Oxygen Storage (KL)', total: 50, occupied: 38, category: 'Critical Utilities' }
 ];
 
+const defaultBloodInventory = [
+    { group: 'A+', units: 28, maxCapacity: 40, status: 'Optimal', expiringInDays: 18, batch: 'BLD-A1-2026' },
+    { group: 'A-', units: 6, maxCapacity: 25, status: 'Low Stock', expiringInDays: 9, batch: 'BLD-A2-2026' },
+    { group: 'B+', units: 34, maxCapacity: 45, status: 'Optimal', expiringInDays: 21, batch: 'BLD-B1-2026' },
+    { group: 'B-', units: 4, maxCapacity: 20, status: 'Critical Shortage', expiringInDays: 5, batch: 'BLD-B2-2026' },
+    { group: 'O+', units: 42, maxCapacity: 50, status: 'Optimal', expiringInDays: 26, batch: 'BLD-O1-2026' },
+    { group: 'O-', units: 3, maxCapacity: 25, status: 'Critical Shortage', expiringInDays: 4, batch: 'BLD-O2-2026' },
+    { group: 'AB+', units: 16, maxCapacity: 30, status: 'Normal', expiringInDays: 14, batch: 'BLD-AB1-2026' },
+    { group: 'AB-', units: 2, maxCapacity: 20, status: 'Critical Shortage', expiringInDays: 6, batch: 'BLD-AB2-2026' }
+];
+
+const defaultBloodDonors = [
+    { id: 'DNR-101', name: 'Ramesh Verma', age: 32, gender: 'Male', bloodGroup: 'O+', hemoglobin: 14.8, weight: 74, lastDonation: '2026-06-10', status: 'Eligible', phone: '9811223344' },
+    { id: 'DNR-102', name: 'Anjali Nair', age: 27, gender: 'Female', bloodGroup: 'A+', hemoglobin: 13.2, weight: 58, lastDonation: '2026-05-15', status: 'Eligible', phone: '9822334455' },
+    { id: 'DNR-103', name: 'Karthik Sundaram', age: 41, gender: 'Male', bloodGroup: 'B+', hemoglobin: 15.1, weight: 82, lastDonation: '2026-07-01', status: 'Eligible', phone: '9833445566' },
+    { id: 'DNR-104', name: 'Preeti Desai', age: 23, gender: 'Female', bloodGroup: 'AB-', hemoglobin: 11.8, weight: 48, lastDonation: '2026-08-20', status: 'Deferred', phone: '9844556677' },
+    { id: 'DNR-105', name: 'Farhan Akhtar', age: 36, gender: 'Male', bloodGroup: 'O-', hemoglobin: 15.6, weight: 78, lastDonation: '2026-04-12', status: 'Eligible', phone: '9855667788' }
+];
+
+const defaultBloodRequests = [
+    { id: 'BREQ-501', department: 'Emergency & Trauma Resuscitation', patient: 'Priya Singh (P004)', bloodGroup: 'O-', units: 2, urgency: 'STAT Emergency', status: 'Dispatched', time: '12 mins ago' },
+    { id: 'BREQ-502', department: 'Cardiac Surgery OT-1', patient: 'Vikram Reddy (P005)', bloodGroup: 'AB+', units: 1, urgency: 'Urgent', status: 'Fulfilled', time: '1 hour ago' },
+    { id: 'BREQ-503', department: 'Orthopedic Trauma Theatre', patient: 'Amit Patel (P003)', bloodGroup: 'B+', units: 2, urgency: 'Routine', status: 'Pending', time: '2 hours ago' }
+];
+
+const defaultHospitalBeds = [
+    { id: 'ICU-101', wing: 'ICU', floor: '2nd Floor - Critical Care', status: 'Occupied', patientId: 'P004', patientName: 'Priya Singh', condition: 'Acute MI Recovery', doctor: 'Dr. Priya Sharma', hr: 84, spo2: 97, bp: '135/88' },
+    { id: 'ICU-102', wing: 'ICU', floor: '2nd Floor - Critical Care', status: 'Occupied', patientId: 'P005', patientName: 'Vikram Reddy', condition: 'Severe COPD Flare', doctor: 'Dr. Meera Iyer', hr: 92, spo2: 94, bp: '142/90' },
+    { id: 'ICU-103', wing: 'ICU', floor: '2nd Floor - Critical Care', status: 'Available', patientId: null, patientName: null, condition: null, doctor: null, hr: null, spo2: null, bp: null },
+    { id: 'ICU-104', wing: 'ICU', floor: '2nd Floor - Critical Care', status: 'Sanitization in Progress', patientId: null, patientName: null, condition: null, doctor: null, hr: null, spo2: null, bp: null },
+    { id: 'CCU-201', wing: 'CCU', floor: '3rd Floor - Cardiovascular Tower', status: 'Occupied', patientId: 'P001', patientName: 'Rajesh Kumar', condition: 'Glycemic Instability & Angina', doctor: 'Dr. Priya Sharma', hr: 76, spo2: 99, bp: '128/82' },
+    { id: 'CCU-202', wing: 'CCU', floor: '3rd Floor - Cardiovascular Tower', status: 'Available', patientId: null, patientName: null, condition: null, doctor: null, hr: null, spo2: null, bp: null },
+    { id: 'CCU-203', wing: 'CCU', floor: '3rd Floor - Cardiovascular Tower', status: 'Maintenance', patientId: null, patientName: null, condition: null, doctor: null, hr: null, spo2: null, bp: null },
+    { id: 'PED-301', wing: 'Pediatric', floor: '4th Floor - Mother & Child Pavilion', status: 'Available', patientId: null, patientName: null, condition: null, doctor: null, hr: null, spo2: null, bp: null },
+    { id: 'PED-302', wing: 'Pediatric', floor: '4th Floor - Mother & Child Pavilion', status: 'Occupied', patientId: 'P006', patientName: 'Neha Gupta', condition: 'Dengue Fever Recovery', doctor: 'Dr. Anil Kumar', hr: 88, spo2: 98, bp: '110/72' },
+    { id: 'PED-303', wing: 'Pediatric', floor: '4th Floor - Mother & Child Pavilion', status: 'Available', patientId: null, patientName: null, condition: null, doctor: null, hr: null, spo2: null, bp: null },
+    { id: 'ER-BAY-01', wing: 'Emergency', floor: 'Ground Floor - Trauma Level 1', status: 'Occupied', patientId: 'P003', patientName: 'Amit Patel', condition: 'Compound Tibia Fracture', doctor: 'Dr. Rahul Verma', hr: 98, spo2: 99, bp: '130/85' },
+    { id: 'ER-BAY-02', wing: 'Emergency', floor: 'Ground Floor - Trauma Level 1', status: 'Available', patientId: null, patientName: null, condition: null, doctor: null, hr: null, spo2: null, bp: null },
+    { id: 'ER-BAY-03', wing: 'Emergency', floor: 'Ground Floor - Trauma Level 1', status: 'Available', patientId: null, patientName: null, condition: null, doctor: null, hr: null, spo2: null, bp: null },
+    { id: 'ER-BAY-04', wing: 'Emergency', floor: 'Ground Floor - Trauma Level 1', status: 'Sanitization in Progress', patientId: null, patientName: null, condition: null, doctor: null, hr: null, spo2: null, bp: null },
+    { id: 'GEN-401', wing: 'General', floor: '5th Floor - Inpatient Tower', status: 'Available', patientId: null, patientName: null, condition: null, doctor: null, hr: null, spo2: null, bp: null },
+    { id: 'GEN-402', wing: 'General', floor: '5th Floor - Inpatient Tower', status: 'Occupied', patientId: 'P007', patientName: 'Ramesh Rao', condition: 'Post-op Knee Rehabilitation', doctor: 'Dr. Rahul Verma', hr: 72, spo2: 98, bp: '122/78' },
+    { id: 'GEN-403', wing: 'General', floor: '5th Floor - Inpatient Tower', status: 'Available', patientId: null, patientName: null, condition: null, doctor: null, hr: null, spo2: null, bp: null },
+    { id: 'EXEC-501', wing: 'Executive', floor: '6th Floor - Presidential Sky Pavilion', status: 'Available', patientId: null, patientName: null, condition: null, doctor: null, hr: null, spo2: null, bp: null },
+    { id: 'EXEC-502', wing: 'Executive', floor: '6th Floor - Presidential Sky Pavilion', status: 'Occupied', patientId: 'P008', patientName: 'Kavita Joshi', condition: 'Migraine Observation', doctor: 'Dr. Sneha Desai', hr: 70, spo2: 99, bp: '118/76' }
+];
+
+const CLINICAL_DDI_RULES = [
+    {
+        drugs: ['warfarin', 'aspirin'],
+        severity: 'Severe',
+        title: 'High Hemorrhage Risk',
+        mechanism: 'Synergistic antiplatelet and anticoagulant effects exponentially elevate risk of life-threatening major GI and intracranial bleeding.',
+        alternative: 'Use Acetaminophen / Paracetamol (max 2g/day) for mild-to-moderate analgesia, or monitor INR closely every 48 hours.'
+    },
+    {
+        drugs: ['sildenafil', 'nitroglycerin'],
+        severity: 'Contraindicated',
+        title: 'Severe Fatal Hypotension & Cardiac Collapse',
+        mechanism: 'PDE-5 inhibition prevents cGMP breakdown while nitrates stimulate cGMP production, causing severe refractory hypotension and cardiogenic shock.',
+        alternative: 'Absolute contraindication. Withhold nitrates within 24-48 hours of PDE-5 inhibitors. Use beta-blockers or calcium channel blockers for angina.'
+    },
+    {
+        drugs: ['metformin', 'contrast'],
+        severity: 'Severe',
+        title: 'Contrast-Induced Lactic Acidosis',
+        mechanism: 'Radiocontrast nephrotoxicity impairs renal clearance of metformin, precipitating fatal lactic acidosis.',
+        alternative: 'Withhold Metformin 48 hours prior to iodinated radiocontrast procedure. Re-evaluate eGFR before restarting.'
+    },
+    {
+        drugs: ['tramadol', 'fluoxetine'],
+        severity: 'Severe',
+        title: 'Serotonin Syndrome & Seizure Threshold Lowering',
+        mechanism: 'Both agents increase synaptic serotonin and lower epileptic seizure threshold through dual serotonergic receptor over-activation.',
+        alternative: 'Substitute Tramadol with Acetaminophen or localized analgesia; avoid combining with serotonergic agents.'
+    },
+    {
+        drugs: ['clopidogrel', 'omeprazole'],
+        severity: 'Moderate',
+        title: 'Reduced Antiplatelet Efficacy',
+        mechanism: 'Omeprazole competitively inhibits hepatic CYP2C19, significantly reducing biotransformation of Clopidogrel into its active antiplatelet metabolite.',
+        alternative: 'Substitute Omeprazole with Pantoprazole or Rabeprazole, which have minimal CYP2C19 inhibitory potential.'
+    },
+    {
+        drugs: ['enalapril', 'spironolactone'],
+        severity: 'Severe',
+        title: 'Life-Threatening Hyperkalemia',
+        mechanism: 'Dual blockade of aldosterone and renin-angiotensin-aldosterone axis severely impairs renal potassium excretion.',
+        alternative: 'Monitor serum potassium and creatinine within 1 week. Consider reducing spironolactone to 12.5-25mg daily.'
+    },
+    {
+        drugs: ['ciprofloxacin', 'antacid'],
+        severity: 'Moderate',
+        title: 'Chelation & Antibacterial Failure',
+        mechanism: 'Divalent and trivalent cations (Al3+, Mg2+, Ca2+) chelate fluoroquinolones into insoluble chelates, reducing bioavailability by 75-85%.',
+        alternative: 'Administer Ciprofloxacin at least 2 hours before or 6 hours after magnesium/aluminum/calcium antacids.'
+    },
+    {
+        drugs: ['digoxin', 'amiodarone'],
+        severity: 'Severe',
+        title: 'Digoxin Toxicity & Fatal Arrhythmias',
+        mechanism: 'Amiodarone inhibits P-glycoprotein-mediated renal and biliary excretion of Digoxin, doubling serum digoxin concentrations.',
+        alternative: 'Reduce maintenance dose of Digoxin by 50% immediately upon starting Amiodarone. Check serum digoxin levels.'
+    },
+    {
+        drugs: ['methotrexate', 'ibuprofen'],
+        severity: 'Severe',
+        title: 'Bone Marrow Suppression & Methotrexate Toxicity',
+        mechanism: 'NSAIDs compete with methotrexate for renal organic anion tubular secretion, causing acute toxic accumulation.',
+        alternative: 'Avoid NSAIDs during high-dose methotrexate therapy. Use Acetaminophen for pain.'
+    },
+    {
+        drugs: ['atorvastatin', 'clarithromycin'],
+        severity: 'Severe',
+        title: 'Severe Rhabdomyolysis & Acute Kidney Injury',
+        mechanism: 'Strong CYP3A4 inhibition by macrolide antibiotics causes up to a 10-fold increase in systemic statin exposure.',
+        alternative: 'Temporarily pause Atorvastatin therapy during the antibiotic course, or prescribe Azithromycin (no CYP3A4 inhibition).'
+    }
+];
+
 // ==========================================
 // 2. STORAGE, REAL-TIME CLINICAL MESH & DATA UTILITIES
 // ==========================================
@@ -332,6 +452,26 @@ function handleHospitalMeshEvent(data) {
             renderPortalPatientData(portalCurrentPatientId);
         }
     }
+
+    if (curPath === 'blood-bank.html' || document.getElementById('bloodInventoryGrid')) {
+        if (data.type.includes('blood') || data.type.includes('sync')) {
+            if (typeof renderBloodInventoryGrid === 'function') renderBloodInventoryGrid();
+            if (typeof renderBloodDonorsTable === 'function') renderBloodDonorsTable();
+            if (typeof renderBloodRequestsTable === 'function') renderBloodRequestsTable();
+        }
+    }
+
+    if (curPath === 'telemedicine.html' || document.getElementById('telemedicineConsole')) {
+        if (data.type.includes('telemed') || data.type.includes('sync')) {
+            if (typeof syncTelemedState === 'function') syncTelemedState(data.payload);
+        }
+    }
+
+    if (document.getElementById('dashboardBedGrid') || document.getElementById('adminBedGrid')) {
+        if (data.type.includes('bed') || data.type.includes('patient') || data.type.includes('sync')) {
+            if (typeof renderBedFloorPlan === 'function') renderBedFloorPlan();
+        }
+    }
 }
 
 function updatePatientStats() {
@@ -436,18 +576,21 @@ const ROLES = {
         id: 'Admin',
         category: 'ADMIN',
         title: 'Master Administrator',
-        allowedPages: ['dashboard.html', 'patients.html', 'doctors.html', 'appointments.html', 'prescriptions.html', 'billing.html', 'admin.html', 'laboratory.html', 'pharmacy.html', 'emergency.html', 'patient-portal.html', 'slides.html'],
+        allowedPages: ['dashboard.html', 'patients.html', 'doctors.html', 'appointments.html', 'prescriptions.html', 'billing.html', 'admin.html', 'laboratory.html', 'pharmacy.html', 'emergency.html', 'patient-portal.html', 'telemedicine.html', 'blood-bank.html', 'slides.html'],
         navItems: [
             { href: 'dashboard.html', icon: 'fa-chart-pie', label: 'Admin Dashboard' },
+            { href: 'emergency.html', icon: 'fa-truck-medical', label: 'Emergency & ICU' },
+            { href: 'telemedicine.html', icon: 'fa-video', label: 'Telemedicine' },
+            { href: 'blood-bank.html', icon: 'fa-hand-holding-droplet', label: 'Blood Bank' },
             { href: 'patients.html', icon: 'fa-user-injured', label: 'Patients' },
             { href: 'doctors.html', icon: 'fa-user-md', label: 'Doctors' },
             { href: 'appointments.html', icon: 'fa-calendar-check', label: 'Appointments' },
             { href: 'prescriptions.html', icon: 'fa-prescription', label: 'Prescriptions' },
             { href: 'laboratory.html', icon: 'fa-flask', label: 'Laboratory' },
             { href: 'pharmacy.html', icon: 'fa-pills', label: 'Pharmacy' },
-            { href: 'emergency.html', icon: 'fa-truck-medical', label: 'Emergency & ICU' },
             { href: 'billing.html', icon: 'fa-file-invoice-dollar', label: 'Billing' },
             { href: 'admin.html', icon: 'fa-shield-halved', label: 'Administration' },
+            { href: 'patient-portal.html', icon: 'fa-id-badge', label: 'Patient Portal' },
             { href: '/slides', icon: 'fa-file-powerpoint', label: 'Presentation' }
         ],
         permissions: {
@@ -473,13 +616,16 @@ const ROLES = {
         id: 'Doctor',
         category: 'DOCTOR',
         title: 'Physician / Consultant',
-        allowedPages: ['dashboard.html', 'patients.html', 'appointments.html', 'prescriptions.html', 'emergency.html', 'patient-portal.html', 'slides.html'],
+        allowedPages: ['dashboard.html', 'patients.html', 'appointments.html', 'prescriptions.html', 'emergency.html', 'patient-portal.html', 'telemedicine.html', 'blood-bank.html', 'slides.html'],
         navItems: [
             { href: 'dashboard.html', icon: 'fa-stethoscope', label: 'Doctor Cockpit' },
+            { href: 'emergency.html', icon: 'fa-heart-pulse', label: 'ICU Telemetry' },
+            { href: 'telemedicine.html', icon: 'fa-video', label: 'Telemedicine Studio' },
+            { href: 'blood-bank.html', icon: 'fa-hand-holding-droplet', label: 'Blood Bank' },
             { href: 'patients.html', icon: 'fa-user-injured', label: 'My Patients' },
             { href: 'appointments.html', icon: 'fa-calendar-check', label: 'My Appointments' },
             { href: 'prescriptions.html', icon: 'fa-prescription', label: 'Prescriptions' },
-            { href: 'emergency.html', icon: 'fa-heart-pulse', label: 'ICU Telemetry' },
+            { href: 'patient-portal.html', icon: 'fa-id-badge', label: 'Patient Portal' },
             { href: '/slides', icon: 'fa-file-powerpoint', label: 'Presentation' }
         ],
         permissions: {
@@ -505,12 +651,15 @@ const ROLES = {
         id: 'Receptionist',
         category: 'STAFF',
         title: 'Front Desk & Admissions',
-        allowedPages: ['dashboard.html', 'patients.html', 'appointments.html', 'billing.html', 'patient-portal.html', 'slides.html'],
+        allowedPages: ['dashboard.html', 'patients.html', 'appointments.html', 'billing.html', 'emergency.html', 'telemedicine.html', 'blood-bank.html', 'patient-portal.html', 'slides.html'],
         navItems: [
             { href: 'dashboard.html', icon: 'fa-concierge-bell', label: 'Reception Desk' },
             { href: 'patients.html', icon: 'fa-user-plus', label: 'Patient Registration' },
             { href: 'appointments.html', icon: 'fa-calendar-plus', label: 'Appointments' },
+            { href: 'telemedicine.html', icon: 'fa-video', label: 'Telemedicine' },
+            { href: 'blood-bank.html', icon: 'fa-hand-holding-droplet', label: 'Blood Bank' },
             { href: 'billing.html', icon: 'fa-receipt', label: 'Billing Counter' },
+            { href: 'patient-portal.html', icon: 'fa-id-badge', label: 'Patient Portal' },
             { href: '/slides', icon: 'fa-file-powerpoint', label: 'Presentation' }
         ],
         permissions: {
@@ -536,12 +685,14 @@ const ROLES = {
         id: 'Pharmacist',
         category: 'STAFF',
         title: 'Pharmacy Operations',
-        allowedPages: ['dashboard.html', 'pharmacy.html', 'prescriptions.html', 'billing.html', 'patient-portal.html', 'slides.html'],
+        allowedPages: ['dashboard.html', 'pharmacy.html', 'prescriptions.html', 'billing.html', 'blood-bank.html', 'patient-portal.html', 'slides.html'],
         navItems: [
             { href: 'dashboard.html', icon: 'fa-laptop-medical', label: 'Pharmacy Dashboard' },
             { href: 'pharmacy.html', icon: 'fa-pills', label: 'Medicines & Stock' },
             { href: 'prescriptions.html', icon: 'fa-file-prescription', label: 'Prescriptions Received' },
+            { href: 'blood-bank.html', icon: 'fa-hand-holding-droplet', label: 'Blood Bank' },
             { href: 'billing.html', icon: 'fa-receipt', label: 'Pharmacy Billing' },
+            { href: 'patient-portal.html', icon: 'fa-id-badge', label: 'Patient Portal' },
             { href: '/slides', icon: 'fa-file-powerpoint', label: 'Presentation' }
         ],
         permissions: {
@@ -564,10 +715,12 @@ const ROLES = {
         id: 'LabTechnician',
         category: 'STAFF',
         title: 'Diagnostic Pathology & Lab',
-        allowedPages: ['dashboard.html', 'laboratory.html', 'patient-portal.html', 'slides.html'],
+        allowedPages: ['dashboard.html', 'laboratory.html', 'blood-bank.html', 'patient-portal.html', 'slides.html'],
         navItems: [
             { href: 'dashboard.html', icon: 'fa-flask-vial', label: 'Laboratory Dashboard' },
             { href: 'laboratory.html', icon: 'fa-microscope', label: 'Diagnostic Tests' },
+            { href: 'blood-bank.html', icon: 'fa-hand-holding-droplet', label: 'Blood Bank & Cryo' },
+            { href: 'patient-portal.html', icon: 'fa-id-badge', label: 'Patient Portal' },
             { href: '/slides', icon: 'fa-file-powerpoint', label: 'Presentation' }
         ],
         permissions: {
@@ -1848,6 +2001,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!localStorage.getItem('hms_prescriptions')) saveData('hms_prescriptions', defaultPrescriptions);
     if (!localStorage.getItem('hms_staff')) saveData('hms_staff', defaultStaff);
     if (!localStorage.getItem('hms_resources')) saveData('hms_resources', defaultResources);
+    if (!localStorage.getItem('hms_blood_inventory')) saveData('hms_blood_inventory', defaultBloodInventory);
+    if (!localStorage.getItem('hms_blood_donors')) saveData('hms_blood_donors', defaultBloodDonors);
+    if (!localStorage.getItem('hms_blood_requests')) saveData('hms_blood_requests', defaultBloodRequests);
+    if (!localStorage.getItem('hms_hospital_beds')) saveData('hms_hospital_beds', defaultHospitalBeds);
 
     // 3. Live Clock HUD & Universal Command/Notification Mesh
     initLiveHUD();
@@ -1912,6 +2069,38 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('portalPatientCard') || currentPath === 'patient-portal.html') {
         initPatientPortalPage();
     }
+    if (document.getElementById('telemedicineConsole') || currentPath === 'telemedicine.html') {
+        initTelemedicinePage();
+    }
+    if (document.getElementById('bloodInventoryGrid') || currentPath === 'blood-bank.html') {
+        initBloodBankPage();
+    }
+
+    // PWA Service Worker Registration & Offline Resilient Handling
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator && (window.location.protocol.startsWith('http') || window.location.protocol.startsWith('https'))) {
+        navigator.serviceWorker.register('./sw.js').catch(err => {
+            console.log('[MediCare HMS] SW note:', err);
+        });
+    }
+
+    window.addEventListener('offline', () => {
+        let b = document.getElementById('offlineBanner');
+        if (!b) {
+            b = document.createElement('div');
+            b.id = 'offlineBanner';
+            b.className = 'offline-mesh-banner';
+            b.innerHTML = '<i class="fas fa-wifi-slash"></i> Offline Resilient Mode Active — Local EHR Cache Engaged';
+            document.body.appendChild(b);
+        }
+        b.style.display = 'flex';
+        if (typeof showToast === 'function') showToast('Offline Resilient Mode Active — Local EHR Cache Engaged', 'warning');
+    });
+
+    window.addEventListener('online', () => {
+        const b = document.getElementById('offlineBanner');
+        if (b) b.style.display = 'none';
+        if (typeof showToast === 'function') showToast('Clinical Connection Restored — Cloud Synced', 'success');
+    });
 
     // 7. Auto-trigger creation modals if navigated with ?action=new or QR verification ?verify=ID
     const urlParams = new URLSearchParams(window.location.search);
@@ -2378,6 +2567,9 @@ function renderAdminDashboard() {
     }
 
     initDashboardCharts();
+    if (typeof renderBedFloorPlan === 'function') {
+        renderBedFloorPlan();
+    }
 }
 
 function renderDoctorDashboard(user) {
@@ -2476,6 +2668,9 @@ function renderDoctorDashboard(user) {
 
     injectDoctorPracticeBanner(user, myPatients.length, myAppts.length);
     initDashboardCharts();
+    if (typeof renderBedFloorPlan === 'function') {
+        renderBedFloorPlan();
+    }
 }
 
 function renderReceptionistDashboard(user) {
@@ -2564,6 +2759,9 @@ function renderReceptionistDashboard(user) {
     }
 
     initDashboardCharts();
+    if (typeof renderBedFloorPlan === 'function') {
+        renderBedFloorPlan();
+    }
 }
 
 function renderPharmacyDashboard(user) {
@@ -2643,6 +2841,9 @@ function renderPharmacyDashboard(user) {
     }
 
     initDashboardCharts();
+    if (typeof renderBedFloorPlan === 'function') {
+        renderBedFloorPlan();
+    }
 }
 
 function renderLabTechnicianDashboard(user) {
@@ -2727,6 +2928,9 @@ function renderLabTechnicianDashboard(user) {
     }
 
     initDashboardCharts();
+    if (typeof renderBedFloorPlan === 'function') {
+        renderBedFloorPlan();
+    }
 }
 
 function injectStaffBanner(title, icon, color, desc) {
@@ -2843,25 +3047,32 @@ function renderPatients(data) {
     }
 
     if (emptyState) emptyState.style.display = 'none';
-    tbody.innerHTML = data.map(p => `
+    tbody.innerHTML = data.map(p => {
+        const abhaInfo = typeof getOrGenerateAbha === 'function' ? getOrGenerateAbha(p) : { number: '91-4582-9301-4720' };
+        return `
         <tr>
             <td><strong style="font-family:'JetBrains Mono'; color:var(--primary);">${p.id}</strong></td>
             <td><strong>${p.name}</strong></td>
-            <td>${p.age} Yrs</td>
-            <td>${p.gender}</td>
+            <td>${p.age} Yrs / ${p.gender}</td>
             <td><span class="badge badge-info">${p.bloodGroup}</span></td>
             <td><i class="fas fa-phone" style="font-size:0.8rem; color:var(--text-muted); margin-right:4px;"></i> ${p.phone}</td>
             <td>${p.condition}</td>
             <td><span class="badge badge-${p.status.toLowerCase()}">${p.status}</span></td>
             <td>
+                <span class="badge badge-primary" style="font-family:'JetBrains Mono'; cursor:pointer; font-size:0.75rem; letter-spacing:0.5px; background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.4); color:#38bdf8;" onclick="openAbhaGeneratorModal('${p.id}')">
+                    <i class="fas fa-id-card"></i> ${abhaInfo.number}
+                </span>
+            </td>
+            <td>
                 <div style="display:flex; gap:6px;">
+                    <button class="btn btn-sm btn-primary" onclick="openAbhaGeneratorModal('${p.id}')" title="View & Print ABHA Health ID" style="background: rgba(56,189,248,0.2); border-color:#38bdf8; color:#38bdf8;"><i class="fas fa-id-badge"></i></button>
                     <button class="btn btn-sm btn-info" onclick="viewPatient('${p.id}')" title="View Patient Profile"><i class="fas fa-eye"></i></button>
                     <button class="btn btn-sm btn-warning" onclick="editPatient('${p.id}')" title="Edit Patient"><i class="fas fa-edit"></i></button>
                     <button class="btn btn-sm btn-danger" onclick="deletePatient('${p.id}')" title="Delete Patient"><i class="fas fa-trash"></i></button>
                 </div>
             </td>
         </tr>
-    `).join('');
+    `}).join('');
 }
 
 function filterPatients() {
@@ -3991,7 +4202,10 @@ function showCreatePrescriptionModal() {
     populatePrescriptionDropdowns();
     const form = document.getElementById('prescriptionForm');
     if (form) form.reset();
+    const extraBox = document.getElementById('additionalMedsContainer');
+    if (extraBox) extraBox.innerHTML = '';
     openModal('prescriptionModal');
+    setTimeout(() => triggerRxDdiScan(), 100);
 }
 
 function savePrescription() {
@@ -4021,6 +4235,18 @@ function savePrescription() {
     const freq1 = document.getElementById('rxFreq1')?.value.trim() || 'Twice daily';
     const dur1 = document.getElementById('rxDur1')?.value.trim() || '5 days';
 
+    const medicinesList = [{ name: med1, dosage: dose1, frequency: freq1, duration: dur1 }];
+
+    document.querySelectorAll('#additionalMedsContainer .extra-rx-med-row').forEach(row => {
+        const extraName = row.querySelector('.extra-med-name')?.value.trim();
+        const extraDose = row.querySelector('.extra-med-dose')?.value.trim() || '1 tablet';
+        const extraFreq = row.querySelector('.extra-med-freq')?.value.trim() || 'Once daily';
+        const extraDur = row.querySelector('.extra-med-dur')?.value.trim() || '5 days';
+        if (extraName) {
+            medicinesList.push({ name: extraName, dosage: extraDose, frequency: extraFreq, duration: extraDur });
+        }
+    });
+
     const newRx = {
         id: generateId('RX'),
         patientId: pId,
@@ -4029,7 +4255,7 @@ function savePrescription() {
         doctorName: doctor.name,
         date: new Date().toISOString().split('T')[0],
         diagnosis,
-        medicines: [{ name: med1, dosage: dose1, frequency: freq1, duration: dur1 }],
+        medicines: medicinesList,
         notes
     };
 
@@ -4039,7 +4265,8 @@ function savePrescription() {
 
     renderPrescriptions(rxs);
     closeModal('prescriptionModal');
-    showToast(`Prescription #${newRx.id} created!`, 'success');
+    showToast(`Prescription #${newRx.id} created successfully!`, 'success');
+    broadcastHospitalEvent('prescription_created', { rxId: newRx.id, patientId: pId }, `Prescription #${newRx.id} issued for ${patient.name}`);
 }
 
 function deletePrescription(id) {
@@ -4318,11 +4545,14 @@ function initAdminPage() {
     renderStaff(staff);
     const resources = loadData('hms_resources', []);
     renderResources(resources);
+    if (typeof renderBedFloorPlan === 'function') {
+        renderBedFloorPlan();
+    }
 }
 
 function switchAdminTab(tabId) {
     playSound('click');
-    const tabs = ['staff', 'resources', 'departments', 'system'];
+    const tabs = ['staff', 'bedmanager', 'resources', 'departments', 'system'];
     tabs.forEach(t => {
         const el = document.getElementById(`${t}Tab`);
         if (el) el.style.display = t === tabId ? 'block' : 'none';
@@ -4330,7 +4560,11 @@ function switchAdminTab(tabId) {
 
     const btns = document.querySelectorAll('.tabs .tab-btn');
     btns.forEach(b => b.classList.remove('active'));
-    if (event && event.currentTarget) event.currentTarget.classList.add('active');
+    if (typeof event !== 'undefined' && event && event.currentTarget) event.currentTarget.classList.add('active');
+
+    if (tabId === 'bedmanager') {
+        if (typeof renderBedFloorPlan === 'function') renderBedFloorPlan();
+    }
 }
 
 function renderStaff(data) {
@@ -6800,20 +7034,23 @@ function switchPharmacyView(view) {
     playSound('click');
     const invView = document.getElementById('pharmacyInventoryView');
     const dispView = document.getElementById('pharmacyDispensaryView');
+    const ddiView = document.getElementById('pharmacyDdiView');
     const tabInv = document.getElementById('tabInventoryBtn');
     const tabDisp = document.getElementById('tabDispensaryBtn');
+    const tabDdi = document.getElementById('tabDdiBtn');
 
-    if (view === 'inventory') {
-        if (invView) invView.style.display = 'block';
-        if (dispView) dispView.style.display = 'none';
-        if (tabInv) { tabInv.className = 'btn btn-primary'; }
-        if (tabDisp) { tabDisp.className = 'btn btn-outline'; }
-    } else {
-        if (invView) invView.style.display = 'none';
-        if (dispView) dispView.style.display = 'block';
-        if (tabInv) { tabInv.className = 'btn btn-outline'; }
-        if (tabDisp) { tabDisp.className = 'btn btn-primary'; }
+    if (invView) invView.style.display = (view === 'inventory' ? 'block' : 'none');
+    if (dispView) dispView.style.display = (view === 'dispensary' ? 'block' : 'none');
+    if (ddiView) ddiView.style.display = (view === 'ddi' ? 'block' : 'none');
+
+    if (tabInv) tabInv.className = (view === 'inventory' ? 'btn btn-primary' : 'btn btn-outline');
+    if (tabDisp) tabDisp.className = (view === 'dispensary' ? 'btn btn-primary' : 'btn btn-outline');
+    if (tabDdi) tabDdi.className = (view === 'ddi' ? 'btn btn-primary' : 'btn btn-outline');
+
+    if (view === 'dispensary') {
         renderDispensaryQueue();
+    } else if (view === 'ddi') {
+        analyzePharmacyDdi();
     }
 }
 
@@ -7302,44 +7539,12 @@ function renderPortalPatientData(id) {
     const patient = patients.find(p => p.id === id) || patients[0];
     if (!patient) return;
 
-    // 1. Digital ID Card
+    // 1. Digital ID Card (ABHA Standard)
     const card = document.getElementById('patientDigitalIdCard');
     if (card) {
-        card.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
-                <div style="display:flex; align-items:center; gap:20px;">
-                    <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(patient.name)}&background=0284c7&color=fff&size=128" alt="${patient.name}" style="width:74px; height:74px; border-radius:18px; border:2px solid var(--primary); box-shadow:0 0 16px rgba(56,189,248,0.4);">
-                    <div>
-                        <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:#38bdf8; font-weight:700;"><i class="fas fa-shield-halved"></i> MediCare Digital Medical Passport</div>
-                        <h2 style="font-size:1.6rem; font-weight:800; color:#ffffff; margin:4px 0;">${patient.name}</h2>
-                        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; font-size:0.85rem; color:var(--text-secondary);">
-                            <span>ID: <strong style="font-family:'JetBrains Mono'; color:#38bdf8;">${patient.id}</strong></span>
-                            <span>•</span>
-                            <span>${patient.age} Yrs / ${patient.gender}</span>
-                            <span>•</span>
-                            <span>Blood: <strong style="color:#ef4444;">${patient.bloodGroup}</strong></span>
-                            <span>•</span>
-                            <span>Contact: ${patient.phone}</span>
-                        </div>
-                    </div>
-                </div>
-                <div style="text-align:right;">
-                    <span class="badge badge-${patient.status.toLowerCase()}" style="font-size:0.88rem; padding:6px 14px;">${patient.status}</span>
-                    <div style="margin-top:8px; font-family:'JetBrains Mono'; font-size:0.75rem; color:var(--text-muted);">
-                        Admitted: ${formatDate(patient.admissionDate || '2026-08-15')}
-                    </div>
-                </div>
-            </div>
-            <div style="margin-top:18px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-                <div style="font-size:0.88rem;">
-                    <span style="color:var(--text-muted);">Clinical Diagnosis:</span> <strong style="color:#f59e0b;">${patient.condition}</strong>
-                </div>
-                <div style="display:flex; gap:8px;">
-                    <button class="btn btn-sm btn-outline" onclick="window.print()"><i class="fas fa-print"></i> Print ID Card</button>
-                    <button class="btn btn-sm btn-primary" onclick="showToast('Medical Passport synchronized with Cloud EHR', 'success')"><i class="fas fa-sync-alt"></i> Sync Cloud</button>
-                </div>
-            </div>
-        `;
+        if (typeof renderABHACard === 'function') {
+            renderABHACard(patient, 'patientDigitalIdCard');
+        }
     }
 
     // 2. Prescriptions Tab
@@ -8732,4 +8937,1626 @@ function simulateAmbulanceArrival() {
     showToast('🚨 ALS-101 DOCKED AT TRAUMA BAY 1: Patient admitted to Resuscitation Suite!', 'success');
 
     broadcastHospitalEvent('ambulance_arrival', { unit: unit?.id }, `Ambulance ${unit?.id || 'ALS-101'} safely docked at Trauma Bay 1`);
+}
+
+
+// ==========================================
+// 12. VIRTUAL TELEMEDICINE & VIDEO CONSULTATION ENGINE
+// ==========================================
+let telemedStreamInterval = null;
+let telemedVitalsInterval = null;
+let telemedSeconds = 342; // Starts at 00:05:42 for realistic ongoing consultation
+let telemedCurrentPatientId = 'P001';
+let telemedMediaStream = null;
+let isTelemedCameraActive = false;
+let isTelemedAudioMuted = false;
+let isTelemedVideoMuted = false;
+
+function initTelemedicinePage() {
+    const patients = loadData('hms_patients', defaultPatients);
+    const pSelect = document.getElementById('telemedPatientSelect');
+    if (pSelect) {
+        pSelect.innerHTML = patients.map(p => `
+            <option value="${p.id}" ${p.id === telemedCurrentPatientId ? 'selected' : ''}>
+                ${p.name} (${p.id} • ${p.age} Yrs / ${p.gender})
+            </option>
+        `).join('');
+    }
+
+    switchTelemedSession(telemedCurrentPatientId, false);
+    startTelemedPatientStream();
+    startTelemedVitalsHUD();
+    startTelemedTimer();
+}
+
+function switchTelemedSession(patientId, notify = true) {
+    telemedCurrentPatientId = patientId;
+    const patients = loadData('hms_patients', defaultPatients);
+    const patient = patients.find(p => p.id === patientId) || patients[0];
+    if (!patient) return;
+
+    const nameLabel = document.getElementById('telemedPatientNameLabel');
+    const metaLabel = document.getElementById('telemedPatientMetaLabel');
+    const badge = document.getElementById('telemedPatientBadge');
+    const diagInput = document.getElementById('telemedDiagnosis');
+
+    if (nameLabel) nameLabel.textContent = patient.name;
+    if (metaLabel) metaLabel.textContent = `(${patient.age} ${patient.gender.charAt(0)} • ${patient.bloodGroup})`;
+    if (badge) {
+        badge.textContent = patient.status;
+        badge.className = `badge badge-${patient.status.toLowerCase()}`;
+    }
+    if (diagInput && patient.condition) {
+        diagInput.value = `${patient.condition} - Remote Tele-Review`;
+    }
+
+    if (notify && typeof showToast === 'function') {
+        showToast(`Switched consultation session to ${patient.name}`, 'info');
+    }
+}
+
+function startTelemedPatientStream() {
+    const canvas = document.getElementById('telemedPatientStreamCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let frame = 0;
+
+    if (telemedStreamInterval) cancelAnimationFrame(telemedStreamInterval);
+
+    function renderStream() {
+        if (isTelemedCameraActive) return; // Don't draw canvas when real camera is active
+
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const w = canvas.clientWidth || 640;
+        const h = canvas.clientHeight || 400;
+        if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
+            canvas.width = w * dpr;
+            canvas.height = h * dpr;
+        }
+
+        ctx.save();
+        ctx.scale(dpr, dpr);
+        ctx.clearRect(0, 0, w, h);
+
+        // Dark medical background with visionOS translucent tint
+        const bgGrad = ctx.createLinearGradient(0, 0, w, h);
+        bgGrad.addColorStop(0, '#040d1a');
+        bgGrad.addColorStop(0.5, '#0a192f');
+        bgGrad.addColorStop(1, '#020617');
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, w, h);
+
+        // Subtle clinical grid lines
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.08)';
+        ctx.lineWidth = 1;
+        const gridSize = 40;
+        for (let x = 0; x < w; x += gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, h);
+            ctx.stroke();
+        }
+        for (let y = 0; y < h; y += gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(w, y);
+            ctx.stroke();
+        }
+
+        // Animated telemetry pulse wave running across bottom of canvas
+        ctx.strokeStyle = 'rgba(16, 185, 129, 0.6)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        const baselineY = h - 50;
+        for (let x = 0; x < w; x += 4) {
+            const waveX = (x + frame * 3) % w;
+            let yOffset = Math.sin((x + frame * 4) * 0.05) * 4;
+            // Simulated QRS spike
+            const distFromSpike = Math.abs((waveX % 180) - 90);
+            if (distFromSpike < 15) {
+                yOffset = -Math.sin((distFromSpike / 15) * Math.PI) * 25;
+            }
+            if (x === 0) ctx.moveTo(x, baselineY + yOffset);
+            else ctx.lineTo(x, baselineY + yOffset);
+        }
+        ctx.stroke();
+
+        // Render simulated remote patient figure / avatar representation
+        const centerX = w / 2;
+        const centerY = h / 2 - 20;
+
+        // Soft backlight glow behind patient
+        const glow = ctx.createRadialGradient(centerX, centerY, 20, centerX, centerY, 140);
+        glow.addColorStop(0, 'rgba(14, 165, 233, 0.22)');
+        glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 140, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Stylized patient silhouette with breathing motion
+        const breathe = Math.sin(frame * 0.04) * 4;
+        
+        // Torso / Shoulders
+        ctx.fillStyle = '#0f2744';
+        ctx.beginPath();
+        ctx.ellipse(centerX, centerY + 110 + breathe * 0.5, 95, 60, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Head
+        ctx.fillStyle = '#1e3a5f';
+        ctx.beginPath();
+        ctx.arc(centerX, centerY + breathe, 48, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Patient Face Icon / Wireframe
+        ctx.fillStyle = '#38bdf8';
+        ctx.font = '28px "Font Awesome 6 Free"';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('\uf007', centerX, centerY + breathe);
+
+        // Medical Target Crosshairs & Corner Reticles
+        const cornerSize = 24;
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
+        ctx.lineWidth = 2;
+        // Top-Left
+        ctx.beginPath(); ctx.moveTo(25, 25 + cornerSize); ctx.lineTo(25, 25); ctx.lineTo(25 + cornerSize, 25); ctx.stroke();
+        // Top-Right
+        ctx.beginPath(); ctx.moveTo(w - 25 - cornerSize, 25); ctx.lineTo(w - 25, 25); ctx.lineTo(w - 25, 25 + cornerSize); ctx.stroke();
+        // Bottom-Left
+        ctx.beginPath(); ctx.moveTo(25, h - 25 - cornerSize); ctx.lineTo(25, h - 25); ctx.lineTo(25 + cornerSize, h - 25); ctx.stroke();
+        // Bottom-Right
+        ctx.beginPath(); ctx.moveTo(w - 25 - cornerSize, h - 25); ctx.lineTo(w - 25, h - 25); ctx.lineTo(w - 25, h - 25 - cornerSize); ctx.stroke();
+
+        // Real-time scanline effect
+        const scanY = (frame * 2.5) % h;
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.18)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(0, scanY);
+        ctx.lineTo(w, scanY);
+        ctx.stroke();
+
+        // WebRTC Stream stats banner in bottom-center
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.7)';
+        ctx.fillRect(centerX - 130, h - 34, 260, 24);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.strokeRect(centerX - 130, h - 34, 260, 24);
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '10.5px "JetBrains Mono", monospace';
+        ctx.fillText('WebRTC 1080p60 • OPUS 48kHz • 24ms Jitter', centerX, h - 22);
+
+        ctx.restore();
+        frame++;
+        telemedStreamInterval = requestAnimationFrame(renderStream);
+    }
+
+    renderStream();
+}
+
+function startTelemedVitalsHUD() {
+    if (telemedVitalsInterval) clearInterval(telemedVitalsInterval);
+
+    telemedVitalsInterval = setInterval(() => {
+        const hrEl = document.getElementById('hudVitalHr');
+        const spo2El = document.getElementById('hudVitalSpo2');
+        const bpEl = document.getElementById('hudVitalBp');
+        const tempEl = document.getElementById('hudVitalTemp');
+
+        if (hrEl) {
+            const baseHr = 74;
+            const variance = Math.floor(Math.sin(Date.now() / 3000) * 4);
+            hrEl.innerHTML = `${baseHr + variance} <span style="font-size: 9px; font-weight: 500; color: #94a3b8;">BPM</span>`;
+        }
+        if (spo2El) {
+            const spo2 = (Date.now() % 6000 < 3000) ? 98 : 99;
+            spo2El.innerHTML = `${spo2} <span style="font-size: 9px; font-weight: 500; color: #94a3b8;">%</span>`;
+        }
+        if (bpEl) {
+            bpEl.innerHTML = `122/80 <span style="font-size: 9px; font-weight: 500; color: #94a3b8;">mmHg</span>`;
+        }
+        if (tempEl) {
+            tempEl.innerHTML = `98.6 <span style="font-size: 9px; font-weight: 500; color: #94a3b8;">°F</span>`;
+        }
+    }, 2000);
+}
+
+function startTelemedTimer() {
+    setInterval(() => {
+        telemedSeconds++;
+        const timerEl = document.getElementById('telemedCallTimer');
+        if (timerEl) {
+            const mins = String(Math.floor(telemedSeconds / 60)).padStart(2, '0');
+            const secs = String(telemedSeconds % 60).padStart(2, '0');
+            timerEl.textContent = `00:${mins}:${secs}`;
+        }
+    }, 1000);
+}
+
+async function toggleRealCameraStream() {
+    const video = document.getElementById('telemedWebcamVideo');
+    const selfVideo = document.getElementById('telemedSelfPreviewVideo');
+    const canvas = document.getElementById('telemedPatientStreamCanvas');
+    const btnLabel = document.getElementById('telemedCamBtnLabel');
+    const fallbackBox = document.getElementById('telemedDoctorFallback');
+
+    if (isTelemedCameraActive) {
+        // Turn off real camera
+        if (telemedMediaStream) {
+            telemedMediaStream.getTracks().forEach(t => t.stop());
+            telemedMediaStream = null;
+        }
+        isTelemedCameraActive = false;
+        if (video) video.style.display = 'none';
+        if (selfVideo) selfVideo.style.display = 'none';
+        if (canvas) canvas.style.display = 'block';
+        if (fallbackBox) fallbackBox.style.display = 'flex';
+        if (btnLabel) btnLabel.textContent = 'Enable Live WebRTC Webcam';
+        startTelemedPatientStream();
+        showToast('Switched back to Simulated HD Patient Stream', 'info');
+        return;
+    }
+
+    try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            throw new Error('WebRTC getUserMedia not supported in this browser context.');
+        }
+
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        telemedMediaStream = stream;
+        isTelemedCameraActive = true;
+
+        if (video) {
+            video.srcObject = stream;
+            video.style.display = 'block';
+        }
+        if (selfVideo) {
+            selfVideo.srcObject = stream;
+            selfVideo.style.display = 'block';
+        }
+        if (canvas) canvas.style.display = 'none';
+        if (fallbackBox) fallbackBox.style.display = 'none';
+        if (btnLabel) btnLabel.textContent = 'Disable Live Webcam (Use Sim)';
+
+        if (typeof playSound === 'function') playSound('success');
+        showToast('🎥 Live WebRTC Camera Connected Successfully!', 'success');
+    } catch (err) {
+        console.warn('Real webcam permission or device note:', err);
+        showToast('⚠️ Webcam not accessible; running high-resolution clinical video simulation.', 'warning');
+    }
+}
+
+function toggleTelemedAudio() {
+    isTelemedAudioMuted = !isTelemedAudioMuted;
+    const btn = document.getElementById('btnToggleAudio');
+    if (btn) {
+        btn.innerHTML = isTelemedAudioMuted ? '<i class="fas fa-microphone-slash" style="color:#ef4444;"></i>' : '<i class="fas fa-microphone"></i>';
+        btn.style.borderColor = isTelemedAudioMuted ? '#ef4444' : 'rgba(255,255,255,0.15)';
+    }
+    if (telemedMediaStream) {
+        telemedMediaStream.getAudioTracks().forEach(t => t.enabled = !isTelemedAudioMuted);
+    }
+    if (typeof playSound === 'function') playSound('click');
+    showToast(isTelemedAudioMuted ? 'Microphone Muted' : 'Microphone Unmuted', 'info');
+}
+
+function toggleTelemedVideo() {
+    isTelemedVideoMuted = !isTelemedVideoMuted;
+    const btn = document.getElementById('btnToggleVideo');
+    if (btn) {
+        btn.innerHTML = isTelemedVideoMuted ? '<i class="fas fa-video-slash" style="color:#ef4444;"></i>' : '<i class="fas fa-video"></i>';
+        btn.style.borderColor = isTelemedVideoMuted ? '#ef4444' : 'rgba(255,255,255,0.15)';
+    }
+    if (telemedMediaStream) {
+        telemedMediaStream.getVideoTracks().forEach(t => t.enabled = !isTelemedVideoMuted);
+    }
+    if (typeof playSound === 'function') playSound('click');
+    showToast(isTelemedVideoMuted ? 'Video Stream Paused' : 'Video Stream Active', 'info');
+}
+
+function toggleScreenShare() {
+    if (typeof playSound === 'function') playSound('mesh');
+    showToast('🖥️ Screen Share Active: Broadcasting EHR diagnostic imaging to patient', 'success');
+}
+
+function captureClinicalSnapshot() {
+    if (typeof playSound === 'function') playSound('click');
+    showToast('📸 Clinical Snapshot captured and attached to electronic health record!', 'success');
+}
+
+function triggerTelemedVitalsSync() {
+    if (typeof playSound === 'function') playSound('mesh');
+    startTelemedVitalsHUD();
+    showToast('🔄 Synchronized real-time patient telemetry from BLE health hub', 'success');
+}
+
+function applyDiagnosisPreset(key) {
+    const diagInput = document.getElementById('telemedDiagnosis');
+    const notesInput = document.getElementById('telemedSoapNotes');
+    const medInput = document.getElementById('telemedMedName');
+    const doseInput = document.getElementById('telemedMedDose');
+    const freqInput = document.getElementById('telemedMedFreq');
+    const durInput = document.getElementById('telemedMedDur');
+
+    const presets = {
+        uri: {
+            diag: 'Acute Viral Upper Respiratory Infection (URI)',
+            notes: 'Patient reports mild sore throat, non-productive cough, and afebrile state for 3 days. Clear breath sounds bilaterally on simulated tele-auscultation. Advised warm saline gargles, adequate hydration, and resting voice.',
+            med: 'Paracetamol 650mg + Cetirizine 10mg',
+            dose: '1 tablet',
+            freq: 'SOS for fever or body ache',
+            dur: '5 days'
+        },
+        htn: {
+            diag: 'Essential Stage-1 Hypertension (Stabilization)',
+            notes: 'Home BP log shows average 142/88 mmHg. No chest heaviness, visual disturbances, or neurological deficits. Reinforce low sodium dietary intake (< 3g/day) and continued daily cardio activity.',
+            med: 'Telmisartan 40mg + Amlodipine 5mg',
+            dose: '1 tablet',
+            freq: 'Once daily morning after breakfast',
+            dur: '30 days'
+        },
+        diabetes: {
+            diag: 'Type-2 Diabetes Mellitus (Glycemic Review)',
+            notes: 'Morning fasting blood sugars fluctuating between 124-138 mg/dL. No polyuria or polydipsia. Advised HbA1c repeat check in 3 weeks and compliance with continuous glucose monitoring log.',
+            med: 'Metformin 1000mg ER',
+            dose: '1 tablet',
+            freq: 'Twice daily with meals',
+            dur: '30 days'
+        },
+        migraine: {
+            diag: 'Chronic Migraine with Visual Aura',
+            notes: 'Unilateral pulsating headache provoked by prolonged screen time. Fundus normal. Prescribe triptan for acute abortive therapy and maintain dark room rest during episodes.',
+            med: 'Sumatriptan 50mg + Naproxen 250mg',
+            dose: '1 tablet',
+            freq: 'At onset of headache aura (SOS)',
+            dur: '10 days'
+        },
+        postop: {
+            diag: 'Post-Operative Orthopedic Fracture Review',
+            notes: 'Surgical incision clean and dry, zero discharge or erythema. Mild swelling managed with limb elevation. Non-weight bearing status reaffirmed until follow-up X-Ray.',
+            med: 'Calcium Carbonate + Vitamin D3',
+            dose: '1 tablet',
+            freq: 'Once daily after lunch',
+            dur: '60 days'
+        },
+        allergy: {
+            diag: 'Acute Allergic Contact Dermatitis',
+            notes: 'Erythematous pruritic maculopapular rash observed over forearm. No mucosal involvement or airway compromise. Prescribed oral antihistamine and topical hydrocortisone lotion.',
+            med: 'Levocetirizine 5mg',
+            dose: '1 tablet',
+            freq: 'Once daily night before sleep',
+            dur: '7 days'
+        }
+    };
+
+    const chosen = presets[key];
+    if (chosen) {
+        if (diagInput) diagInput.value = chosen.diag;
+        if (notesInput) notesInput.value = chosen.notes;
+        if (medInput) medInput.value = chosen.med;
+        if (doseInput) doseInput.value = chosen.dose;
+        if (freqInput) freqInput.value = chosen.freq;
+        if (durInput) durInput.value = chosen.dur;
+
+        if (typeof playSound === 'function') playSound('click');
+        showToast(`Loaded clinical preset: ${chosen.diag}`, 'info');
+        checkTelemedDDI();
+    }
+}
+
+function checkTelemedDDI() {
+    const medInput = document.getElementById('telemedMedName');
+    const alertBox = document.getElementById('telemedDdiAlertBox');
+    const titleEl = document.getElementById('telemedDdiTitle');
+    const descEl = document.getElementById('telemedDdiDesc');
+    if (!medInput || !alertBox) return;
+
+    const medName = medInput.value.trim().toLowerCase();
+    const ddiResult = checkClinicalDDI([medName, 'aspirin']); // cross-check against standard common conflict
+
+    if (ddiResult.hasConflict) {
+        alertBox.style.display = 'block';
+        if (titleEl) titleEl.textContent = `${ddiResult.rule.title} (${ddiResult.rule.severity})`;
+        if (descEl) descEl.textContent = `${ddiResult.rule.mechanism} Alternative: ${ddiResult.rule.alternative}`;
+    } else {
+        alertBox.style.display = 'none';
+    }
+}
+
+function issueTelemedPrescription() {
+    const medInput = document.getElementById('telemedMedName');
+    const doseInput = document.getElementById('telemedMedDose');
+    const freqInput = document.getElementById('telemedMedFreq');
+    const durInput = document.getElementById('telemedMedDur');
+    const diagInput = document.getElementById('telemedDiagnosis');
+    const notesInput = document.getElementById('telemedSoapNotes');
+
+    const med = medInput?.value.trim() || 'Metformin 1000mg ER';
+    const dose = doseInput?.value.trim() || '1 tablet';
+    const freq = freqInput?.value.trim() || 'Twice daily';
+    const dur = durInput?.value.trim() || '30 days';
+    const diag = diagInput?.value.trim() || 'Virtual Video Consultation';
+    const notes = notesInput?.value.trim() || 'Take medication as directed.';
+
+    const patients = loadData('hms_patients', defaultPatients);
+    const patient = patients.find(p => p.id === telemedCurrentPatientId) || patients[0];
+
+    const newRx = {
+        id: generateId('RX'),
+        patientId: patient.id,
+        patientName: patient.name,
+        doctorId: 'D001',
+        doctorName: 'Dr. Priya Sharma (Telemedicine Lead)',
+        date: new Date().toISOString().split('T')[0],
+        diagnosis: diag,
+        medicines: [{ name: med, dosage: dose, frequency: freq, duration: dur }],
+        notes: notes + ' [Issued via WebRTC Telemedicine Session]'
+    };
+
+    let rxs = loadData('hms_prescriptions', defaultPrescriptions);
+    rxs.unshift(newRx);
+    saveData('hms_prescriptions', rxs);
+
+    if (typeof playSound === 'function') playSound('success');
+    showToast(`✅ Digital Prescription #${newRx.id} issued and dispatched to ${patient.name}!`, 'success');
+    broadcastHospitalEvent('prescription_created', { rxId: newRx.id, patientId: patient.id }, `Tele-Prescription #${newRx.id} issued for ${patient.name}`);
+}
+
+function completeTelemedConsultation() {
+    const patients = loadData('hms_patients', defaultPatients);
+    const patient = patients.find(p => p.id === telemedCurrentPatientId) || patients[0];
+    const diag = document.getElementById('telemedDiagnosis')?.value.trim() || 'Virtual Clinical Tele-Visit';
+
+    // 1. Create a consultation invoice in hms_bills
+    const billId = generateId('B');
+    const newBill = {
+        id: billId,
+        patientId: patient.id,
+        patientName: patient.name,
+        date: new Date().toISOString().split('T')[0],
+        items: [
+            { desc: 'Virtual Telemedicine Video Consultation', amount: 800 },
+            { desc: 'Digital Health Passport & Electronic Prescription Service', amount: 0 }
+        ],
+        total: 800,
+        status: 'Paid',
+        paymentMethod: 'UPI'
+    };
+
+    let bills = loadData('hms_bills', defaultBills);
+    bills.unshift(newBill);
+    saveData('hms_bills', bills);
+
+    // 2. Open Consultation Complete Modal
+    const modal = document.getElementById('telemedCompleteModal');
+    const receipt = document.getElementById('telemedCompleteReceiptContent');
+    if (receipt) {
+        receipt.innerHTML = `
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                <span style="color:#94a3b8;">Patient Name:</span> <strong style="color:#fff;">${patient.name} (${patient.id})</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                <span style="color:#94a3b8;">Consulting Physician:</span> <strong style="color:#38bdf8;">Dr. Priya Sharma (Lead MD)</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                <span style="color:#94a3b8;">Clinical Impression:</span> <strong style="color:#f59e0b;">${diag}</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                <span style="color:#94a3b8;">Invoice Reference:</span> <strong style="font-family:'JetBrains Mono'; color:#10b981;">#${billId}</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; border-top:1px solid rgba(255,255,255,0.1); padding-top:8px;">
+                <span style="color:#94a3b8;">Tele-Consult Fee:</span> <strong style="color:#10b981; font-size:1.1rem;">₹800.00 (PAID ONLINE)</strong>
+            </div>
+        `;
+    }
+
+    openModal('telemedCompleteModal');
+    if (typeof playSound === 'function') playSound('success');
+    showToast(`✅ Consultation complete! Invoice #${billId} generated and routed to billing.`, 'success');
+
+    broadcastHospitalEvent('telemed_consult_finish', { patientId: patient.id, billId }, `Tele-consultation completed for ${patient.name} - Invoice #${billId} generated`);
+}
+
+function endTelemedCallModal() {
+    if (confirm('End active telemedicine video consultation and navigate to dashboard?')) {
+        completeTelemedConsultation();
+    }
+}
+
+function simulateIncomingCallModal() {
+    openModal('simulatedIncomingCallModal');
+    if (typeof playSound === 'function') playSound('mesh');
+}
+
+function acceptIncomingCall(patientId) {
+    closeModal('simulatedIncomingCallModal');
+    const select = document.getElementById('telemedPatientSelect');
+    if (select) select.value = patientId;
+    switchTelemedSession(patientId, true);
+    if (typeof playSound === 'function') playSound('success');
+    showToast('📞 Call connected! Live encrypted video stream established.', 'success');
+}
+
+// ==========================================
+// 13. NATIONAL BLOOD BANK & DONOR REGISTRY ENGINE
+// ==========================================
+function initBloodBankPage() {
+    renderBloodInventoryGrid();
+    renderBloodDonorsTable();
+    renderBloodRequestsTable();
+    updateBloodBankKPIs();
+}
+
+function renderBloodInventoryGrid() {
+    const grid = document.getElementById('bloodInventoryGrid');
+    if (!grid) return;
+
+    const inventory = loadData('hms_blood_inventory', defaultBloodInventory);
+
+    grid.innerHTML = inventory.map(item => {
+        const pct = Math.min(100, Math.round((item.units / item.maxCapacity) * 100));
+        const isCritical = item.units < 5;
+        const isLow = item.units >= 5 && item.units <= 10;
+        const statusClass = isCritical ? 'critical' : (isLow ? 'low' : 'optimal');
+        const badgeColor = isCritical ? '#ef4444' : (isLow ? '#f59e0b' : '#10b981');
+        const badgeBg = isCritical ? 'rgba(239,68,68,0.2)' : (isLow ? 'rgba(245,158,11,0.2)' : 'rgba(16,185,129,0.2)');
+
+        return `
+            <div class="blood-group-card">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span class="blood-group-letter">${item.group}</span>
+                    <span style="font-size:0.68rem; padding:2px 6px; border-radius:10px; font-weight:700; background:${badgeBg}; color:${badgeColor}; border:1px solid ${badgeColor};">
+                        ${isCritical ? 'CRITICAL' : (isLow ? 'LOW' : 'OPTIMAL')}
+                    </span>
+                </div>
+
+                <div class="blood-cylinder-wrap">
+                    <div class="blood-cylinder-fill ${statusClass}" style="height: ${pct}%;"></div>
+                </div>
+
+                <div style="font-size:1.35rem; font-weight:800; color:#fff; font-family:'JetBrains Mono';">${item.units} <span style="font-size:0.75rem; color:#94a3b8; font-weight:500;">Units</span></div>
+                <div style="font-size:0.72rem; color:var(--text-muted); margin-top:2px;">Capacity: ${item.maxCapacity}</div>
+                <div style="font-size:0.7rem; color:#fca5a5; margin-top:6px;"><i class="fas fa-clock"></i> Exp in ${item.expiringInDays}d</div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderBloodDonorsTable() {
+    const tbody = document.getElementById('bloodDonorsTableBody');
+    if (!tbody) return;
+
+    const donors = loadData('hms_blood_donors', defaultBloodDonors);
+
+    tbody.innerHTML = donors.map(d => `
+        <tr>
+            <td>
+                <strong>${d.name}</strong><br>
+                <small style="color:var(--text-muted);">${d.age} Yrs • ${d.gender} • <i class="fas fa-phone"></i> ${d.phone}</small>
+            </td>
+            <td><span class="badge badge-danger" style="font-size:0.85rem; font-weight:700;">${d.bloodGroup}</span></td>
+            <td><strong style="color:${d.hemoglobin >= 12.5 ? '#10b981' : '#ef4444'};">${d.hemoglobin}</strong></td>
+            <td>${formatDate(d.lastDonation)}</td>
+            <td>
+                <span class="badge ${d.status === 'Eligible' ? 'badge-success' : 'badge-warning'}">
+                    ${d.status}
+                </span>
+            </td>
+            <td>
+                <button class="btn btn-sm btn-outline" onclick="intakeRepeatDonation('${d.id}')" title="Record New Blood Intake">
+                    <i class="fas fa-plus"></i> Intake
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function renderBloodRequestsTable() {
+    const tbody = document.getElementById('bloodRequestsTableBody');
+    if (!tbody) return;
+
+    const requests = loadData('hms_blood_requests', defaultBloodRequests);
+
+    tbody.innerHTML = requests.map(r => `
+        <tr>
+            <td><strong style="font-family:'JetBrains Mono'; color:var(--primary);">${r.id}</strong></td>
+            <td>
+                <strong>${r.department}</strong><br>
+                <small style="color:#cbd5e1;">${r.patient}</small>
+            </td>
+            <td><span class="badge badge-danger" style="font-weight:700;">${r.bloodGroup}</span></td>
+            <td><strong style="font-size:1rem; color:#fff;">${r.units}</strong></td>
+            <td>
+                <span class="badge ${r.urgency === 'STAT Emergency' ? 'badge-danger' : (r.urgency === 'Urgent' ? 'badge-warning' : 'badge-info')}">
+                    ${r.urgency}
+                </span>
+            </td>
+            <td>
+                ${r.status === 'Fulfilled' 
+                    ? '<span class="badge badge-success"><i class="fas fa-check"></i> Fulfilled</span>' 
+                    : `<button class="btn btn-sm btn-primary" onclick="fulfillBloodRequest('${r.id}')" style="background:#10b981; border-color:#10b981;">
+                        <i class="fas fa-truck-fast"></i> Dispatch
+                       </button>`}
+            </td>
+        </tr>
+    `).join('');
+}
+
+function updateBloodBankKPIs() {
+    const inventory = loadData('hms_blood_inventory', defaultBloodInventory);
+    const donors = loadData('hms_blood_donors', defaultBloodDonors);
+    const requests = loadData('hms_blood_requests', defaultBloodRequests);
+
+    const totalUnits = inventory.reduce((sum, item) => sum + item.units, 0);
+    const criticalGroups = inventory.filter(item => item.units < 5).length;
+    const pendingReqs = requests.filter(r => r.status !== 'Fulfilled').length;
+
+    const totalEl = document.getElementById('bloodTotalUnits');
+    const critEl = document.getElementById('bloodCriticalGroups');
+    const donorsEl = document.getElementById('bloodRegisteredDonors');
+    const reqsEl = document.getElementById('bloodPendingRequests');
+
+    if (totalEl) totalEl.textContent = totalUnits;
+    if (critEl) critEl.textContent = criticalGroups;
+    if (donorsEl) donorsEl.textContent = donors.length;
+    if (reqsEl) reqsEl.textContent = pendingReqs;
+}
+
+function openDonorIntakeModal() {
+    evaluateDonorEligibility();
+    openModal('donorIntakeModal');
+}
+
+function evaluateDonorEligibility() {
+    const age = parseInt(document.getElementById('donorAge')?.value || 28);
+    const weight = parseInt(document.getElementById('donorWeight')?.value || 68);
+    const hb = parseFloat(document.getElementById('donorHemoglobin')?.value || 14.2);
+    const lastDonation = document.getElementById('donorLastDonation')?.value || '2026-05-10';
+
+    const lastDate = new Date(lastDonation);
+    const diffDays = Math.floor((Date.now() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+
+    const verdictBox = document.getElementById('donorScreeningVerdictBox');
+    const icon = document.getElementById('verdictIcon');
+    const title = document.getElementById('verdictTitle');
+    const desc = document.getElementById('verdictDesc');
+    const btn = document.getElementById('btnConfirmDonorIntake');
+
+    const isAgeOk = age >= 18 && age <= 65;
+    const isWeightOk = weight >= 50;
+    const isHbOk = hb >= 12.5;
+    const isIntervalOk = diffDays >= 90;
+
+    const isEligible = isAgeOk && isWeightOk && isHbOk && isIntervalOk;
+
+    if (isEligible) {
+        if (verdictBox) {
+            verdictBox.style.background = 'rgba(16, 185, 129, 0.15)';
+            verdictBox.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+        }
+        if (icon) {
+            icon.className = 'fas fa-circle-check';
+            icon.style.color = '#10b981';
+        }
+        if (title) {
+            title.textContent = 'Clinically Eligible for Blood Donation';
+            title.style.color = '#10b981';
+        }
+        if (desc) desc.textContent = `All criteria passed: Age ${age} (18-65), Weight ${weight}kg (≥50), Hb ${hb} g/dL (≥12.5), Deferral interval ${diffDays} days (>90).`;
+        if (btn) btn.disabled = false;
+    } else {
+        if (verdictBox) {
+            verdictBox.style.background = 'rgba(239, 68, 68, 0.15)';
+            verdictBox.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+        }
+        if (icon) {
+            icon.className = 'fas fa-circle-xmark';
+            icon.style.color = '#ef4444';
+        }
+        if (title) {
+            title.textContent = 'Clinical Deferral: Donor Currently Ineligible';
+            title.style.color = '#ef4444';
+        }
+        let failReasons = [];
+        if (!isAgeOk) failReasons.push(`Age ${age} outside 18-65 window`);
+        if (!isWeightOk) failReasons.push(`Weight ${weight}kg below 50kg requirement`);
+        if (!isHbOk) failReasons.push(`Hemoglobin ${hb} below 12.5 g/dL safety cutoff`);
+        if (!isIntervalOk) failReasons.push(`Last donated ${diffDays} days ago (< 90 days required)`);
+        if (desc) desc.textContent = failReasons.join('; ');
+        if (btn) btn.disabled = true;
+    }
+}
+
+function submitDonorIntake() {
+    const name = document.getElementById('donorName')?.value.trim();
+    const group = document.getElementById('donorBloodGroup')?.value || 'O+';
+    const age = parseInt(document.getElementById('donorAge')?.value || 28);
+    const weight = parseInt(document.getElementById('donorWeight')?.value || 68);
+    const hb = parseFloat(document.getElementById('donorHemoglobin')?.value || 14.2);
+    const phone = document.getElementById('donorPhone')?.value.trim() || '9876543210';
+
+    if (!name) {
+        showToast('Please enter donor full name', 'error');
+        return;
+    }
+
+    const newDonor = {
+        id: 'DNR-' + Math.floor(100 + Math.random() * 900),
+        name,
+        age,
+        gender: 'Male',
+        bloodGroup: group,
+        hemoglobin: hb,
+        weight,
+        lastDonation: new Date().toISOString().split('T')[0],
+        status: 'Eligible',
+        phone
+    };
+
+    let donors = loadData('hms_blood_donors', defaultBloodDonors);
+    donors.unshift(newDonor);
+    saveData('hms_blood_donors', donors);
+
+    // Increment blood group inventory
+    let inventory = loadData('hms_blood_inventory', defaultBloodInventory);
+    const item = inventory.find(i => i.group === group);
+    if (item) {
+        item.units += 1;
+        item.status = item.units < 5 ? 'Critical Shortage' : (item.units <= 10 ? 'Low Stock' : 'Optimal');
+        saveData('hms_blood_inventory', inventory);
+    }
+
+    closeModal('donorIntakeModal');
+    renderBloodInventoryGrid();
+    renderBloodDonorsTable();
+    updateBloodBankKPIs();
+
+    if (typeof playSound === 'function') playSound('success');
+    showToast(`🩸 Donor ${name} intake recorded! +1 Unit added to ${group} inventory.`, 'success');
+    broadcastHospitalEvent('blood_donation', { donorId: newDonor.id, group }, `Blood Donation Intake: +1 Unit ${group} from ${name}`);
+}
+
+function intakeRepeatDonation(donorId) {
+    const donors = loadData('hms_blood_donors', defaultBloodDonors);
+    const donor = donors.find(d => d.id === donorId);
+    if (!donor) return;
+
+    donor.lastDonation = new Date().toISOString().split('T')[0];
+    saveData('hms_blood_donors', donors);
+
+    let inventory = loadData('hms_blood_inventory', defaultBloodInventory);
+    const item = inventory.find(i => i.group === donor.bloodGroup);
+    if (item) {
+        item.units += 1;
+        saveData('hms_blood_inventory', inventory);
+    }
+
+    renderBloodInventoryGrid();
+    renderBloodDonorsTable();
+    updateBloodBankKPIs();
+
+    if (typeof playSound === 'function') playSound('success');
+    showToast(`🩸 Repeat donation recorded for ${donor.name}! +1 Unit ${donor.bloodGroup} added.`, 'success');
+    broadcastHospitalEvent('blood_donation', { donorId, group: donor.bloodGroup }, `Repeat blood intake for ${donor.name} (+1 Unit ${donor.bloodGroup})`);
+}
+
+function openEmergencyBloodRequestModal() {
+    openModal('emergencyBloodRequestModal');
+}
+
+function broadcastEmergencyBloodRequest() {
+    const dept = document.getElementById('reqDept')?.value || 'Emergency Trauma Bay';
+    const patient = document.getElementById('reqPatient')?.value.trim() || 'Urgent Resuscitation';
+    const group = document.getElementById('reqBloodGroup')?.value || 'O-';
+    const units = parseInt(document.getElementById('reqUnits')?.value || 2);
+    const urgency = document.getElementById('reqUrgency')?.value || 'STAT Emergency';
+
+    const reqId = 'BREQ-' + Math.floor(100 + Math.random() * 900);
+    const newReq = {
+        id: reqId,
+        department: dept,
+        patient,
+        bloodGroup: group,
+        units,
+        urgency,
+        status: 'Dispatched',
+        time: 'Just now'
+    };
+
+    let requests = loadData('hms_blood_requests', defaultBloodRequests);
+    requests.unshift(newReq);
+    saveData('hms_blood_requests', requests);
+
+    closeModal('emergencyBloodRequestModal');
+    renderBloodRequestsTable();
+    updateBloodBankKPIs();
+
+    if (typeof playSound === 'function') playSound('siren');
+    showToast(`🚨 BROADCAST DISPATCHED: ${units} Units of ${group} requested for ${dept}!`, 'error');
+    broadcastHospitalEvent('blood_request', { reqId, group, units, dept }, `🚨 STAT BLOOD REQUEST: ${units}x ${group} for ${dept}`);
+}
+
+function fulfillBloodRequest(reqId) {
+    let requests = loadData('hms_blood_requests', defaultBloodRequests);
+    const req = requests.find(r => r.id === reqId);
+    if (!req) return;
+
+    let inventory = loadData('hms_blood_inventory', defaultBloodInventory);
+    const item = inventory.find(i => i.group === req.bloodGroup);
+    if (item && item.units >= req.units) {
+        item.units -= req.units;
+        item.status = item.units < 5 ? 'Critical Shortage' : (item.units <= 10 ? 'Low Stock' : 'Optimal');
+        saveData('hms_blood_inventory', inventory);
+    }
+
+    req.status = 'Fulfilled';
+    saveData('hms_blood_requests', requests);
+
+    renderBloodInventoryGrid();
+    renderBloodRequestsTable();
+    updateBloodBankKPIs();
+
+    if (typeof playSound === 'function') playSound('success');
+    showToast(`✅ Blood Request #${reqId} fulfilled & dispatched to ${req.department}!`, 'success');
+    broadcastHospitalEvent('blood_stock_update', { reqId, group: req.bloodGroup }, `Blood Request #${reqId} fulfilled for ${req.department}`);
+}
+
+function submitQuickAddUnits() {
+    const group = document.getElementById('quickAddGroup')?.value || 'O+';
+    const units = parseInt(document.getElementById('quickAddUnitsNum')?.value || 2);
+
+    let inventory = loadData('hms_blood_inventory', defaultBloodInventory);
+    const item = inventory.find(i => i.group === group);
+    if (item) {
+        item.units += units;
+        item.status = item.units < 5 ? 'Critical Shortage' : (item.units <= 10 ? 'Low Stock' : 'Optimal');
+        saveData('hms_blood_inventory', inventory);
+    }
+
+    closeModal('quickAddUnitsModal');
+    renderBloodInventoryGrid();
+    updateBloodBankKPIs();
+
+    if (typeof playSound === 'function') playSound('success');
+    showToast(`✅ Added ${units} units of ${group} to Cryo-Inventory!`, 'success');
+    broadcastHospitalEvent('blood_stock_update', { group, units }, `Cryo-Inventory restocked: +${units} Units ${group}`);
+}
+
+// ==========================================
+// 14. SMART VISUAL HOSPITAL BED & WARD MANAGEMENT FLOOR PLAN
+// ==========================================
+let currentBedWingFilter = 'all';
+
+function renderBedFloorPlan(filterWing = currentBedWingFilter) {
+    currentBedWingFilter = filterWing;
+    const containers = [
+        document.getElementById('dashboardBedGrid'),
+        document.getElementById('adminBedGrid')
+    ].filter(Boolean);
+
+    if (containers.length === 0) return;
+
+    const beds = loadData('hms_hospital_beds', defaultHospitalBeds);
+    const filtered = (filterWing === 'all') ? beds : beds.filter(b => b.wing.toLowerCase().includes(filterWing.toLowerCase()));
+
+    const markup = filtered.map(b => {
+        const isOccupied = b.status === 'Occupied';
+        const isAvailable = b.status === 'Available';
+        const isSanitizing = b.status === 'Sanitization in Progress';
+        const isMaintenance = b.status === 'Maintenance';
+
+        const statusClass = isOccupied ? 'occupied' : (isAvailable ? 'available' : (isSanitizing ? 'sanitizing' : 'maintenance'));
+        const icon = isOccupied ? 'fa-user-injured' : (isAvailable ? 'fa-bed' : (isSanitizing ? 'fa-spray-can-sparkles' : 'fa-wrench'));
+
+        return `
+            <div class="bed-matrix-card status-${statusClass}" onclick="handleBedCardClick('${b.id}')">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <strong style="font-family:'JetBrains Mono'; color:#ffffff; font-size:0.95rem;">${b.id}</strong>
+                    <span class="bed-status-pill ${statusClass}">${b.status.split(' ')[0]}</span>
+                </div>
+                <div style="font-size:0.7rem; color:#38bdf8; text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">${b.wing}</div>
+                <div style="margin:10px 0; display:flex; align-items:center; gap:8px;">
+                    <div style="width:32px; height:32px; border-radius:8px; background:rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; color:${isOccupied ? '#ef4444' : (isAvailable ? '#10b981' : '#f59e0b')}; font-size:15px;">
+                        <i class="fas ${icon}"></i>
+                    </div>
+                    <div style="flex:1; overflow:hidden;">
+                        ${isOccupied 
+                            ? `<strong style="font-size:0.84rem; color:#fff; display:block; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${b.patientName}</strong>
+                               <span style="font-size:0.72rem; color:var(--text-muted); display:block; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${b.condition || 'Admitted'}</span>`
+                            : `<strong style="font-size:0.84rem; color:${isAvailable ? '#10b981' : '#f59e0b'}; display:block;">${isAvailable ? 'Ready for Intake' : (isSanitizing ? 'Sanitizing' : 'Maintenance')}</strong>
+                               <span style="font-size:0.72rem; color:var(--text-muted); display:block;">${b.floor.split('-')[0]}</span>`}
+                    </div>
+                </div>
+                ${isOccupied && b.hr ? `
+                    <div style="border-top:1px solid rgba(255,255,255,0.06); padding-top:6px; display:flex; justify-content:space-between; font-size:0.72rem; color:#94a3b8; font-family:'JetBrains Mono';">
+                        <span><i class="fas fa-heart-pulse" style="color:#ef4444;"></i> ${b.hr}</span>
+                        <span><i class="fas fa-lungs" style="color:#38bdf8;"></i> ${b.spo2}%</span>
+                        <span>${b.bp}</span>
+                    </div>
+                ` : `
+                    <div style="border-top:1px solid rgba(255,255,255,0.06); padding-top:6px; font-size:0.72rem; color:var(--text-muted); text-align:right;">
+                        <i class="fas fa-arrow-right"></i> Click for Actions
+                    </div>
+                `}
+            </div>
+        `;
+    }).join('');
+
+    containers.forEach(c => c.innerHTML = markup);
+
+    // Update available beds KPI card in dashboard
+    const freeCount = beds.filter(b => b.status === 'Available').length;
+    const availBedsEl = document.getElementById('availableBeds');
+    if (availBedsEl) availBedsEl.textContent = freeCount;
+}
+
+function filterBedFloorPlan(wing, btnEl) {
+    if (typeof playSound === 'function') playSound('click');
+    document.querySelectorAll('.btn-wing-pill').forEach(b => b.classList.remove('active'));
+    if (btnEl) btnEl.classList.add('active');
+    renderBedFloorPlan(wing);
+}
+
+function handleBedCardClick(bedId) {
+    const beds = loadData('hms_hospital_beds', defaultHospitalBeds);
+    const bed = beds.find(b => b.id === bedId);
+    if (!bed) return;
+
+    if (bed.status === 'Available') {
+        openBedAllocationModal(bedId);
+    } else if (bed.status === 'Occupied') {
+        openBedDetailsModal(bedId);
+    } else if (bed.status === 'Sanitization in Progress') {
+        if (confirm(`Bed ${bedId} sanitization is complete. Mark ready and available for inpatient intake?`)) {
+            markBedSanitized(bedId);
+        }
+    } else {
+        openBedDetailsModal(bedId);
+    }
+}
+
+function openBedAllocationModal(targetBedId = null) {
+    const beds = loadData('hms_hospital_beds', defaultHospitalBeds);
+    const patients = loadData('hms_patients', defaultPatients);
+
+    const bedSelect = document.getElementById('allocBedSelect');
+    const patientSelect = document.getElementById('allocPatientSelect');
+
+    const availableBeds = beds.filter(b => b.status === 'Available');
+
+    if (bedSelect) {
+        bedSelect.innerHTML = availableBeds.map(b => `
+            <option value="${b.id}" ${b.id === targetBedId ? 'selected' : ''}>
+                ${b.id} (${b.wing} - ${b.floor})
+            </option>
+        `).join('') || '<option value="">No Available Beds</option>';
+    }
+
+    if (patientSelect) {
+        patientSelect.innerHTML = patients.map(p => `
+            <option value="${p.id}">${p.name} (${p.id} • ${p.condition || 'Admitted'})</option>
+        `).join('');
+    }
+
+    openModal('bedAllocationModal');
+}
+
+function submitBedAllocation() {
+    const bedId = document.getElementById('allocBedSelect')?.value;
+    const patientId = document.getElementById('allocPatientSelect')?.value;
+    const notes = document.getElementById('allocNotes')?.value.trim() || 'Urgent Inpatient Admission';
+
+    if (!bedId || !patientId) {
+        showToast('Please select both an available bed and a patient', 'error');
+        return;
+    }
+
+    const beds = loadData('hms_hospital_beds', defaultHospitalBeds);
+    const patients = loadData('hms_patients', defaultPatients);
+
+    const bed = beds.find(b => b.id === bedId);
+    const patient = patients.find(p => p.id === patientId);
+
+    if (bed && patient) {
+        bed.status = 'Occupied';
+        bed.patientId = patient.id;
+        bed.patientName = patient.name;
+        bed.condition = patient.condition || notes;
+        bed.doctor = 'Dr. Priya Sharma';
+        bed.hr = 78;
+        bed.spo2 = 98;
+        bed.bp = '120/80';
+        saveData('hms_hospital_beds', beds);
+
+        closeModal('bedAllocationModal');
+        renderBedFloorPlan();
+
+        if (typeof playSound === 'function') playSound('success');
+        showToast(`✅ Bed ${bedId} allocated to ${patient.name}!`, 'success');
+        broadcastHospitalEvent('bed_allocation', { bedId, patientId }, `Inpatient Bed ${bedId} allocated to ${patient.name}`);
+    }
+}
+
+function openPatientTransferModal(sourceBedId = null) {
+    const beds = loadData('hms_hospital_beds', defaultHospitalBeds);
+    const occupiedBeds = beds.filter(b => b.status === 'Occupied');
+    const availableBeds = beds.filter(b => b.status === 'Available');
+
+    const srcSelect = document.getElementById('transferSourceBedSelect');
+    const destSelect = document.getElementById('transferTargetBedSelect');
+
+    if (srcSelect) {
+        srcSelect.innerHTML = occupiedBeds.map(b => `
+            <option value="${b.id}" ${b.id === sourceBedId ? 'selected' : ''}>
+                ${b.id}: ${b.patientName} (${b.wing})
+            </option>
+        `).join('') || '<option value="">No Occupied Beds to Transfer</option>';
+    }
+
+    if (destSelect) {
+        destSelect.innerHTML = availableBeds.map(b => `
+            <option value="${b.id}">${b.id} (${b.wing} - ${b.floor})</option>
+        `).join('') || '<option value="">No Target Beds Available</option>';
+    }
+
+    openModal('patientTransferModal');
+}
+
+function submitPatientTransfer() {
+    const srcId = document.getElementById('transferSourceBedSelect')?.value;
+    const destId = document.getElementById('transferTargetBedSelect')?.value;
+    const reason = document.getElementById('transferReasonSelect')?.value || 'Clinical Escalation';
+
+    if (!srcId || !destId) {
+        showToast('Please select both source and destination beds', 'error');
+        return;
+    }
+
+    const beds = loadData('hms_hospital_beds', defaultHospitalBeds);
+    const srcBed = beds.find(b => b.id === srcId);
+    const destBed = beds.find(b => b.id === destId);
+
+    if (srcBed && destBed) {
+        const patientName = srcBed.patientName;
+        const patientId = srcBed.patientId;
+        const condition = srcBed.condition;
+
+        // Source bed transitions to Sanitization in Progress
+        srcBed.status = 'Sanitization in Progress';
+        srcBed.patientId = null;
+        srcBed.patientName = null;
+        srcBed.condition = null;
+        srcBed.hr = null;
+        srcBed.spo2 = null;
+        srcBed.bp = null;
+
+        // Destination bed becomes Occupied
+        destBed.status = 'Occupied';
+        destBed.patientId = patientId;
+        destBed.patientName = patientName;
+        destBed.condition = condition;
+        destBed.hr = 80;
+        destBed.spo2 = 98;
+        destBed.bp = '122/80';
+
+        saveData('hms_hospital_beds', beds);
+
+        closeModal('patientTransferModal');
+        renderBedFloorPlan();
+
+        if (typeof playSound === 'function') playSound('mesh');
+        showToast(`🔄 Patient ${patientName} transferred from ${srcId} to ${destId}!`, 'success');
+        broadcastHospitalEvent('bed_transfer', { srcId, destId, patientName, reason }, `Bed Transfer: ${patientName} moved from ${srcId} to ${destId} (${reason})`);
+    }
+}
+
+function openBedDetailsModal(bedId) {
+    const beds = loadData('hms_hospital_beds', defaultHospitalBeds);
+    const bed = beds.find(b => b.id === bedId);
+    if (!bed) return;
+
+    const title = document.getElementById('bedDetailTitle');
+    const content = document.getElementById('bedDetailContent');
+
+    if (title) title.innerHTML = `<i class="fas fa-bed"></i> Bed Details: <strong>${bed.id}</strong> (${bed.wing})`;
+    if (content) {
+        content.innerHTML = `
+            <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:16px; margin-bottom:16px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <span style="color:#94a3b8;">Floor & Location:</span>
+                    <strong style="color:#fff;">${bed.floor}</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <span style="color:#94a3b8;">Current Status:</span>
+                    <span class="bed-status-pill ${bed.status.toLowerCase().replace(/[^a-z]/g, '')}">${bed.status}</span>
+                </div>
+                ${bed.patientName ? `
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                        <span style="color:#94a3b8;">Admitted Patient:</span>
+                        <strong style="color:#38bdf8;">${bed.patientName} (${bed.patientId})</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                        <span style="color:#94a3b8;">Diagnosis:</span>
+                        <strong style="color:#f59e0b;">${bed.condition || 'Observation'}</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                        <span style="color:#94a3b8;">Attending Doctor:</span>
+                        <span style="color:#fff;">${bed.doctor || 'Dr. Priya Sharma'}</span>
+                    </div>
+                ` : ''}
+            </div>
+            <div style="display:flex; gap:10px;">
+                ${bed.status === 'Occupied' ? `
+                    <button class="btn btn-outline" style="flex:1;" onclick="closeModal('bedDetailsModal'); openPatientTransferModal('${bed.id}');">
+                        <i class="fas fa-right-left"></i> Transfer
+                    </button>
+                    <button class="btn btn-danger" style="flex:1;" onclick="dischargeBed('${bed.id}')">
+                        <i class="fas fa-door-open"></i> Discharge Patient
+                    </button>
+                ` : (bed.status === 'Sanitization in Progress' ? `
+                    <button class="btn btn-success" style="width:100%;" onclick="markBedSanitized('${bed.id}')">
+                        <i class="fas fa-check"></i> Complete Sanitization & Mark Ready
+                    </button>
+                ` : `
+                    <button class="btn btn-primary" style="width:100%;" onclick="closeModal('bedDetailsModal'); openBedAllocationModal('${bed.id}');">
+                        <i class="fas fa-plus"></i> Allocate Inpatient Bed
+                    </button>
+                `)}
+            </div>
+        `;
+    }
+
+    openModal('bedDetailsModal');
+}
+
+function dischargeBed(bedId) {
+    if (!confirm(`Discharge patient from bed ${bedId} and send bed to sanitization?`)) return;
+
+    const beds = loadData('hms_hospital_beds', defaultHospitalBeds);
+    const bed = beds.find(b => b.id === bedId);
+    if (bed) {
+        const patientName = bed.patientName;
+        bed.status = 'Sanitization in Progress';
+        bed.patientId = null;
+        bed.patientName = null;
+        bed.condition = null;
+        bed.hr = null;
+        bed.spo2 = null;
+        bed.bp = null;
+        saveData('hms_hospital_beds', beds);
+
+        closeModal('bedDetailsModal');
+        renderBedFloorPlan();
+
+        if (typeof playSound === 'function') playSound('mesh');
+        showToast(`Discharged ${patientName} from bed ${bedId}. Bed queued for sanitization.`, 'info');
+        broadcastHospitalEvent('bed_status_change', { bedId, status: 'Sanitization in Progress' }, `Bed ${bedId} discharged, sanitization started`);
+    }
+}
+
+function markBedSanitized(bedId) {
+    const beds = loadData('hms_hospital_beds', defaultHospitalBeds);
+    const bed = beds.find(b => b.id === bedId);
+    if (bed) {
+        bed.status = 'Available';
+        saveData('hms_hospital_beds', beds);
+
+        closeModal('bedDetailsModal');
+        renderBedFloorPlan();
+
+        if (typeof playSound === 'function') playSound('success');
+        showToast(`✨ Bed ${bedId} sanitized and marked AVAILABLE!`, 'success');
+        broadcastHospitalEvent('bed_status_change', { bedId, status: 'Available' }, `Bed ${bedId} sanitized & available`);
+    }
+}
+
+// ==========================================
+// 15. CLINICAL DRUG-DRUG INTERACTION (DDI) & ALLERGY SAFETY CHECKER
+// ==========================================
+function checkClinicalDDI(medList = [], patientId = null) {
+    const normalized = medList.map(m => String(m || '').toLowerCase());
+    
+    // Check pairwise against CLINICAL_DDI_RULES
+    for (const rule of CLINICAL_DDI_RULES) {
+        const d1 = rule.drugs[0];
+        const d2 = rule.drugs[1];
+
+        const hasD1 = normalized.some(n => n.includes(d1));
+        const hasD2 = normalized.some(n => n.includes(d2));
+
+        if (hasD1 && hasD2) {
+            return { hasConflict: true, rule };
+        }
+    }
+
+    return { hasConflict: false, rule: null };
+}
+
+function triggerRxDdiScan() {
+    const med1 = document.getElementById('rxMed1')?.value.trim() || '';
+    const extraMeds = Array.from(document.querySelectorAll('#additionalMedsContainer .extra-med-name')).map(el => el.value.trim());
+    const allMeds = [med1, ...extraMeds].filter(Boolean);
+
+    const alertBox = document.getElementById('prescriptionDdiAlert');
+    const allClearBox = document.getElementById('prescriptionDdiAllClear');
+    const titleEl = document.getElementById('rxDdiWarningTitle');
+    const badgeEl = document.getElementById('rxDdiSeverityBadge');
+    const mechEl = document.getElementById('rxDdiMechanism');
+    const altEl = document.getElementById('rxDdiAlternative');
+
+    if (!alertBox) return;
+
+    const result = checkClinicalDDI(allMeds);
+
+    if (result.hasConflict) {
+        alertBox.style.display = 'block';
+        if (allClearBox) allClearBox.style.display = 'none';
+        if (titleEl) titleEl.textContent = `${result.rule.title} (${result.rule.drugs.join(' + ').toUpperCase()})`;
+        if (badgeEl) badgeEl.textContent = result.rule.severity.toUpperCase();
+        if (mechEl) mechEl.textContent = result.rule.mechanism;
+        if (altEl) altEl.textContent = result.rule.alternative;
+
+        if (typeof playSound === 'function') playSound('error');
+    } else {
+        alertBox.style.display = 'none';
+        if (allClearBox) allClearBox.style.display = 'flex';
+    }
+}
+
+function loadDdiPreset(key) {
+    const presets = {
+        warfarin_aspirin: { med1: 'Warfarin 5mg', med2: 'Aspirin 75mg' },
+        sildenafil_nitro: { med1: 'Sildenafil 50mg', med2: 'Nitroglycerin 0.4mg SL' },
+        tramadol_fluoxetine: { med1: 'Tramadol 50mg', med2: 'Fluoxetine 20mg' },
+        clopidogrel_omeprazole: { med1: 'Clopidogrel 75mg', med2: 'Omeprazole 20mg' }
+    };
+
+    const chosen = presets[key];
+    if (chosen) {
+        const med1Input = document.getElementById('rxMed1');
+        if (med1Input) med1Input.value = chosen.med1;
+
+        const extraBox = document.getElementById('additionalMedsContainer');
+        if (extraBox) {
+            extraBox.innerHTML = `
+                <div class="rx-med-block extra-rx-med-row" style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); padding:12px; border-radius:10px; margin-bottom:10px; position:relative;">
+                    <button type="button" class="btn-icon" onclick="removePrescriptionMedRow(this)" style="position:absolute; top:8px; right:8px; width:26px; height:26px;"><i class="fas fa-times"></i></button>
+                    <div class="form-row">
+                        <div class="form-group" style="flex:2;">
+                            <label class="form-label">Medicine 2 Name & Strength *</label>
+                            <input type="text" class="form-control extra-med-name" value="${chosen.med2}" oninput="triggerRxDdiScan()">
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label class="form-label">Dosage</label>
+                            <input type="text" class="form-control extra-med-dose" value="1 tablet">
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        triggerRxDdiScan();
+    }
+}
+
+function addPrescriptionMedRow() {
+    const extraBox = document.getElementById('additionalMedsContainer');
+    if (!extraBox) return;
+
+    const rowIdx = extraBox.children.length + 2;
+    const div = document.createElement('div');
+    div.className = 'rx-med-block extra-rx-med-row';
+    div.style.cssText = 'background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); padding:12px; border-radius:10px; margin-bottom:10px; position:relative;';
+    div.innerHTML = `
+        <button type="button" class="btn-icon" onclick="removePrescriptionMedRow(this)" style="position:absolute; top:8px; right:8px; width:26px; height:26px;" title="Remove Medicine"><i class="fas fa-times"></i></button>
+        <div class="form-row">
+            <div class="form-group" style="flex:2;">
+                <label class="form-label">Medicine ${rowIdx} Name & Strength *</label>
+                <input type="text" class="form-control extra-med-name" placeholder="e.g. Aspirin 75mg" oninput="triggerRxDdiScan()">
+            </div>
+            <div class="form-group" style="flex:1;">
+                <label class="form-label">Dosage</label>
+                <input type="text" class="form-control extra-med-dose" placeholder="e.g. 1 tablet" value="1 tablet">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Frequency</label>
+                <input type="text" class="form-control extra-med-freq" placeholder="Once daily" value="Once daily">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Duration</label>
+                <input type="text" class="form-control extra-med-dur" placeholder="30 days" value="30 days">
+            </div>
+        </div>
+    `;
+
+    extraBox.appendChild(div);
+    triggerRxDdiScan();
+}
+
+function removePrescriptionMedRow(btn) {
+    const row = btn.closest('.extra-rx-med-row');
+    if (row) {
+        row.remove();
+        triggerRxDdiScan();
+    }
+}
+
+function applyDdiSafeAlternative() {
+    const altEl = document.getElementById('rxDdiAlternative');
+    const extraMed = document.querySelector('#additionalMedsContainer .extra-med-name');
+    if (extraMed) {
+        extraMed.value = 'Acetaminophen 500mg';
+        triggerRxDdiScan();
+        if (typeof playSound === 'function') playSound('success');
+        showToast('Substituted contraindicated medication with safe clinical alternative!', 'success');
+    }
+}
+
+function analyzePharmacyDdi() {
+    const drugA = document.getElementById('ddiDrugA')?.value.trim() || 'Warfarin';
+    const drugB = document.getElementById('ddiDrugB')?.value.trim() || 'Aspirin';
+    const dossier = document.getElementById('ddiPharmacologyDossier');
+    if (!dossier) return;
+
+    const result = checkClinicalDDI([drugA, drugB]);
+
+    if (result.hasConflict) {
+        dossier.style.display = 'block';
+        dossier.innerHTML = `
+            <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.45); border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(239, 68, 68, 0.2);">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="width:36px; height:36px; border-radius:50%; background:rgba(239,68,68,0.25); border:1px solid #ef4444; display:flex; align-items:center; justify-content:center; color:#ef4444;">
+                            <i class="fas fa-triangle-exclamation"></i>
+                        </span>
+                        <div>
+                            <h4 style="margin:0; font-size:1.15rem; color:#fff;">${result.rule.title}</h4>
+                            <span style="font-size:0.75rem; color:#fca5a5; font-family:'JetBrains Mono';">${drugA.toUpperCase()} + ${drugB.toUpperCase()}</span>
+                        </div>
+                    </div>
+                    <span class="badge badge-danger" style="font-size:0.85rem; padding:4px 10px;">${result.rule.severity.toUpperCase()}</span>
+                </div>
+                <div style="margin:12px 0; color:#cbd5e1; font-size:0.88rem; line-height:1.6;">
+                    <strong style="color:#fff; display:block; margin-bottom:4px;"><i class="fas fa-microscope"></i> Pharmacological Mechanism:</strong>
+                    ${result.rule.mechanism}
+                </div>
+                <div style="background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px; margin-top:12px;">
+                    <strong style="color:#38bdf8; font-size:0.82rem; display:block; margin-bottom:4px;"><i class="fas fa-prescription-bottle-medical"></i> Evidence-Based Clinical Alternative:</strong>
+                    <span style="color:#f1f5f9; font-size:0.85rem;">${result.rule.alternative}</span>
+                </div>
+            </div>
+        `;
+    } else {
+        dossier.style.display = 'block';
+        dossier.innerHTML = `
+            <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.45); border-radius: 16px; padding: 20px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <i class="fas fa-circle-check" style="color:#10b981; font-size:24px;"></i>
+                    <div>
+                        <h4 style="margin:0; font-size:1.05rem; color:#fff;">All Clear — Safe Clinical Combination</h4>
+                        <p style="margin:4px 0 0 0; color:#cbd5e1; font-size:0.82rem;">No known severe or contraindicated CYP450 or pharmacodynamic interactions between <strong>${drugA}</strong> and <strong>${drugB}</strong>.</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+}
+
+function runPharmacologyDdiDemo(drugA, drugB) {
+    const inputA = document.getElementById('ddiDrugA');
+    const inputB = document.getElementById('ddiDrugB');
+    if (inputA) inputA.value = drugA;
+    if (inputB) inputB.value = drugB;
+    analyzePharmacyDdi();
+    if (typeof playSound === 'function') playSound('click');
+}
+
+// ==========================================
+// 16. ABHA (AYUSHMAN BHARAT) DIGITAL HEALTH CARD GENERATOR
+// ==========================================
+function getOrGenerateAbha(patient) {
+    if (!patient) patient = { id: 'P001', name: 'Rajesh Kumar', bloodGroup: 'O+', phone: '9876543210' };
+
+    // Deterministic 14-digit number based on patient ID
+    const seed = (patient.id || 'P001').replace(/[^0-9]/g, '') || '1';
+    const padded = String(parseInt(seed) * 174829 + 91000000000000).padStart(14, '0');
+    const part1 = padded.slice(0, 2);
+    const part2 = padded.slice(2, 6);
+    const part3 = padded.slice(6, 10);
+    const part4 = padded.slice(10, 14);
+
+    const abhaNumber = `${part1}-${part2}-${part3}-${part4}`;
+    const abhaAddress = `${patient.name.toLowerCase().replace(/[^a-z0-9]/g, '.')}@abdm`;
+    const verifyPayload = `https://abdm.gov.in/verify?abha=${abhaNumber}&name=${encodeURIComponent(patient.name)}&hms=MEDICARE`;
+
+    return { number: abhaNumber, address: abhaAddress, payload: verifyPayload };
+}
+
+async function renderABHACard(patient, containerId = 'abhaCardVisualContainer') {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const abha = getOrGenerateAbha(patient);
+
+    let qrSvg = '';
+    try {
+        if (window.QRCode && typeof window.QRCode.toString === 'function') {
+            qrSvg = await window.QRCode.toString(abha.payload, {
+                type: 'svg',
+                margin: 1,
+                width: 100,
+                color: { dark: '#000000', light: '#ffffff' }
+            });
+        }
+    } catch (_) {}
+
+    if (!qrSvg) {
+        qrSvg = `<div style="width:100px; height:100px; background:#fff; display:flex; align-items:center; justify-content:center; color:#000; font-size:10px; font-weight:700; text-align:center; padding:4px;">ABDM QR CODE VERIFIED</div>`;
+    }
+
+    container.innerHTML = `
+        <div class="abha-card-wrap">
+            <div class="abha-tricolor-bar"></div>
+            
+            <!-- Government ABDM Header -->
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.12); padding-bottom:12px; margin-bottom:16px;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="width:40px; height:40px; border-radius:10px; background:rgba(56,189,248,0.2); border:1px solid #38bdf8; display:flex; align-items:center; justify-content:center; color:#38bdf8; font-size:20px;">
+                        <i class="fas fa-shield-halved"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:0.65rem; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:1px;">National Health Authority • Govt of India</div>
+                        <h4 style="margin:0; font-size:0.98rem; color:#ffffff; font-weight:800; letter-spacing:0.3px;">Ayushman Bharat Health Account (ABHA)</h4>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="abha-chip-icon" title="Electronic Health Smart Chip"></span>
+                    <span class="badge badge-success" style="font-size:0.7rem; padding:3px 8px;"><i class="fas fa-check-circle"></i> VERIFIED</span>
+                </div>
+            </div>
+
+            <!-- Main Patient & Card Details Grid -->
+            <div style="display:grid; grid-template-columns:auto 1fr auto; gap:20px; align-items:center;">
+                <!-- Patient Avatar -->
+                <div style="position:relative;">
+                    <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(patient.name)}&background=0284c7&color=fff&size=160" alt="${patient.name}" style="width:84px; height:84px; border-radius:16px; border:2px solid #38bdf8; box-shadow:0 0 16px rgba(56,189,248,0.35);">
+                    <span style="position:absolute; bottom:-6px; left:50%; transform:translateX(-50%); background:#0f172a; border:1px solid #38bdf8; color:#38bdf8; font-size:9px; font-weight:800; padding:1px 6px; border-radius:8px;">${patient.bloodGroup}</span>
+                </div>
+
+                <!-- Text Details -->
+                <div>
+                    <h3 style="margin:0 0 4px 0; font-size:1.35rem; color:#ffffff; font-weight:800;">${patient.name}</h3>
+                    <div style="font-size:0.8rem; color:#94a3b8; margin-bottom:8px;">
+                        <span>DOB: <strong>1981-08-15</strong></span> • <span>Gender: <strong>${patient.gender}</strong></span>
+                    </div>
+
+                    <div style="margin-bottom:8px;">
+                        <span style="font-size:0.72rem; color:var(--text-muted); text-transform:uppercase; display:block;">14-Digit Government ABHA Number</span>
+                        <div class="abha-number-pill">${abha.number}</div>
+                    </div>
+
+                    <div style="font-size:0.8rem; color:#cbd5e1;">
+                        ABHA Address: <strong style="color:#38bdf8; font-family:'JetBrains Mono';">${abha.address}</strong>
+                    </div>
+                </div>
+
+                <!-- Verified QR Code -->
+                <div style="text-align:center; background:#ffffff; padding:6px; border-radius:12px; box-shadow:0 8px 20px rgba(0,0,0,0.4);">
+                    ${qrSvg}
+                    <div style="font-size:8px; font-weight:700; color:#0f172a; margin-top:2px;">SCAN TO VERIFY</div>
+                </div>
+            </div>
+
+            <!-- Footer Bar with Direct Actions -->
+            <div style="margin-top:18px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                <div style="font-size:0.76rem; color:#94a3b8;">
+                    Emergency Contact: <strong style="color:#fff;">${patient.phone}</strong>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn btn-sm btn-outline" onclick="toggleAppleWalletPassView()"><i class="fab fa-apple"></i> Apple Wallet Pass</button>
+                    <button class="btn btn-sm btn-primary" onclick="window.print()"><i class="fas fa-print"></i> Print Official Card</button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function openAbhaGeneratorModal(patientId) {
+    const patients = loadData('hms_patients', defaultPatients);
+    const patient = patients.find(p => p.id === patientId) || patients[0];
+    if (!patient) return;
+
+    renderABHACard(patient, 'abhaCardVisualContainer');
+    openModal('abhaCardModal');
+}
+
+function openAbhaGeneratorForActive() {
+    const patients = loadData('hms_patients', defaultPatients);
+    if (patients.length > 0) {
+        openAbhaGeneratorModal(patients[0].id);
+    }
+}
+
+function toggleAppleWalletPassView() {
+    const patients = loadData('hms_patients', defaultPatients);
+    const activePatient = patients.find(p => p.id === (typeof portalCurrentPatientId !== 'undefined' ? portalCurrentPatientId : 'P001')) || patients[0];
+
+    renderAppleWalletPass(activePatient, 'appleWalletPassContent');
+    openModal('appleWalletPassModal');
+}
+
+async function renderAppleWalletPass(patient, containerId = 'appleWalletPassContent') {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const abha = getOrGenerateAbha(patient);
+
+    let qrSvg = '';
+    try {
+        if (window.QRCode && typeof window.QRCode.toString === 'function') {
+            qrSvg = await window.QRCode.toString(abha.payload, {
+                type: 'svg',
+                margin: 1,
+                width: 140,
+                color: { dark: '#000000', light: '#ffffff' }
+            });
+        }
+    } catch (_) {}
+
+    container.innerHTML = `
+        <div style="background:linear-gradient(135deg, #18181b 0%, #09090b 100%); border:1px solid rgba(255,255,255,0.18); border-radius:24px; padding:24px; color:#ffffff; box-shadow:0 30px 70px rgba(0,0,0,0.8);">
+            <!-- Pass Top Header -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <i class="fab fa-apple" style="font-size:22px; color:#fff;"></i>
+                    <strong style="font-size:0.95rem; letter-spacing:0.3px;">Health Pass</strong>
+                </div>
+                <span style="font-size:0.75rem; color:#94a3b8; font-family:'JetBrains Mono';">MEDICARE ABDM</span>
+            </div>
+
+            <!-- Patient Name & Pass Hero -->
+            <div style="margin-bottom:20px;">
+                <div style="font-size:0.72rem; color:#a1a1aa; text-transform:uppercase; letter-spacing:0.8px;">Patient Name</div>
+                <h2 style="margin:2px 0 0 0; font-size:1.45rem; font-weight:800; color:#fff;">${patient.name}</h2>
+            </div>
+
+            <!-- Details 3-Column Strip -->
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:24px; background:rgba(255,255,255,0.04); padding:12px; border-radius:12px; border:1px solid rgba(255,255,255,0.08);">
+                <div>
+                    <span style="font-size:0.68rem; color:#a1a1aa; text-transform:uppercase;">Blood Group</span>
+                    <strong style="color:#ef4444; font-size:0.95rem; display:block;">${patient.bloodGroup}</strong>
+                </div>
+                <div>
+                    <span style="font-size:0.68rem; color:#a1a1aa; text-transform:uppercase;">Patient ID</span>
+                    <strong style="color:#38bdf8; font-size:0.95rem; display:block; font-family:'JetBrains Mono';">${patient.id}</strong>
+                </div>
+                <div>
+                    <span style="font-size:0.68rem; color:#a1a1aa; text-transform:uppercase;">Status</span>
+                    <strong style="color:#10b981; font-size:0.95rem; display:block;">Active EHR</strong>
+                </div>
+            </div>
+
+            <div style="margin-bottom:20px;">
+                <span style="font-size:0.68rem; color:#a1a1aa; text-transform:uppercase; display:block;">14-Digit ABHA ID</span>
+                <div style="font-family:'JetBrains Mono'; font-size:1.2rem; font-weight:800; color:#fff; letter-spacing:1.5px;">${abha.number}</div>
+            </div>
+
+            <!-- Pass Scannable Barcode / QR Section -->
+            <div style="background:#ffffff; border-radius:16px; padding:16px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.4);">
+                <div style="display:flex; justify-content:center; margin-bottom:6px;">
+                    ${qrSvg}
+                </div>
+                <div style="font-family:'JetBrains Mono'; font-size:11px; font-weight:700; color:#09090b; letter-spacing:1px;">
+                    ${abha.number}
+                </div>
+            </div>
+        </div>
+    `;
 }
