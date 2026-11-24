@@ -462,6 +462,32 @@ export default function LiveTelemetryMonitor({ patientId = 'BED-04' }) {
             <option value="BED-12">ICU Bed 12 (Saravanan, D.)</option>
           </select>
 
+          {/* Optical PPG Sensor Button */}
+          <button
+            onClick={() => {
+              if (typeof window !== 'undefined' && window.openBiometricScannerModal) {
+                window.openBiometricScannerModal(currentPatient.bed);
+              }
+            }}
+            title="Open Live Optical PPG Webcam Biometric Scanner"
+            style={{
+              background: 'rgba(56, 189, 248, 0.15)',
+              border: '1px solid rgba(56, 189, 248, 0.4)',
+              borderRadius: '8px',
+              color: '#38bdf8',
+              padding: '6px 12px',
+              fontSize: '0.76rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <i className="fas fa-camera"></i>
+            <span>PPG Sensor</span>
+          </button>
+
           {/* Audio QRS Synth Toggle */}
           <button
             onClick={() => setAudioEnabled(!audioEnabled)}

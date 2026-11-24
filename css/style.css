@@ -1839,6 +1839,7 @@ textarea {
     .actions-bar,
     .btn,
     .btn-icon,
+    .no-print,
     .modal-footer,
     #toast-container {
         display: none !important;

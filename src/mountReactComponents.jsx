@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import QRCode from 'qrcode';
 import AskAIAssistant from './components/AskAIAssistant.jsx';
 import LiveTelemetryMonitor from './components/LiveTelemetryMonitor.jsx';
 import ReactBadge from './components/ReactBadge.jsx';
@@ -79,6 +80,7 @@ export function mountReactWidgets() {
 if (typeof window !== 'undefined') {
   window.React = React;
   window.ReactDOM = ReactDOM;
+  window.QRCode = QRCode;
   window.mountReactWidgets = mountReactWidgets;
   window.AskAIAssistant = AskAIAssistant;
   window.LiveTelemetryMonitor = LiveTelemetryMonitor;

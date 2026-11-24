@@ -86,9 +86,12 @@
                         <i class="fas fa-search"></i>
                         <input type="text" id="prescriptionSearch" placeholder="Search prescriptions by patient, Rx ID, diagnosis..." oninput="filterPrescriptions()">
                     </div>
-                    <div style="display: flex; gap: 10px;">
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <button class="btn btn-outline" onclick="exportPrescriptionsToCSV()" title="Export Prescriptions to CSV">
                             <i class="fas fa-file-csv"></i> Export CSV
+                        </button>
+                        <button class="btn btn-primary" onclick="showVerifiableRxModal()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-color: #059669; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);">
+                            <i class="fas fa-qrcode"></i> Verifiable e-Prescription
                         </button>
                         <button class="btn btn-primary" onclick="showCreatePrescriptionModal()">
                             <i class="fas fa-prescription"></i> New Prescription
@@ -189,15 +192,32 @@
         </div>
     </div>
 
-    <!-- View / Print Rx Modal -->
+    <!-- MODAL: Verifiable Digital e-Prescription with Scannable QR Code -->
     <div class="modal-overlay" id="viewRxModal" style="display:none;">
-        <div class="modal" style="max-width: 680px;">
-            <div class="modal-header">
-                <h3>Digital Prescription Preview</h3>
-                <button class="btn-icon" onclick="closeModal('viewRxModal')"><i class="fas fa-times"></i></button>
+        <div class="modal" style="max-width: 820px; width: 96%; background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(36px); border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 20px; box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 40px rgba(16, 185, 129, 0.2);">
+            <div class="modal-header no-print" style="border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding: 14px 20px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; display: flex; align-items: center; justify-content: center; color: #10b981;">
+                        <i class="fas fa-file-signature"></i>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.05rem; color: #ffffff;">NABH Verifiable Digital e-Prescription</h3>
+                        <span style="font-size: 0.72rem; color: #94a3b8;">Digitally Signed &amp; Timestamped • Real Scannable ABDM QR Code</span>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <button class="btn btn-sm btn-outline no-print" onclick="verifyCurrentRxIntegrity()" title="Verify SHA-256 Tamper-Proof Cryptographic Hash">
+                        <i class="fas fa-shield-halved" style="color: #10b981;"></i> Verify Hash
+                    </button>
+                    <button class="btn btn-sm btn-primary no-print" onclick="printVerifiablePrescription()" style="background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); border-color: #0284c7;">
+                        <i class="fas fa-print"></i> Print / Save PDF
+                    </button>
+                    <button class="btn-icon no-print" onclick="closeModal('viewRxModal')"><i class="fas fa-times"></i></button>
+                </div>
             </div>
-            <div class="modal-body" id="viewRxContent">
-                <!-- Populated by JS -->
+
+            <div class="modal-body" id="viewRxContent" style="padding: 20px; max-height: calc(85vh - 70px); overflow-y: auto;">
+                <!-- Dynamically rendered by renderVerifiableRxPreview() in js/app.js -->
             </div>
         </div>
     </div>

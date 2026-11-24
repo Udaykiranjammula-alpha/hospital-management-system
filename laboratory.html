@@ -141,6 +141,149 @@
                     </div>
                 </div>
 
+                <!-- AI Radiology Neural Vision Scanner (Chest X-Ray Grad-CAM Heatmap) -->
+                <div class="card" style="margin-bottom: 28px; background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(56, 189, 248, 0.25); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), 0 0 25px rgba(14, 165, 233, 0.15);">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(14, 165, 233, 0.2); border: 1px solid #0ea5e9; display: flex; align-items: center; justify-content: center; color: #38bdf8; font-size: 1.1rem;">
+                                <i class="fas fa-x-ray"></i>
+                            </div>
+                            <div>
+                                <h3 class="card-title" style="margin: 0; color: #ffffff;"><i class="fas fa-brain" style="color: #38bdf8; margin-right: 6px;"></i> Chest X-Ray AI Heatmap Diagnostic Scanner</h3>
+                                <div style="font-size: 0.76rem; color: #94a3b8; margin-top: 2px;">Deep Residual CNN • Grad-CAM Attention Heatmaps • Thoracic Pathology Triage</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                            <span class="badge badge-success"><span class="clock-dot"></span> Neural Engine v4.2 Ready</span>
+                            <button class="btn btn-sm btn-outline" onclick="triggerXRayInferenceScan()" title="Re-scan and run AI Grad-CAM inference">
+                                <i class="fas fa-microchip" style="color: #38bdf8;"></i> Re-Scan AI
+                            </button>
+                            <button class="btn btn-sm btn-primary" onclick="exportRadiologyReport()" style="background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); border-color: #0284c7;">
+                                <i class="fas fa-file-medical"></i> Export AI Report
+                            </button>
+                        </div>
+                    </div>
+                    <div style="padding: 20px;">
+                        <!-- Preset selector chips & Custom upload strip -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; background: rgba(30, 41, 59, 0.5); padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.08);">
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <span style="font-size: 0.78rem; font-weight: 700; color: #cbd5e1;"><i class="fas fa-folder-open" style="color: #38bdf8; margin-right: 4px;"></i> Demo Cases:</span>
+                                <button type="button" class="btn btn-sm" id="cxrCaseNormalBtn" onclick="loadXRayCase('normal')" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #34d399; font-size: 0.75rem;">
+                                    Case 1: Normal CXR
+                                </button>
+                                <button type="button" class="btn btn-sm" id="cxrCasePneumoniaBtn" onclick="loadXRayCase('pneumonia')" style="background: #0ea5e9; border: 1px solid #0284c7; color: #ffffff; font-size: 0.75rem; font-weight: 700;">
+                                    Case 2: Lobar Pneumonia
+                                </button>
+                                <button type="button" class="btn btn-sm" id="cxrCaseCardiomegalyBtn" onclick="loadXRayCase('cardiomegaly')" style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #f87171; font-size: 0.75rem;">
+                                    Case 3: Cardiomegaly
+                                </button>
+                                <button type="button" class="btn btn-sm" id="cxrCaseEffusionBtn" onclick="loadXRayCase('effusion')" style="background: rgba(245, 158, 11, 0.2); border: 1px solid #f59e0b; color: #fbbf24; font-size: 0.75rem;">
+                                    Case 4: Pleural Effusion
+                                </button>
+                            </div>
+
+                            <!-- Custom File Upload Trigger -->
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <label for="cxrFileInput" class="btn btn-sm btn-outline" style="cursor: pointer; font-size: 0.75rem; margin: 0; display: inline-flex; align-items: center; gap: 6px;">
+                                    <i class="fas fa-cloud-arrow-up" style="color: #38bdf8;"></i> Upload Judge X-Ray
+                                </label>
+                                <input type="file" id="cxrFileInput" accept="image/*" style="display: none;" onchange="handleJudgeXRayUpload(event)">
+                            </div>
+                        </div>
+
+                        <!-- Scanner Body: Dual Canvases (Left) & AI Diagnostic Classification Matrix (Right) -->
+                        <div style="display: grid; grid-template-columns: 360px 1fr; gap: 20px; align-items: start;">
+                            <!-- Left: Interactive Radiograph & Heatmap Canvas Display -->
+                            <div style="background: #030712; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 14px; padding: 12px; position: relative; box-shadow: inset 0 0 30px rgba(0,0,0,0.9);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: #94a3b8;">
+                                    <span id="cxrDicomId">DICOM: CXR-PA-4092</span>
+                                    <span id="cxrViewType">POSTEROANTERIOR (PA)</span>
+                                </div>
+
+                                <!-- Canvas Stage with Layered Heatmap & Scanner Reticle -->
+                                <div style="position: relative; width: 100%; height: 320px; background: #000; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                                    <!-- Base X-Ray Canvas -->
+                                    <canvas id="cxrBaseCanvas" width="360" height="320" style="position: absolute; inset: 0; width: 100%; height: 100%;"></canvas>
+                                    <!-- Grad-CAM Heatmap Overlay Canvas -->
+                                    <canvas id="cxrHeatmapCanvas" width="360" height="320" style="position: absolute; inset: 0; width: 100%; height: 100%; mix-blend-mode: screen; pointer-events: none;"></canvas>
+                                    <!-- Bounding Box Annotation Layer -->
+                                    <canvas id="cxrAnnotationCanvas" width="360" height="320" style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none;"></canvas>
+                                    
+                                    <!-- Laser Inference Scanline Animation -->
+                                    <div id="cxrScanline" style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, #38bdf8, #00f0ff, transparent); box-shadow: 0 0 12px #38bdf8; display: none;"></div>
+
+                                    <!-- Processing Spinner Badge -->
+                                    <div id="cxrProcessingBadge" style="position: absolute; display: none; align-items: center; gap: 8px; background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(12px); padding: 8px 16px; border-radius: 9999px; border: 1px solid #38bdf8; color: #38bdf8; font-size: 0.78rem; font-weight: 700;">
+                                        <i class="fas fa-circle-notch fa-spin"></i> Neural Grad-CAM In Progress...
+                                    </div>
+                                </div>
+
+                                <!-- Heatmap Controls Bar (Opacity & Toggles) -->
+                                <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.74rem; color: #cbd5e1;">
+                                        <span><i class="fas fa-fire" style="color: #ef4444; margin-right: 4px;"></i> Heatmap Opacity:</span>
+                                        <span id="cxrOpacityVal" style="font-family: 'JetBrains Mono'; font-weight: 700; color: #38bdf8;">75%</span>
+                                    </div>
+                                    <input type="range" id="cxrHeatmapOpacity" min="0" max="100" value="75" oninput="updateXRayHeatmapOpacity(this.value)" style="width: 100%; accent-color: #0ea5e9;">
+                                    
+                                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-top: 4px;">
+                                        <button type="button" class="btn btn-sm btn-outline" id="cxrToggleBoxesBtn" onclick="toggleXRayBoundingBoxes()" style="font-size: 0.68rem; padding: 3px 8px;">
+                                            <i class="fas fa-vector-square"></i> Bounding Box
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline" id="cxrInvertBtn" onclick="toggleXRayInvert()" style="font-size: 0.68rem; padding: 3px 8px;">
+                                            <i class="fas fa-circle-half-stroke"></i> Invert L/D
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline" onclick="resetXRayView()" style="font-size: 0.68rem; padding: 3px 8px;">
+                                            <i class="fas fa-rotate-left"></i> Reset
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right: AI Neural Diagnostic Predictions & Clinical Triage Matrix -->
+                            <div style="display: flex; flex-direction: column; gap: 14px;">
+                                <!-- Primary Clinical Finding Card -->
+                                <div id="cxrPrimaryFindingCard" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 12px; padding: 14px 18px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <i class="fas fa-triangle-exclamation" style="color: #ef4444; font-size: 1.1rem;"></i>
+                                            <strong id="cxrPrimaryFindingTitle" style="font-size: 1rem; color: #ffffff;">Pathology Detected: Right Lower Lobe Pneumonia</strong>
+                                        </div>
+                                        <span id="cxrPrimaryConfidenceBadge" class="badge badge-danger" style="font-size: 0.85rem; font-family: 'JetBrains Mono';">95.4% Confidence</span>
+                                    </div>
+                                    <p id="cxrPrimaryFindingDesc" style="color: #cbd5e1; font-size: 0.82rem; margin: 8px 0 0 0; line-height: 1.45;">
+                                        Dense alveolar consolidation with air bronchograms localized to the right paracardiac and basal lung field. No visible tension pneumothorax.
+                                    </p>
+                                </div>
+
+                                <!-- Deep Neural Multi-Label Classification Breakdown -->
+                                <div style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 14px 18px;">
+                                    <h4 style="margin: 0 0 12px 0; font-size: 0.84rem; text-transform: uppercase; letter-spacing: 0.6px; color: #94a3b8;">
+                                        <i class="fas fa-chart-column" style="color: #38bdf8; margin-right: 6px;"></i> Deep Learning Multi-Label Output (ResNet-101 / DenseNet-121)
+                                    </h4>
+                                    
+                                    <div style="display: flex; flex-direction: column; gap: 10px;" id="cxrProbabilityBars">
+                                        <!-- Injected dynamically by JS -->
+                                    </div>
+                                </div>
+
+                                <!-- Clinical Triage & Pharmacotherapy Advice -->
+                                <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 12px; padding: 14px 18px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                        <span style="font-size: 0.78rem; font-weight: 700; color: #38bdf8;"><i class="fas fa-stethoscope"></i> Automated Clinical Triage Recommendation</span>
+                                        <span id="cxrTriagePriorityPill" class="badge badge-warning">ESI Priority 2: Emergent</span>
+                                    </div>
+                                    <div id="cxrClinicalAdvice" style="font-size: 0.80rem; color: #e2e8f0; line-height: 1.45;">
+                                        1. Immediate supplemental O2 titration targeting SpO2 &gt; 94%.<br>
+                                        2. Initiate IV Ceftriaxone 1g + Azithromycin 500mg empirical therapy.<br>
+                                        3. Stat Arterial Blood Gas (ABG) &amp; Blood Cultures before antimicrobial administration.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Lab Test Orders Table -->
                 <div class="card">
                     <div class="card-header">
