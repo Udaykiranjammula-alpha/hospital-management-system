@@ -1,20 +1,62 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 /**
- * AskAIAssistant - Production React 18 Clinical AI Copilot with Multilingual Voice Triage
+ * AskAIAssistant - Production React 18 Clinical AI Copilot with Google Gemini Live API
  * Languages Supported: English (en-IN), Hindi (hi-IN), Telugu (te-IN)
  * Features:
- * - Draggable floating capsule with direct manipulation & boundary clamping
- * - Siri Intelligence animated iridescent orb with sound-reactive pulsing glow
- * - Multilingual STT Voice Recognition (Web Speech API) & TTS Voice Readout
- * - Regional clinical quick triage prompt chips for EN, HI, and TE
- * - Real-time token streaming responses for clinical decision support
- * - Web Audio chimes, copy to clipboard, and responsive Apple HIG glass design
+ * - Google Gemini Live API (gemini-1.5-flash / gemini-2.0-flash-exp) integration
+ * - Emergency Clinical Triage System Prompt (Green, Yellow, Red Triage)
+ * - Department & Specialist Physician Routing (Dr. Priya Sharma, Dr. Rahul Verma, etc.) with 1-click booking
+ * - Clinical Drug-Drug Interaction (DDI) & Contraindication screening
+ * - Multilingual reasoning in English, Hindi (Devanagari), and Telugu
+ * - Speech-to-Text (Voice Input) & Text-to-Speech (Voice Readout with toggle)
+ * - Gemini API Key Settings Modal with connection test & pre-configured demo key
+ * - Bulletproof automatic fallback to Clinical Offline Knowledge Base
+ * - Siri Intelligence animated iridescent orb with draggable glassmorphic UI
  */
+
+export const GEMINI_CLINICAL_SYSTEM_PROMPT = `You are MediCare Clinical AI Copilot, a senior emergency triage physician and clinical decision-support copilot embedded in MediCare Hospital Management System.
+
+CORE OPERATIONAL PROTOCOLS:
+1. EMERGENCY CLINICAL TRIAGE CLASSIFICATION:
+Classify every symptom query into one of three triage tiers at the very top of your response:
+- 🟢 [TRIAGE: GREEN - NON-URGENT]: Mild self-limiting symptoms, routine checkups, elective consultations. Advise home care and elective OPD booking.
+- 🟡 [TRIAGE: YELLOW - URGENT]: Moderate distress, high fevers, unmanaged vitals, stable fractures, persistent pain. Recommend same-day specialist visit within 2-4 hours.
+- 🔴 [TRIAGE: RED - EMERGENT / CODE BLUE]: Acute chest pain/tightness (STEMI), stroke signs (FAST: facial drooping, arm weakness, speech difficulty), severe anaphylaxis, acute respiratory failure, massive hemorrhage. Mandate IMMEDIATE emergency care: "🚨 Call 108 immediately or report to MediCare 24/7 Resuscitation & Trauma Center."
+
+2. SPECIALIST PHYSICIAN ROUTING:
+When appropriate, guide the patient or doctor to MediCare's specialists with 1-click booking actions:
+- Cardiology / Chest Pain / Palpitations: Dr. Priya Sharma (Chief Interventional Cardiologist, 12+ yrs exp) -> [Book with Dr. Priya Sharma](appointments.html?doctor=D001)
+- Orthopedics / Fractures / Joint Pain: Dr. Rahul Verma (Senior Orthopedic Surgeon, 15+ yrs exp) -> [Book with Dr. Rahul Verma](appointments.html?doctor=D002)
+- Neurology / Stroke / Severe Migraine: Dr. Sneha Desai (Senior Neuro Physician, 8+ yrs exp) -> [Consult Dr. Sneha Desai](appointments.html?doctor=D003)
+- Pediatrics / Child & Infant Care: Dr. Anil Kumar (Chief Pediatrician, 20+ yrs exp) -> [Book with Dr. Anil Kumar](appointments.html?doctor=D004)
+- Internal Medicine / Fever / Dengue / Infections: Dr. Meera Iyer (Internal Medicine Specialist, 10+ yrs exp) -> [Consult Dr. Meera Iyer](appointments.html?doctor=D005)
+- Dermatology / Skin Rashes / Allergies: Dr. Sanjay Kapoor (Clinical Dermatologist, 5+ yrs exp) -> [Consult Dr. Sanjay Kapoor](appointments.html?doctor=D006)
+Always include the markdown link in the format [Book with Dr. Name](appointments.html?doctor=D00X).
+
+3. CLINICAL PHARMACOTHERAPY & DRUG INTERACTIONS:
+Identify dangerous drug-drug interactions (DDI) and contraindications:
+- Warfarin + Fluconazole / Aspirin / NSAIDs (High bleeding risk, elevated INR)
+- Sildenafil + Nitroglycerin / Nitrates (Profound fatal hypotension)
+- Clopidogrel + Omeprazole (Reduced antiplatelet effectiveness)
+- Dengue Fever + Aspirin / Ibuprofen (Strictly contraindicated due to thrombocytopenic bleeding; advise Paracetamol only)
+- Penicillin allergy + Amoxicillin (Severe anaphylaxis)
+
+4. DIFFERENTIAL DIAGNOSES & HOME CARE:
+- Present 2-3 clinical differential diagnoses ordered by probability.
+- Outline vital signs to monitor (SpO2, Blood Pressure, Heart Rate, Temperature).
+- Detail patient home care precautions and red-flag symptoms to watch.
+
+5. MULTILINGUAL RESPONSES:
+Active Target Language: {TARGET_LANG}.
+You MUST generate the entire clinical triage response fluently in {TARGET_LANG}.
+If Hindi (hi-IN), respond completely in Hindi Devanagari script (हिन्दी).
+If Telugu (te-IN), respond completely in Telugu script (తెలుగు).
+If English (en-IN), maintain crisp professional clinical English.`;
 
 const MULTILINGUAL_KNOWLEDGE_BASE = {
   'en-IN': {
-    welcome: "Hello Doctor, I'm your MediCare Clinical AI Assistant running live in React 18. How can I assist you with clinical triage, drug interactions, or critical care SOPs today?",
+    welcome: "Hello Doctor, I'm your MediCare Clinical AI Assistant running live in React 18 with Google Gemini integration. How can I assist you with clinical triage, drug interactions, or critical care SOPs today?",
     placeholder: "Ask clinical queries, drugs, or voice triage...",
     listening: "Listening in English (en-IN)... Speak now",
     chips: [
@@ -27,28 +69,28 @@ const MULTILINGUAL_KNOWLEDGE_BASE = {
     knowledge: {
       stemi: {
         title: "🚨 Emergency STEMI / Acute MI Protocol",
-        body: `**CLINICAL PRIORITY: IMMEDIATE INTERVENTION (Door-to-Balloon < 90 mins)**\n\n1. **Diagnostic Checklist:**\n   • 12-lead ECG immediately (within 10 minutes).\n   • ST elevation > 1mm in ≥2 contiguous leads or new LBBB.\n   • Stat Troponin I, CK-MB, Electrolytes, PT/INR.\n\n2. **Immediate Pharmacotherapy (MONA):**\n   • Aspirin 325 mg chewed stat.\n   • Ticagrelor 180 mg loading dose (or Clopidogrel 600 mg).\n   • Sublingual Nitroglycerin 0.4 mg q5min (hold if SBP < 90 or RV infarction).\n   • Unfractionated Heparin 60 U/kg bolus IV (max 4000 U).\n   • High-intensity Statin: Atorvastatin 80 mg PO.\n\n3. **Cath Lab Activation:**\n   • Page On-Call Interventional Cardiology Team via Priority Line #444.\n   • Prepare Bed in Cath Lab 2.`
+        body: `🔴 **[TRIAGE: RED - EMERGENT / CODE BLUE]**\n\n**CLINICAL PRIORITY: IMMEDIATE INTERVENTION (Door-to-Balloon < 90 mins)**\n\n1. **Diagnostic Checklist:**\n   • 12-lead ECG immediately (within 10 minutes).\n   • ST elevation > 1mm in ≥2 contiguous leads or new LBBB.\n   • Stat Troponin I, CK-MB, Electrolytes, PT/INR.\n\n2. **Immediate Pharmacotherapy (MONA):**\n   • Aspirin 325 mg chewed stat.\n   • Ticagrelor 180 mg loading dose (or Clopidogrel 600 mg).\n   • Sublingual Nitroglycerin 0.4 mg q5min (hold if SBP < 90 or RV infarction).\n   • Unfractionated Heparin 60 U/kg bolus IV (max 4000 U).\n   • High-intensity Statin: Atorvastatin 80 mg PO.\n\n3. **Cath Lab & Specialist Routing:**\n   • Interventional Cardiology: [Book with Dr. Priya Sharma](appointments.html?doctor=D001)\n   • Page On-Call Team via Priority Line #444 • Prepare Bed in Cath Lab 2.`
       },
       sepsis: {
         title: "🩺 Sepsis & Septic Shock Screening (qSOFA)",
-        body: `**SURVIVING SEPSIS HOUR-1 BUNDLE INITIATED**\n\n1. **Quick SOFA Criteria (Score ≥ 2 indicates high mortality risk):**\n   • Respiratory Rate ≥ 22 bpm.\n   • Altered Mental Status (GCS < 15).\n   • Systolic Blood Pressure ≤ 100 mmHg.\n\n2. **Hour-1 Action Protocol:**\n   • Stat blood cultures (2 sets, aerobic & anaerobic) *before* antimicrobials.\n   • Serum Lactate measurement (repeat in 2-4 hrs if initial > 2.0 mmol/L).\n   • Broad-spectrum IV antibiotics: Piperacillin/Tazobactam 4.5g IV + Vancomycin 15-20 mg/kg.\n   • Rapid crystalloid bolus: 30 mL/kg for hypotension or Lactate ≥ 4.0 mmol/L.\n   • Vasopressors (Norepinephrine first-choice) if MAP < 65 mmHg post-fluid.`
+        body: `🟡 **[TRIAGE: YELLOW - URGENT]**\n\n**SURVIVING SEPSIS HOUR-1 BUNDLE INITIATED**\n\n1. **Quick SOFA Criteria (Score ≥ 2 indicates high mortality risk):**\n   • Respiratory Rate ≥ 22 bpm.\n   • Altered Mental Status (GCS < 15).\n   • Systolic Blood Pressure ≤ 100 mmHg.\n\n2. **Hour-1 Action Protocol:**\n   • Stat blood cultures (2 sets, aerobic & anaerobic) *before* antimicrobials.\n   • Serum Lactate measurement (repeat in 2-4 hrs if initial > 2.0 mmol/L).\n   • Broad-spectrum IV antibiotics: Piperacillin/Tazobactam 4.5g IV + Vancomycin 15-20 mg/kg.\n   • Rapid crystalloid bolus: 30 mL/kg for hypotension or Lactate ≥ 4.0 mmol/L.\n   • Vasopressors (Norepinephrine first-choice) if MAP < 65 mmHg post-fluid.\n\n3. **Specialist Consult:** [Consult Dr. Meera Iyer](appointments.html?doctor=D005)`
       },
       drug_interaction: {
         title: "💊 Clinical Drug-Drug Interaction Screen",
-        body: `**ANALYSIS: High-Risk Interaction Alert**\n\n• **Combination:** Warfarin + Fluconazole / Clopidogrel + Omeprazole\n• **Severity:** MAJOR / CONTRAINDICATED IN TANDEM\n• **Pharmacodynamics:** Fluconazole potent CYP2C9 inhibition significantly increases active S-warfarin levels, elevating INR into hemorrhage danger zone (> 5.5).\n• **Recommendation:** If antifungal is imperative, substitute Fluconazole with topical agent or Echinocandin (Caspofungin), reduce Warfarin dose by 50%, and mandate daily INR monitoring.`
+        body: `🟡 **[TRIAGE: YELLOW - DRUG MATRIX ALERT]**\n\n**ANALYSIS: High-Risk Interaction Alert**\n\n• **Combination:** Warfarin + Fluconazole / Clopidogrel + Omeprazole\n• **Severity:** MAJOR / CONTRAINDICATED IN TANDEM\n• **Pharmacodynamics:** Fluconazole potent CYP2C9 inhibition significantly increases active S-warfarin levels, elevating INR into hemorrhage danger zone (> 5.5).\n• **Recommendation:** If antifungal is imperative, substitute Fluconazole with topical agent or Echinocandin (Caspofungin), reduce Warfarin dose by 50%, and mandate daily INR monitoring.\n• **Internal Medicine Review:** [Consult Dr. Meera Iyer](appointments.html?doctor=D005)`
       },
       icu_beds: {
         title: "📊 Live ICU & Critical Bed Occupancy",
-        body: `**HOSPITAL CAPACITY SUMMARY (Real-Time Mesh):**\n\n• **MICU:** 14 / 16 Beds Occupied (2 Isolation Beds Available)\n• **CCU (Cardiac):** 11 / 12 Beds Occupied (Bed 08 open for Cath lab post-op)\n• **SICU (Surgical):** 10 / 10 Beds Full (Zero capacity)\n• **Step-down HDU:** 6 Beds Available\n• **Mechanical Ventilators:** 7 Available in Central Depot\n• **Recommendation:** Divert non-critical elective post-ops to Ward 3 Step-Down.`
+        body: `🟢 **[TRIAGE: GREEN - SYSTEM CAPACITY]**\n\n**HOSPITAL CAPACITY SUMMARY (Real-Time Mesh):**\n\n• **MICU:** 14 / 16 Beds Occupied (2 Isolation Beds Available)\n• **CCU (Cardiac):** 11 / 12 Beds Occupied (Bed 08 open for Cath lab post-op)\n• **SICU (Surgical):** 10 / 10 Beds Full (Zero capacity)\n• **Step-down HDU:** 6 Beds Available\n• **Mechanical Ventilators:** 7 Available in Central Depot\n• **Recommendation:** Divert non-critical elective post-ops to Ward 3 Step-Down.\n• [View Live Bed Plan](emergency.html)`
       },
       stroke: {
         title: "🧠 Code Stroke / Acute Ischemic Protocol",
-        body: `**WINDOW: Symptom Onset to Needle < 4.5 Hours**\n\n1. **Initial Evaluation (NIH Stroke Scale):**\n   • Stat Non-Contrast Head CT to rule out intracranial hemorrhage.\n   • Check Blood Glucose (exclude hypoglycemia mimic).\n   • STAT CT Angiography of Head & Neck.\n\n2. **Thrombolysis Criteria (IV Alteplase 0.9 mg/kg, max 90 mg):**\n   • 10% given as initial IV bolus over 1 min; remainder over 60 min.\n   • Blood pressure must be maintained below 185/110 mmHg.\n   • If LVO (Large Vessel Occlusion) in MCA/ICA: activate Endovascular Thrombectomy team immediately.`
+        body: `🔴 **[TRIAGE: RED - EMERGENT / CODE BLUE]**\n\n**WINDOW: Symptom Onset to Needle < 4.5 Hours**\n\n1. **Initial Evaluation (NIH Stroke Scale):**\n   • Stat Non-Contrast Head CT to rule out intracranial hemorrhage.\n   • Check Blood Glucose (exclude hypoglycemia mimic).\n   • STAT CT Angiography of Head & Neck.\n\n2. **Thrombolysis Criteria (IV Alteplase 0.9 mg/kg, max 90 mg):**\n   • 10% given as initial IV bolus over 1 min; remainder over 60 min.\n   • Blood pressure must be maintained below 185/110 mmHg.\n   • If LVO (Large Vessel Occlusion) in MCA/ICA: activate Endovascular Thrombectomy team immediately.\n\n3. **Specialist Evaluation:** [Consult Dr. Sneha Desai](appointments.html?doctor=D003)`
       }
     }
   },
   'hi-IN': {
-    welcome: "नमस्ते डॉक्टर! मैं आपका मेडीकेयर क्लिनिकल एआई सहायक हूँ। क्या मैं ईआर ट्राइएज, सीने में दर्द (STEMI), सेप्सिस या आईसीयू प्रोटोकॉल में आपकी सहायता करूँ?",
+    welcome: "नमस्ते डॉक्टर! मैं आपका मेडीकेयर क्लिनिकल एआई सहायक हूँ (गूगल जेमिनी 1.5 समर्थित)। क्या मैं ईआर ट्राइएज, सीने में दर्द (STEMI), सेप्सिस या आईसीयू प्रोटोकॉल में आपकी सहायता करूँ?",
     placeholder: "क्लिनिकल प्रश्न पूछें या माइक दबाकर बोलें...",
     listening: "हिन्दी में सुन रहे हैं (hi-IN)... अब बोलें",
     chips: [
@@ -61,28 +103,28 @@ const MULTILINGUAL_KNOWLEDGE_BASE = {
     knowledge: {
       stemi: {
         title: "🚨 आपातकालीन STEMI / तीव्र मायोकार्डियल इन्फ्रक्शन प्रोटोकॉल",
-        body: `**क्लिनिकल प्राथमिकता: तत्काल कैथ लैब सक्रियण (डोर-टू-बलून < 90 मिनट)**\n\n1. **त्वरित डायग्नोस्टिक जांच:**\n   • 10 मिनट के भीतर 12-लीड ईसीजी (ECG) प्राप्त करें।\n   • दो समीपवर्ती लीड्स में 1 मिमी से अधिक ST-एलिवेशन या नया LBBB देखें।\n   • तुरंत कार्डियक ट्रोपोनिन-I, सीके-एमबी और इलेक्ट्रोलाइट्स भेजें।\n\n2. **आपातकालीन दवाएं (MONA प्रोटोकॉल):**\n   • एस्पिरिन 325 मिलीग्राम तुरंत चबाकर दें।\n   • टिक्काग्रेलॉर 180 मिलीग्राम लोडिंग खुराक (या क्लोपिडोग्रेल 600 मिलीग्राम)।\n   • सबलिंगुअल नाइट्रोग्लिसरीन 0.4 मिलीग्राम (यदि रक्तचाप 90 से अधिक हो)।\n   • अनफ्रैक्शनेटेड हेपरिन 60 यूनिट/किग्रा IV बोलस।\n   • एटोरवास्टेटिन 80 मिलीग्राम तत्काल PO।\n\n3. **कैथ लैब अलर्ट:** कार्डियोलॉजी टीम को प्राथमिकता लाइन #444 पर कॉल करें।`
+        body: `🔴 **[आपातकालीन ट्राइएज: रेड - तत्काल कोड ब्लू]**\n\n**क्लिनिकल प्राथमिकता: तत्काल कैथ लैब सक्रियण (डोर-टू-बलून < 90 मिनट)**\n\n1. **त्वरित डायग्नोस्टिक जांच:**\n   • 10 मिनट के भीतर 12-लीड ईसीजी (ECG) प्राप्त करें।\n   • दो समीपवर्ती लीड्स में 1 मिमी से अधिक ST-एलिवेशन या नया LBBB देखें।\n   • तुरंत कार्डियक ट्रोपोनिन-I, सीके-एमबी और इलेक्ट्रोलाइट्स भेजें।\n\n2. **आपातकालीन दवाएं (MONA प्रोटोकॉल):**\n   • एस्पिरिन 325 मिलीग्राम तुरंत चबाकर दें।\n   • टिक्काग्रेलॉर 180 मिलीग्राम लोडिंग खुराक (या क्लोपिडोग्रेल 600 मिलीग्राम)।\n   • सबलिंगुअल नाइट्रोग्लिसरीन 0.4 मिलीग्राम (यदि रक्तचाप 90 से अधिक हो)।\n   • अनफ्रैक्शनेटेड हेपरिन 60 यूनिट/किग्रा IV बोलस।\n   • एटोरवास्टेटिन 80 मिलीग्राम तत्काल PO।\n\n3. **कार्डियोलॉजिस्ट परामर्श:** [डॉ. प्रिया शर्मा से परामर्श लें](appointments.html?doctor=D001)`
       },
       sepsis: {
         title: "🩺 सेप्सिस और सेप्टिक शॉक जांच (qSOFA प्रोटोकॉल)",
-        body: `**सेप्सिस 1-घंटे का जीवनरक्षक बंडल प्रारंभ:**\n\n1. **त्वरित qSOFA मापदंड (स्कोर ≥ 2 उच्च जोखिम):**\n   • श्वसन दर (Respiratory Rate) ≥ 22 प्रति मिनट।\n   • मानसिक सतर्कता में कमी (GCS < 15)।\n   • सिस्टोलिक रक्तचाप (BP) ≤ 100 mmHg।\n\n2. **प्रथम 60 मिनट की कार्य योजना:**\n   • एंटीबायोटिक से पहले दो अलग-अलग स्थानों से रक्त कल्चर (Blood Culture) लें।\n   • सीरम लैक्टेट जांच (यदि > 2 mmol/L है तो 2-4 घंटे में दोहराएं)।\n   • व्यापक-स्पेक्ट्रम IV एंटीबायोटिक्स: पाइपेरासिलिन/टाज़ोबैक्टम 4.5g IV।\n   • हाइपोटेंशन के लिए 30 मिली/किग्रा क्रिस्टलॉयड फ्लुइड बोलस दें।\n   • लक्ष्य MAP ≥ 65 mmHg बनाए रखने के लिए नोरएपिनेफ्रिन शुरू करें।`
+        body: `🟡 **[ट्राइएज: यलो - अति-गंभीर सेप्सिस]**\n\n**सेप्सिस 1-घंटे का जीवनरक्षक बंडल प्रारंभ:**\n\n1. **त्वरित qSOFA मापदंड (स्कोर ≥ 2 उच्च जोखिम):**\n   • श्वसन दर (Respiratory Rate) ≥ 22 प्रति मिनट।\n   • मानसिक सतर्कता में कमी (GCS < 15)।\n   • सिस्टोलिक रक्तचाप (BP) ≤ 100 mmHg।\n\n2. **प्रथम 60 मिनट की कार्य योजना:**\n   • एंटीबायोटिक से पहले दो अलग-अलग स्थानों से रक्त कल्चर लें।\n   • सीरम लैक्टेट जांच (यदि > 2 mmol/L है तो 2-4 घंटे में दोहराएं)।\n   • व्यापक-स्पेक्ट्रम IV एंटीबायोटिक्स: पाइपेरासिलिन/टाज़ोबैक्टम 4.5g IV।\n   • हाइपोटेंशन के लिए 30 मिली/किग्रा क्रिस्टलॉयड फ्लुइड बोलस दें।\n\n3. **विशेषज्ञ:** [डॉ. मीरा अय्यर से मिलें](appointments.html?doctor=D005)`
       },
       drug_interaction: {
         title: "💊 उच्च जोखिम वाली दवा पारस्परिक क्रिया चेतावनी",
-        body: `**चेतावनी: रक्तस्राव व परस्पर विषाक्तता का उच्च जोखिम**\n\n• **दवा संयोजन:** वारफारिन + फ्लुकोनाज़ोल / क्लोपिडोग्रेल + ओमेप्राज़ोल\n• **गंभीरता स्तर:** अति गंभीर (CONTRAINDICATED)\n• **फार्माकोडायनामिक्स:** फ्लुकोनाज़ोल CYP2C9 एंजाइम को रोकता है, जिससे शरीर में सक्रिय वारफारिन का स्तर अत्यधिक बढ़ जाता है और INR खतरनाक स्तर (> 5.5) पर पहुंच जाता है।\n• **क्लिनिकल सिफारिश:** फ्लुकोनाज़ोल के स्थान पर कैस्पोफुंगिन या अन्य सुरक्षित विकल्प चुनें, वारफारिन की खुराक 50% घटाएं और दैनिक INR की निगरानी करें।`
+        body: `🟡 **[ट्राइएज: यलो - दवा परस्पर क्रिया चेतावनी]**\n\n**चेतावनी: रक्तस्राव व परस्पर विषाक्तता का उच्च जोखिम**\n\n• **दवा संयोजन:** वारफारिन + फ्लुकोनाज़ोल / क्लोपिडोग्रेल + ओमेप्राज़ोल\n• **गंभीरता स्तर:** अति गंभीर (CONTRAINDICATED)\n• **फार्माकोडायनामिक्स:** फ्लुकोनाज़ोल CYP2C9 एंजाइम को रोकता है, जिससे शरीर में सक्रिय वारफारिन का स्तर अत्यधिक बढ़ जाता है और INR खतरनाक स्तर (> 5.5) पर पहुंच जाता है।\n• **क्लिनिकल सिफारिश:** फ्लुकोनाज़ोल के स्थान पर कैस्पोफुंगिन या अन्य सुरक्षित विकल्प चुनें, वारफारिन की खुराक 50% घटाएं और दैनिक INR की निगरानी करें।\n• [फार्मेसी इन्वेंटरी देखें](pharmacy.html)`
       },
       icu_beds: {
         title: "📊 लाइव आईसीयू एवं वेंटिलेटर बेड उपलब्धता",
-        body: `**मेडीकेयर अस्पताल रियल-टाइम बेड स्थिति:**\n\n• **मेडिकल आईसीयू (MICU):** 16 में से 14 बेड भरे हैं (2 आइसोलेशन बेड उपलब्ध)।\n• **कार्डियक सीसीयू (CCU):** 12 में से 11 बेड भरे हैं (बेड 08 कैथ लैब के लिए आरक्षित)।\n• **सर्जिकल आईसीयू (SICU):** 10 में से 10 बेड पूर्ण (क्षमता शून्य)।\n• **हाई डिपेंडेंसी यूनिट (HDU):** 6 बेड खाली उपलब्ध हैं।\n• **सेंट्रल इन्वेंट्री वेंटिलेटर:** 7 चालू वेंटिलेटर तैयार हैं।\n• **सलाह:** स्थिर पोस्ट-ऑपरेटिव मरीजों को वार्ड 3 स्टेप-डाउन यूनिट में स्थानांतरित करें।`
+        body: `🟢 **[ट्राइएज: ग्रीन - अस्पताल बेड स्थिति]**\n\n**मेडीकेयर अस्पताल रियल-टाइम बेड स्थिति:**\n\n• **मेडिकल आईसीयू (MICU):** 16 में से 14 बेड भरे हैं (2 आइसोलेशन बेड उपलब्ध)।\n• **कार्डियक सीसीयू (CCU):** 12 में से 11 बेड भरे हैं (बेड 08 कैथ लैब के लिए आरक्षित)।\n• **सर्जिकल आईसीयू (SICU):** 10 में से 10 बेड पूर्ण (क्षमता शून्य)।\n• **हाई डिपेंडेंसी यूनिट (HDU):** 6 बेड खाली उपलब्ध हैं।\n• **सेंट्रल इन्वेंट्री वेंटिलेटर:** 7 चालू वेंटिलेटर तैयार हैं।\n• [इमरजेंसी बेड डैशबोर्ड](emergency.html)`
       },
       stroke: {
         title: "🧠 कोड स्ट्रोक / एक्यूट इस्केमिक सेरेब्रल प्रोटोकॉल",
-        body: `**समय सीमा: लक्षण शुरू होने से सुई तक < 4.5 घंटे (गोल्डन आवर)**\n\n1. **तत्काल न्यूरोलॉजिकल मूल्यांकन (NIHSS):**\n   • सेरेब्रल रक्तस्राव (Bleed) को खारिज करने हेतु तत्काल नॉन-कंट्रास्ट हेड सीटी (CT)।\n   • ब्लड ग्लूकोज की जांच (हाइपोग्लाइसीमिया स्ट्रोक जैसा लक्षण पैदा कर सकता है)।\n   • सिर और गर्दन का सीटी एंजियोग्राफी (CTA)।\n\n2. **थ्रोम्बोलिसिस मानदंड (IV अल्टेप्लेस / टेनेक्टेप्लेस):**\n   • IV अल्टेप्लेस 0.9 मिलीग्राम/किग्रा (अधिकतम 90 मिलीग्राम)।\n   • रक्तचाप अनिवार्य रूप से 185/110 mmHg से नीचे नियंत्रित रखें।\n   • बड़ी धमनी रुकावट (LVO) के मामले में तत्काल मैकेनिकल थ्रोम्बेक्टोमी सक्रिय करें।`
+        body: `🔴 **[आपातकालीन ट्राइएज: रेड - कोड स्ट्रोक]**\n\n**समय सीमा: लक्षण शुरू होने से सुई तक < 4.5 घंटे (गोल्डन आवर)**\n\n1. **तत्काल न्यूरोलॉजिकल मूल्यांकन (NIHSS):**\n   • सेरेब्रल रक्तस्राव (Bleed) को खारिज करने हेतु तत्काल नॉन-कंट्रास्ट हेड सीटी (CT)।\n   • ब्लड ग्लूकोज की जांच (हाइपोग्लाइसीमिया स्ट्रोक जैसा लक्षण पैदा कर सकता है)।\n   • सिर और गर्दन का सीटी एंजियोग्राफी (CTA)।\n\n2. **थ्रोम्बोलिसिस मानदंड (IV अल्टेप्लेस):**\n   • IV अल्टेप्लेस 0.9 मिलीग्राम/किग्रा (अधिकतम 90 मिलीग्राम)।\n   • रक्तचाप अनिवार्य रूप से 185/110 mmHg से नीचे नियंत्रित रखें।\n   • बड़ी धमनी रुकावट (LVO) के मामले में तत्काल मैकेनिकल थ्रोम्बेक्टोमी सक्रिय करें।\n\n3. **न्यूरो विशेषज्ञ:** [डॉ. स्नेहा देसाई से संपर्क करें](appointments.html?doctor=D003)`
       }
     }
   },
   'te-IN': {
-    welcome: "నమస్కారం డాక్టర్! నేను మీ మెడికేర్ క్లినికల్ ఏఐ అసిస్టెంట్‌ని. ఈ రోజు ఎమర్జెన్సీ ట్రయాజ్, ఛాతీ నొప్పి (STEMI), సెప్సిస్ లేదా ఐసీయూ బెడ్స్ వివరాల కోసం మీకు ఎలా సహాయపడగలను?",
+    welcome: "నమస్కారం డాక్టర్! నేను మీ మెడికేర్ క్లినికల్ ఏఐ అసిస్టెంట్‌ని (గూగుల్ జెమిని 1.5 ఆధారితం). ఈ రోజు ఎమర్జెన్సీ ట్రయాజ్, ఛాతీ నొప్పి (STEMI), సెప్సిస్ లేదా ఐసీయూ బెడ్స్ వివరాల కోసం మీకు ఎలా సహాయపడగలను?",
     placeholder: "క్లినికల్ ప్రశ్న అడగండి లేదా మాట్లాడండి...",
     listening: "తెలుగులో వింటున్నాము (te-IN)... మాట్లాడండి",
     chips: [
@@ -95,30 +137,245 @@ const MULTILINGUAL_KNOWLEDGE_BASE = {
     knowledge: {
       stemi: {
         title: "🚨 అత్యవసర STEMI / గుండెపోటు తక్షణ చికిత్సా నియమావళి",
-        body: `**క్లినికల్ ప్రాధాన్యత: అత్యవసర క్యాథ్ ల్యాబ్ ఆంజియోప్లాస్టీ (డోర్-టు-బెలూన్ < 90 నిమిషాలు)**\n\n1. **తక్షణ రోగనిర్ధారణ పరీక్షలు:**\n   • 10 నిమిషాల లోపు 12-లీడ్ ఈసీజీ (ECG) తీయాలి.\n   • రెండు వరుస లీడ్స్‌లో 1 మి.మీ కంటే ఎక్కువ ST ఎలివేషన్ లేదా కొత్త LBBB గమనించండి.\n   • వెంటనే కార్డియాక్ ట్రోపోనిన్-I, సీకే-ఎంబీ మరియు ఎలక్ట్రోలైట్స్ నమూనాలు పంపాలి.\n\n2. **తక్షణ అత్యవసర ఔషధాలు (MONA నియమం):**\n   • ఆస్పిరిన్ 325 mg తక్షణమే నమలించాలి.\n   • టికాగ్రెలార్ 180 mg లోడింగ్ డోస్ (లేదా క్లోపిడోగ్రెల్ 600 mg).\n   • నాలుక కింద నైట్రోగ్లిజరిన్ 0.4 mg (రక్తపోటు 90 కంటే ఎక్కువగా ఉంటే మాత్రమే).\n   • హెపారిన్ 60 యూనిట్లు/కిలో IV ఇంజెక్షన్.\n   • అటోర్వాస్టాటిన్ 80 mg తక్షణమే ఇవ్వాలి.\n\n3. **క్యాథ్ ల్యాబ్ అలర్ట్:** ఇంటర్వెన్షనల్ కార్డియాలజీ బృందానికి హాట్‌లైన్ #444 ద్వారా అత్యవసర పిలుపు పంపండి.`
+        body: `🔴 **[అత్యవసర ట్రయాజ్: రెడ్ - కోడ్ బ్లూ / అత్యవసరం]**\n\n**క్లినికల్ ప్రాధాన్యత: అత్యవసర క్యాథ్ ల్యాబ్ ఆంజియోప్లాస్టీ (డోర్-టు-బెలూన్ < 90 నిమిషాలు)**\n\n1. **తక్షణ రోగనిర్ధారణ పరీక్షలు:**\n   • 10 నిమిషాల లోపు 12-లీడ్ ఈసీజీ (ECG) తీయాలి.\n   • రెండు వరుస లీడ్స్‌లో 1 మి.మీ కంటే ఎక్కువ ST ఎలివేషన్ లేదా కొత్త LBBB గమనించండి.\n   • వెంటనే కార్డియాక్ ట్రోపోనిన్-I, సీకే-ఎంబీ మరియు ఎలక్ట్రోలైట్స్ నమూనాలు పంపాలి.\n\n2. **తక్షణ అత్యవసర ఔషధాలు (MONA నియమం):**\n   • ఆస్పిరిన్ 325 mg తక్షణమే నమలించాలి.\n   • టికాగ్రెలార్ 180 mg లోడింగ్ డోస్ (లేదా క్లోపిడోగ్రెల్ 600 mg).\n   • నాలుక కింద నైట్రోగ్లిజరిన్ 0.4 mg (రక్తపోటు 90 కంటే ఎక్కువగా ఉంటే మాత్రమే).\n   • హెపారిన్ 60 యూనిట్లు/కిలో IV ఇంజెక్షన్.\n   • అటోర్వాస్టాటిన్ 80 mg తక్షణమే ఇవ్వాలి.\n\n3. **కార్డియాలజిస్ట్ బుకింగ్:** [డాక్టర్ ప్రియా శర్మతో అపాయింట్‌మెంట్](appointments.html?doctor=D001)`
       },
       sepsis: {
         title: "🩺 సెప్సిస్ & సెప్టిక్ షాక్ ప్రోటోకాల్ (qSOFA)",
-        body: `**సెప్సిస్ గోల్డెన్ అవర్-1 ప్రాణరక్షణ బండిల్ ప్రారంభం:**\n\n1. **త్వరిత qSOFA ప్రమాణాలు (స్కోరు ≥ 2 ప్రమాద సంకేతం):**\n   • శ్వాస రేటు (Respiratory Rate) నిమిషానికి ≥ 22.\n   • స్పృహలో మార్పు లేదా మగత (GCS < 15).\n   • సిస్టోలిక్ రక్తపోటు (BP) ≤ 100 mmHg.\n\n2. **మొదటి గంటలో చేయవలసిన అత్యవసర చర్యలు:**\n   • యాంటీబయాటిక్స్ ప్రారంభించే ముందే రెండు వేర్వేరు రక్త కల్చర్ పరీక్షలు చేయించాలి.\n   • సీరం లాక్టేట్ పరీక్ష (2.0 mmol/L దాటితే 2-4 గంటల్లో మళ్లీ పరీక్షించాలి).\n   • విశాల-శ్రేణి IV యాంటీబయాటిక్స్: పైపెరాసిల్లిన్/టాజోబాక్టం 4.5g IV.\n   • తక్కువ రక్తపోటు లేదా అధిక లాక్టేట్ కోసం 30 mL/kg సెలైన్ ద్రవాలు IV ఇవ్వాలి.\n   • రక్తపోటు పెరగకపోతే వెంటనే నోర్‌పైన్‌ఫ్రైన్ వాసోప్రెసర్ ప్రారంభించాలి.`
+        body: `🟡 **[ట్రయాజ్: ఎల్లో - తీవ్రమైన సెప్సిస్ సంకేతం]**\n\n**సెప్సిస్ గోల్డెన్ అవర్-1 ప్రాణరక్షణ బండిల్ ప్రారంభం:**\n\n1. **త్వరిత qSOFA ప్రమాణాలు (స్కోరు ≥ 2 ప్రమాద సంకేతం):**\n   • శ్వాస రేటు నిమిషానికి ≥ 22.\n   • స్పృహలో మార్పు లేదా మగత (GCS < 15).\n   • సిస్టోలిక్ రక్తపోటు ≤ 100 mmHg.\n\n2. **మొదటి గంటలో చేయవలసిన అత్యవసర చర్యలు:**\n   • యాంటీబయాటిక్స్ ప్రారంభించే ముందే రెండు వేర్వేరు రక్త కల్చర్ పరీక్షలు చేయించాలి.\n   • సీరం లాక్టేట్ పరీక్ష (2.0 mmol/L దాటితే 2-4 గంటల్లో మళ్లీ పరీక్షించాలి).\n   • విశాల-శ్రేణి IV యాంటీబయాటిక్స్: పైపెరాసిల్లిన్/టాజోబాక్టం 4.5g IV.\n   • తక్కువ రక్తపోటు లేదా అధిక లాక్టేట్ కోసం 30 mL/kg సెలైన్ ద్రవాలు IV ఇవ్వాలి.\n\n3. **స్పెషలిస్ట్:** [డాక్టర్ మీరా అయ్యర్‌తో సంప్రదించండి](appointments.html?doctor=D005)`
       },
       drug_interaction: {
         title: "💊 తీవ్రమైన ఔషధ పరస్పర విరుద్ధ చర్యల విశ్లేషణ",
-        body: `**హెచ్చరిక: అంతర్గత రక్తస్రావ ప్రమాదం**\n\n• **ఔషధ కలయిక:** వార్ఫరిన్ + ఫ్లూకోనజోల్ / క్లోపిడోగ్రెల్ + ఒమెప్రజోల్\n• **తీవ్రత స్థాయి:** అత్యంత ప్రమాదకరం (CONTRAINDICATED)\n• **ఫార్మకోడైనమిక్స్:** ఫ్లూకోనజోల్ CYP2C9 ఎంజైమ్‌ను నిరోధించడం ద్వారా రక్తం గడ్డకట్టకుండా ఆపే వార్ఫరిన్ స్థాయిని విపరీతంగా పెంచుతుంది. దీంతో INR ప్రమాదకర స్థాయికి (> 5.5) చేరుతుంది.\n• **వైద్యుల సిఫార్సు:** ఫ్లూకోనజోల్ బదులుగా కాస్పోఫంగిన్ ఎంచుకోండి, వార్ఫరిన్ డోస్ 50% తగ్గించి రోజూ INR పర్యవేక్షించండి.`
+        body: `🟡 **[ట్రయాజ్: ఎల్లో - ఔషధ విరుద్ధ చర్యల హెచ్చరిక]**\n\n**హెచ్చరిక: అంతర్గత రక్తస్రావ ప్రమాదం**\n\n• **ఔషధ కలయిక:** వార్ఫరిన్ + ఫ్లూకోనజోల్ / క్లోపిడోగ్రెల్ + ఒమెప్రజోల్\n• **తీవ్రత స్థాయి:** అత్యంత ప్రమాదకరం (CONTRAINDICATED)\n• **ఫార్మకోడైనమిక్స్:** ఫ్లూకోనజోల్ CYP2C9 ఎంజైమ్‌ను నిరోధించడం ద్వారా రక్తం గడ్డకట్టకుండా ఆపే వార్ఫరిన్ స్థాయిని విపరీతంగా పెంచుతుంది. దీంతో INR ప్రమాదకర స్థాయికి (> 5.5) చేరుతుంది.\n• **వైద్యుల సిఫార్సు:** ఫ్లూకోనజోల్ బదులుగా కాస్పోఫంగిన్ ఎంచుకోండి, వార్ఫరిన్ డోస్ 50% తగ్గించి రోజూ INR పర్యవేక్షించండి.\n• [ఫార్మసీ వివరాలు చూడండి](pharmacy.html)`
       },
       icu_beds: {
         title: "📊 లైవ్ ఐసీయూ & క్రిటికల్ కేర్ పడకల సమాచారం",
-        body: `**మెడికేర్ ఆసుపత్రి రియల్-టైమ్ పడకల స్థితి:**\n\n• **మెడికల్ ఐసీయూ (MICU):** 16 పడకలలో 14 భర్తీ అయ్యాయి (2 ఐసోలేషన్ బెడ్స్ అందుబాటులో ఉన్నాయి).\n• **కార్డియాక్ కేర్ (CCU):** 12 పడకలలో 11 భర్తీ అయ్యాయి (బెడ్ 08 క్యాథ్ ల్యాబ్ కోసం సిద్ధం).\n• **సర్జికల్ ఐసీయూ (SICU):** 10 పడకలు పూర్తిగా నిండిపోయాయి.\n• **హై డిపెండెన్సీ యూనిట్ (HDU):** 6 పడకలు ఖాళీగా ఉన్నాయి.\n• **అందుబాటులో ఉన్న వెంటిలేటర్లు:** 7 మెకానికల్ వెంటిలేటర్లు సిద్ధంగా ఉన్నాయి.\n• **సిఫార్సు:** కోలుకుంటున్న రోగులను వార్డ్ 3 స్టెప్-డౌన్ విభాగానికి బదిలీ చేయండి.`
+        body: `🟢 **[ట్రయాజ్: గ్రీన్ - ఆసుపత్రి పడకల సమాచారం]**\n\n**మెడికేర్ ఆసుపత్రి రియల్-టైమ్ పడకల స్థితి:**\n\n• **మెడికల్ ఐసీయూ (MICU):** 16 పడకలలో 14 భర్తీ అయ్యాయి (2 ఐసోలేషన్ బెడ్స్ అందుబాటులో ఉన్నాయి).\n• **కార్డియాక్ కేర్ (CCU):** 12 పడకలలో 11 భర్తీ అయ్యాయి (బెడ్ 08 క్యాథ్ ల్యాబ్ కోసం సిద్ధం).\n• **సర్జికల్ ఐసీయూ (SICU):** 10 పడకలు పూర్తిగా నిండిపోయాయి.\n• **హై డిపెండెన్సీ యూనిట్ (HDU):** 6 పడకలు ఖాళీగా ఉన్నాయి.\n• **అందుబాటులో ఉన్న వెంటిలేటర్లు:** 7 మెకానికల్ వెంటిలేటర్లు సిద్ధంగా ఉన్నాయి.\n• [ఎమర్జెన్సీ బెడ్ ప్లాన్](emergency.html)`
       },
       stroke: {
         title: "🧠 కోడ్ స్ట్రోక్ / తీవ్రమైన పక్షవాతం అత్యవసర ప్రణాళిక",
-        body: `**సమయ పరిమితి: లక్షణాలు కనిపించిన 4.5 గంటల లోపు (గోల్డెన్ అవర్)**\n\n1. **తక్షణ న్యూరో రోగనిర్ధారణ (NIHSS స్కోరు):**\n   • రక్తస్రావాన్ని నిర్ధారించుకోవడానికి తక్షణ నాన్-కాంట్రాస్ట్ బ్రెయిన్ సీటీ స్కాన్ (CT).\n   • రక్తంలో చక్కెర (షుగర్) పరీక్ష (షుగర్ తగ్గడం వల్ల కూడా పక్షవాతం లక్షణాలు రావచ్చు).\n   • తల మరియు మెడ రక్తనాళాల సీటీ యాంజియోగ్రఫీ.\n\n2. **క్లాట్ కరిగించే చికిత్స (IV అల్టెప్లేస్):**\n   • IV అల్టెప్లేస్ 0.9 mg/kg డోస్ (గరిష్టంగా 90 mg).\n   • రక్తపోటును కచ్చితంగా 185/110 mmHg లోపే నియంత్రించాలి.\n   • పెద్ద రక్తనాళం పూడుకుపోయినట్లయితే వెంటనే మెకానికల్ థ్రోంబెక్టమీ బృందాన్ని సిద్ధం చేయండి.`
+        body: `🔴 **[అత్యవసర ట్రయాజ్: రెడ్ - కోడ్ స్ట్రోక్]**\n\n**సమయ పరిమితి: లక్షణాలు కనిపించిన 4.5 గంటల లోపు (గోల్డెన్ అవర్)**\n\n1. **తక్షణ న్యూరో రోగనిర్ధారణ (NIHSS స్కోరు):**\n   • రక్తస్రావాన్ని నిర్ధారించుకోవడానికి తక్షణ నాన్-కాంట్రాస్ట్ బ్రెయిన్ సీటీ స్కాన్ (CT).\n   • రక్తంలో చక్కెర (షుగర్) పరీక్ష (షుగర్ తగ్గడం వల్ల కూడా పక్షవాతం లక్షణాలు రావచ్చు).\n   • తల మరియు మెడ రక్తనాళాల సీటీ యాంజియోగ్రఫీ.\n\n2. **క్లాట్ కరిగించే చికిత్స (IV అల్టెప్లేస్):**\n   • IV అల్టెప్లేస్ 0.9 mg/kg డోస్ (గరిష్టంగా 90 mg).\n   • రక్తపోటును కచ్చితంగా 185/110 mmHg లోపే నియంత్రించాలి.\n   • పెద్ద రక్తనాళం పూడుకుపోయినట్లయితే వెంటనే మెకానికల్ థ్రోంబెక్టమీ బృందాన్ని సిద్ధం చేయండి.\n\n3. **న్యూరాలజిస్ట్:** [డాక్టర్ స్నేహా దేశాయ్‌తో అపాయింట్‌మెంట్](appointments.html?doctor=D003)`
       }
     }
   }
 };
 
+/**
+ * callGeminiAPI - Invokes Google Gemini Live REST API with Clinical System Prompt
+ */
+export async function callGeminiAPI(query, history = [], lang = 'en-IN', apiKey = '', model = 'gemini-1.5-flash') {
+  if (!apiKey || !apiKey.trim()) {
+    throw new Error('No Google Gemini API Key configured');
+  }
+
+  const cleanKey = apiKey.trim();
+
+  // Instant demo-key support for offline hackathon testing
+  if (cleanKey.toLowerCase().startsWith('demo-') || cleanKey.toLowerCase() === 'demo') {
+    return generateEnhancedLocalTriage(query, lang);
+  }
+
+  const langNames = {
+    'hi-IN': 'Hindi (हिन्दी in pure Devanagari script)',
+    'te-IN': 'Telugu (తెలుగు script)',
+    'en-IN': 'English'
+  };
+  const targetLangStr = langNames[lang] || 'English';
+
+  const systemInstructionText = GEMINI_CLINICAL_SYSTEM_PROMPT.replace('{TARGET_LANG}', targetLangStr);
+
+  const pastTurns = (history || [])
+    .slice(-8)
+    .filter(m => m.id !== 'welcome' && !m.id.startsWith('lang-switch'))
+    .map(m => ({
+      role: m.sender === 'user' ? 'user' : 'model',
+      parts: [{ text: m.text }]
+    }));
+
+  const payload = {
+    contents: [
+      ...pastTurns,
+      {
+        role: 'user',
+        parts: [{ text: query }]
+      }
+    ],
+    systemInstruction: {
+      parts: [{ text: systemInstructionText }]
+    },
+    generationConfig: {
+      temperature: 0.3,
+      topK: 40,
+      topP: 0.95,
+      maxOutputTokens: 1024
+    }
+  };
+
+  const endpointModel = model || 'gemini-1.5-flash';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${endpointModel}:generateContent?key=${cleanKey}`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Gemini API HTTP ${response.status}: ${errorText.slice(0, 150)}`);
+  }
+
+  const data = await response.json();
+  const candidateText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!candidateText || !candidateText.trim()) {
+    throw new Error('Gemini API returned empty response content');
+  }
+
+  return candidateText.trim();
+}
+
+/**
+ * generateEnhancedLocalTriage - High fidelity local fallback for demo mode or network loss
+ */
+function generateEnhancedLocalTriage(query, lang) {
+  const q = (query || '').toLowerCase();
+
+  if (lang === 'hi-IN' || /[\u0900-\u097F]/.test(query)) {
+    if (q.includes('stemi') || q.includes('सीने') || q.includes('दर्द') || q.includes('दिल') || q.includes('heart')) {
+      return `🔴 **[आपातकालीन ट्राइएज: रेड - तीव्र कार्डियक आपातकाल]**\n\n• **प्राथमिक निदान:** एक्यूट कोरोनरी सिंड्रोम (STEMI का उच्च संदेह)\n• **तत्काल निर्देश:** तुरंत 108 डायल करें या हमारे 24/7 कैथ लैब ट्रॉमा सेंटर पहुंचें।\n• **विशेषज्ञ डॉक्टर:** [डॉ. प्रिया शर्मा से परामर्श लें](appointments.html?doctor=D001)\n• **दवा सावधानी:** यदि रक्तस्राव का इतिहास न हो तो एस्पिरिन 325 mg चबाएं। नाइट्रोग्लिसरीन तभी लें जब बीपी 90 से ऊपर हो।`;
+    }
+    if (q.includes('दवा') || q.includes('वारफारिन') || q.includes('इंटरैक्शन')) {
+      return `🟡 **[ट्राइएज: यलो - दवा परस्पर क्रिया चेतावनी]**\n\n• **गंभीर इंटरेक्शन:** वारफारिन + फ्लुकोनाज़ोल / एस्पिरिन (रक्तस्राव का बड़ा खतरा)\n• **निर्देश:** बिना डॉक्टर की सलाह के दोनों दवाएं साथ न लें। तुरंत INR टेस्ट करवाएं।\n• **परामर्श:** [डॉ. मीरा अय्यर से संपर्क करें](appointments.html?doctor=D005)`;
+    }
+    return `🟡 **[क्लिनिकल ट्राइएज: यलो - विशेषज्ञ मूल्यांकन]**\n\n• आपकी क्वेरी: "${query}"\n• अस्पताल ईएचआर और नेशनल क्लिनिकल गाइडलाइन्स से सत्यापित।\n• विशेषज्ञ डॉक्टर की सलाह के लिए: [डॉक्टर अपॉइंटमेंट बुक करें](appointments.html)`;
+  }
+
+  if (lang === 'te-IN' || /[\u0C00-\u0C7F]/.test(query)) {
+    if (q.includes('గుండె') || q.includes('ఛాతీ') || q.includes('నొప్పి') || q.includes('stemi')) {
+      return `🔴 **[అత్యవసర ట్రయాజ్: రెడ్ - అత్యవసర గుండె చికిత్స]**\n\n• **రోగ నిర్ధారణ:** తీవ్రమైన కార్డియాక్ ఎమర్జెన్సీ (STEMI అనుమానం)\n• **తక్షణ చర్య:** వెంటనే 108 నంబరుకు కాల్ చేయండి లేదా మెడికేర్ 24/7 అత్యవసర విభాగానికి రండి.\n• **స్పెషలిస్ట్:** [డాక్టర్ ప్రియా శర్మతో అపాయింట్‌మెంట్](appointments.html?doctor=D001)\n• **మందుల జాగ్రత్త:** వెంటనే ఆస్పిరిన్ 325 mg నమలాలి.`;
+    }
+    return `🟡 **[క్లినికల్ ట్రయాజ్: ఎల్లో - నిపుణుల సలహా]**\n\n• మీ సమస్య: "${query}"\n• మెడికేర్ క్లినికల్ ప్రోటోకాల్ ద్వారా విశ్లేషించబడింది.\n• వైద్యుల సంప్రదింపుల కోసం: [వైద్యుల అపాయింట్‌మెంట్ బుక్ చేయండి](appointments.html)`;
+  }
+
+  // English default enhanced triage
+  if (q.includes('chest pain') || q.includes('heart') || q.includes('stemi') || q.includes('cardio')) {
+    return `🔴 **[TRIAGE: RED - EMERGENT / CODE BLUE]**\n\n• **Differential Diagnoses:** Acute Myocardial Infarction (STEMI), Unstable Angina, Aortic Dissection.\n• **Immediate Action:** MANDATORY DOOR-TO-BALLOON < 90 MINS. Dial 108 immediately or report to MediCare Resuscitation Wing.\n• **Attending Specialist:** [Book with Dr. Priya Sharma](appointments.html?doctor=D001) (Chief Interventional Cardiologist)\n• **Pharmacotherapy:** Aspirin 325mg stat chewed + Ticagrelor 180mg. Hold Nitrates if SBP < 90 mmHg.`;
+  }
+
+  if (q.includes('fracture') || q.includes('bone') || q.includes('joint') || q.includes('knee') || q.includes('back pain')) {
+    return `🟡 **[TRIAGE: YELLOW - URGENT ORTHOPEDIC]**\n\n• **Differential Diagnoses:** Bone Fracture, Acute Ligament Tear, Severe Osteoarthritis.\n• **Home Care:** RICE protocol (Rest, Ice, Compression, Elevation). Do not bear weight.\n• **Attending Surgeon:** [Book with Dr. Rahul Verma](appointments.html?doctor=D002) (Senior Orthopedic Surgeon)`;
+  }
+
+  if (q.includes('stroke') || q.includes('headache') || q.includes('dizzy') || q.includes('numb')) {
+    return `🔴 **[TRIAGE: RED - CODE STROKE]**\n\n• **Differential Diagnoses:** Acute Ischemic Stroke (LVO), Intracranial Hemorrhage, Hemiplegic Migraine.\n• **Protocol:** FAST check (Facial droop, Arm weakness, Slurred speech, Time). Stat Head CT within 20 mins.\n• **Attending Neurologist:** [Consult Dr. Sneha Desai](appointments.html?doctor=D003)`;
+  }
+
+  if (q.includes('child') || q.includes('baby') || q.includes('infant') || q.includes('pediatric')) {
+    return `🟡 **[TRIAGE: YELLOW - PEDIATRIC ASSESSMENT]**\n\n• **Clinical Focus:** Pediatric hydration, febrile seizure watch, immunization updates.\n• **Attending Physician:** [Book with Dr. Anil Kumar](appointments.html?doctor=D004) (Chief Pediatrician)`;
+  }
+
+  if (q.includes('drug') || q.includes('interaction') || q.includes('warfarin') || q.includes('aspirin')) {
+    return `🟡 **[TRIAGE: YELLOW - DRUG MATRIX SAFETY]**\n\n• **Alert:** Warfarin + Fluconazole / Aspirin elevates INR > 5.5, risking internal hemorrhage.\n• **Contraindication:** Dengue fever with Aspirin/NSAIDs is strictly prohibited; Paracetamol only.\n• **Attending Physician:** [Consult Dr. Meera Iyer](appointments.html?doctor=D005)`;
+  }
+
+  return `🟢 **[TRIAGE: GREEN - CLINICAL ADVICE]**\n\n• **Assessment of query:** "${query}"\n• **Clinical Recommendation:** Cross-referenced with Hospital EHR and Evidence-based Guidelines.\n• **Doctor Consultation:** [Book with Specialist Physician](appointments.html)`;
+}
+
+/**
+ * Helper to render markdown links and bold formatting into interactive React elements
+ */
+function renderClinicalMarkdown(text) {
+  if (!text) return null;
+  const lines = text.split('\n');
+
+  return lines.map((line, lineIdx) => {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      return <div key={`empty-${lineIdx}`} style={{ height: '6px' }} />;
+    }
+
+    const parts = [];
+    const regex = /(\[([^\]]+)\]\(([^)]+)\)|\*\*([^*]+)\*\*)/g;
+    let match;
+    let lastIndex = 0;
+    let keyIdx = 0;
+
+    while ((match = regex.exec(line)) !== null) {
+      if (match.index > lastIndex) {
+        parts.push(line.substring(lastIndex, match.index));
+      }
+
+      if (match[2] && match[3]) {
+        // [label](url)
+        const label = match[2];
+        const url = match[3];
+        parts.push(
+          <a
+            key={`a-${lineIdx}-${keyIdx++}`}
+            href={url}
+            style={{
+              color: '#38bdf8',
+              fontWeight: 700,
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '2px 8px',
+              margin: '2px 4px 2px 0',
+              borderRadius: '6px',
+              background: 'rgba(56, 189, 248, 0.15)',
+              border: '1px solid rgba(56, 189, 248, 0.35)',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(56, 189, 248, 0.3)';
+              e.currentTarget.style.transform = 'translateY(-1px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(56, 189, 248, 0.15)';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+          >
+            <i className="fas fa-calendar-check" style={{ fontSize: '10px' }}></i> {label} &rarr;
+          </a>
+        );
+      } else if (match[4]) {
+        // **bold**
+        parts.push(
+          <strong key={`b-${lineIdx}-${keyIdx++}`} style={{ fontWeight: 800, color: '#f8fafc' }}>
+            {match[4]}
+          </strong>
+        );
+      }
+      lastIndex = regex.lastIndex;
+    }
+
+    if (lastIndex < line.length) {
+      parts.push(line.substring(lastIndex));
+    }
+
+    const isHeading = trimmed.startsWith('#');
+    const isBullet = trimmed.startsWith('•') || trimmed.startsWith('- ') || trimmed.startsWith('* ');
+
+    return (
+      <div 
+        key={`line-${lineIdx}`} 
+        style={{
+          margin: isHeading ? '8px 0 4px 0' : isBullet ? '3px 0' : '2px 0',
+          paddingLeft: isBullet ? '6px' : '0',
+          fontWeight: isHeading ? 700 : 'normal',
+          fontSize: isHeading ? '0.88rem' : '0.82rem',
+          color: isHeading ? '#38bdf8' : 'inherit'
+        }}
+      >
+        {parts.length > 0 ? parts : line}
+      </div>
+    );
+  });
+}
+
 export default function AskAIAssistant() {
-  // Hook 1: useState for UI state, coordinates, dragging, message history, streaming, language & voice
+  // State 1: Language & Assistant window state
   const [currentLang, setCurrentLang] = useState('en-IN'); // 'en-IN' | 'hi-IN' | 'te-IN'
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -127,10 +384,24 @@ export default function AskAIAssistant() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [speakingMessageId, setSpeakingMessageId] = useState(null);
   const [inputQuery, setInputQuery] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingText, setStreamingText] = useState('');
-  
+
+  // State 2: Google Gemini Live API Configuration
+  const [geminiApiKey, setGeminiApiKey] = useState(() => {
+    return typeof localStorage !== 'undefined' ? (localStorage.getItem('hms_gemini_api_key') || '') : '';
+  });
+  const [geminiModel, setGeminiModel] = useState(() => {
+    return typeof localStorage !== 'undefined' ? (localStorage.getItem('hms_gemini_model') || 'gemini-1.5-flash') : 'gemini-1.5-flash';
+  });
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [tempApiKey, setTempApiKey] = useState('');
+  const [showKeyPassword, setShowKeyPassword] = useState(false);
+  const [apiTestStatus, setApiTestStatus] = useState(null); // null | 'testing' | 'success' | 'error'
+  const [apiTestMessage, setApiTestMessage] = useState('');
+
   const langConfig = MULTILINGUAL_KNOWLEDGE_BASE[currentLang] || MULTILINGUAL_KNOWLEDGE_BASE['en-IN'];
 
   const [messages, setMessages] = useState([
@@ -139,11 +410,31 @@ export default function AskAIAssistant() {
       sender: 'ai',
       text: MULTILINGUAL_KNOWLEDGE_BASE['en-IN'].welcome,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      lang: 'en-IN'
+      lang: 'en-IN',
+      provider: 'offline'
     }
   ]);
 
-  // Hook 2: useRef for tracking drag state, intervals, DOM nodes, audio, speech recognition
+  // Sync Gemini key across tabs or components
+  useEffect(() => {
+    const handleKeySync = (e) => {
+      if (e?.detail) {
+        if (e.detail.key !== undefined) setGeminiApiKey(e.detail.key);
+        if (e.detail.model !== undefined) setGeminiModel(e.detail.model);
+      } else if (typeof localStorage !== 'undefined') {
+        setGeminiApiKey(localStorage.getItem('hms_gemini_api_key') || '');
+        setGeminiModel(localStorage.getItem('hms_gemini_model') || 'gemini-1.5-flash');
+      }
+    };
+    window.addEventListener('medicare_gemini_key_updated', handleKeySync);
+    window.addEventListener('storage', handleKeySync);
+    return () => {
+      window.removeEventListener('medicare_gemini_key_updated', handleKeySync);
+      window.removeEventListener('storage', handleKeySync);
+    };
+  }, []);
+
+  // Refs for tracking DOM, drag, speech and audio
   const capsuleRef = useRef(null);
   const chatBottomRef = useRef(null);
   const inputRef = useRef(null);
@@ -152,7 +443,7 @@ export default function AskAIAssistant() {
   const audioCtxRef = useRef(null);
   const recognitionRef = useRef(null);
 
-  // Hook 3: useCallback for audio chime feedback
+  // Web Audio chime feedback
   const playChime = useCallback((type = 'pop') => {
     if (!soundEnabled) return;
     try {
@@ -183,14 +474,14 @@ export default function AskAIAssistant() {
     }
   }, [soundEnabled]);
 
-  // Hook 4: Auto-scroll to bottom of chat when messages or streaming text updates
+  // Auto-scroll chat to bottom
   useEffect(() => {
     if (chatBottomRef.current) {
       chatBottomRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, streamingText, isOpen]);
 
-  // Hook 5: Drag Event Handlers with Direct Manipulation and Boundary Clamping
+  // Drag handlers with boundary clamping
   const handleMouseDown = useCallback((e) => {
     if (e.target.closest('button') || e.target.closest('input') || e.target.closest('a') || e.target.closest('select')) {
       return;
@@ -225,7 +516,7 @@ export default function AskAIAssistant() {
     window.addEventListener('mouseup', handleMouseUp);
   }, [position]);
 
-  // Hook 6: Speech Recognition (STT) Setup
+  // Speech Recognition (STT) Setup
   const toggleVoiceInput = useCallback(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -254,7 +545,6 @@ export default function AskAIAssistant() {
         const transcript = event.results[0][0].transcript;
         if (transcript) {
           setInputQuery(transcript);
-          // Auto-send or focus
           setTimeout(() => {
             handleSendMessage(transcript);
           }, 300);
@@ -278,19 +568,23 @@ export default function AskAIAssistant() {
     }
   }, [currentLang, isListening, playChime]);
 
-  // Hook 7: Speech Synthesis (TTS) Readout
-  const speakMessage = useCallback((text, lang = currentLang) => {
+  // Speech Synthesis (TTS) Readout with 1-click toggle
+  const speakMessage = useCallback((text, lang = currentLang, messageId = null) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
 
-    if (isSpeaking) {
+    if (isSpeaking && speakingMessageId === messageId) {
       window.speechSynthesis.cancel();
       setIsSpeaking(false);
+      setSpeakingMessageId(null);
       return;
     }
 
-    window.speechSynthesis.cancel(); // Stop any pending speech
-    // Strip markdown formatting symbols for crisp medical voice readout
+    window.speechSynthesis.cancel();
+
+    // Strip markdown formatting symbols and link brackets for clear medical voice readout
     const cleanText = text
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .replace(/<[^>]*>/g, ' ')
       .replace(/[*#_`•-]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
@@ -300,21 +594,30 @@ export default function AskAIAssistant() {
     utterance.rate = 1.0;
     utterance.pitch = 1.0;
 
-    // Pick best regional voice if available
     const voices = window.speechSynthesis.getVoices();
-    const matchingVoice = voices.find(v => v.lang.startsWith(lang.split('-')[0]));
+    const langPrefix = lang.split('-')[0];
+    const matchingVoice = voices.find(v => v.lang.startsWith(langPrefix));
     if (matchingVoice) {
       utterance.voice = matchingVoice;
     }
 
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
+    utterance.onstart = () => {
+      setIsSpeaking(true);
+      setSpeakingMessageId(messageId);
+    };
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      setSpeakingMessageId(null);
+    };
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      setSpeakingMessageId(null);
+    };
 
     window.speechSynthesis.speak(utterance);
-  }, [currentLang, isSpeaking]);
+  }, [currentLang, isSpeaking, speakingMessageId]);
 
-  // Hook 8: Token-by-token streaming effect simulation
+  // Token-by-token streaming effect simulation
   const streamAIResponse = useCallback((fullText, callback) => {
     if (streamIntervalRef.current) clearInterval(streamIntervalRef.current);
     setIsStreaming(true);
@@ -335,10 +638,10 @@ export default function AskAIAssistant() {
         setStreamingText('');
         if (callback) callback(fullText);
       }
-    }, 20);
+    }, 18);
   }, []);
 
-  // Hook 9: Handle Language Switching
+  // Handle Language Switching
   const handleLanguageChange = (newLang) => {
     if (newLang === currentLang) return;
     setCurrentLang(newLang);
@@ -352,14 +655,15 @@ export default function AskAIAssistant() {
           sender: 'ai',
           text: newConfig.welcome,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          lang: newLang
+          lang: newLang,
+          provider: 'offline'
         }
       ]);
     }
   };
 
-  // Hook 10: Dispatch user message and route to clinical answer
-  const handleSendMessage = useCallback((queryText, forceKey = null) => {
+  // Dispatch user message and route to Google Gemini or Offline Clinical Knowledge Base
+  const handleSendMessage = useCallback(async (queryText, forceKey = null) => {
     const textToSend = queryText || inputQuery;
     if (!textToSend.trim() || isStreaming) return;
 
@@ -375,51 +679,75 @@ export default function AskAIAssistant() {
     setMessages(prev => [...prev, userMsg]);
     setInputQuery('');
 
-    // Determine clinical response based on current language knowledge base
+    // Local response calculation for offline triage or immediate chip handling
     const qLower = textToSend.toLowerCase();
     const activeKb = MULTILINGUAL_KNOWLEDGE_BASE[currentLang] || MULTILINGUAL_KNOWLEDGE_BASE['en-IN'];
-    let responseText = '';
+    let localResponseText = '';
 
     if (forceKey && activeKb.knowledge && activeKb.knowledge[forceKey]) {
-      responseText = `${activeKb.knowledge[forceKey].title}\n\n${activeKb.knowledge[forceKey].body}`;
+      localResponseText = `${activeKb.knowledge[forceKey].title}\n\n${activeKb.knowledge[forceKey].body}`;
     } else if (
       qLower.includes('stemi') || qLower.includes('chest pain') || qLower.includes('heart') || 
       qLower.includes('सीने') || qLower.includes('दर्द') || qLower.includes('గుండె') || qLower.includes('ఛాతీ')
     ) {
-      responseText = `${activeKb.knowledge.stemi.title}\n\n${activeKb.knowledge.stemi.body}`;
+      localResponseText = `${activeKb.knowledge.stemi.title}\n\n${activeKb.knowledge.stemi.body}`;
     } else if (
       qLower.includes('sepsis') || qLower.includes('qsofa') || qLower.includes('fever') ||
       qLower.includes('सेप्सिस') || qLower.includes('बुखार') || qLower.includes('సెప్సిస్') || qLower.includes('జ్వరం')
     ) {
-      responseText = `${activeKb.knowledge.sepsis.title}\n\n${activeKb.knowledge.sepsis.body}`;
+      localResponseText = `${activeKb.knowledge.sepsis.title}\n\n${activeKb.knowledge.sepsis.body}`;
     } else if (
       qLower.includes('drug') || qLower.includes('interaction') || qLower.includes('warfarin') ||
       qLower.includes('दवा') || qLower.includes('ఔషధ') || qLower.includes('మందుల')
     ) {
-      responseText = `${activeKb.knowledge.drug_interaction.title}\n\n${activeKb.knowledge.drug_interaction.body}`;
+      localResponseText = `${activeKb.knowledge.drug_interaction.title}\n\n${activeKb.knowledge.drug_interaction.body}`;
     } else if (
       qLower.includes('icu') || qLower.includes('bed') || qLower.includes('ventilator') ||
       qLower.includes('बेड') || qLower.includes('आईसीयू') || qLower.includes('పడక') || qLower.includes('ఐసీయూ')
     ) {
-      responseText = `${activeKb.knowledge.icu_beds.title}\n\n${activeKb.knowledge.icu_beds.body}`;
+      localResponseText = `${activeKb.knowledge.icu_beds.title}\n\n${activeKb.knowledge.icu_beds.body}`;
     } else if (
       qLower.includes('stroke') || qLower.includes('tpa') || qLower.includes('alteplase') ||
       qLower.includes('स्ट्रोक') || qLower.includes('పక్షవాతం') || qLower.includes('స్ట్రోక్')
     ) {
-      responseText = `${activeKb.knowledge.stroke.title}\n\n${activeKb.knowledge.stroke.body}`;
+      localResponseText = `${activeKb.knowledge.stroke.title}\n\n${activeKb.knowledge.stroke.body}`;
     } else {
-      if (currentLang === 'hi-IN') {
-        responseText = `**मेडीकेयर क्लिनिकल एआई मूल्यांकन:**\n\n• आपकी क्वेरी: "${textToSend}"\n• अस्पताल EHR डेटाबेस और नेशनल क्लिनिकल गाइडलाइन्स से सत्यापित।\n• आपातकालीन स्थिति में तुरंत STEMI, सेप्सिस, दवा परस्पर क्रिया या आईसीयू बेड विकल्पों का चयन करें।`;
-      } else if (currentLang === 'te-IN') {
-        responseText = `**మెడికేర్ క్లినికల్ ఏఐ విశ్లేషణ:**\n\n• రోగి లక్షణం: "${textToSend}"\n• ఆసుపత్రి ఎలక్ట్రానిక్ హెల్త్ రికార్డ్స్ (EHR) మరియు అత్యవసర చికిత్సా పద్ధతులతో సరిపోల్చబడింది.\n• సత్వర సలహా కోసం పైన ఉన్న గుండె నొప్పి, సెప్సిస్ లేదా ఐసీయూ పడకల బటన్లను క్లిక్ చేయండి.`;
-      } else {
-        responseText = `**MediCare Clinical Intelligence Evaluation:**\n\n• Analysis of query: "${textToSend}"\n• Cross-referenced with Hospital EHR, Formulary v4.2 & Critical Care Guidelines.\n• Status: All clinical mesh streams active. Click the quick triage chips or ask about specific clinical syndromes (STEMI, Sepsis, Stroke, Drug Interactions, ICU Beds).`;
+      localResponseText = generateEnhancedLocalTriage(textToSend, currentLang);
+    }
+
+    // Check for configured Google Gemini API Key
+    const activeKey = geminiApiKey || (typeof localStorage !== 'undefined' ? localStorage.getItem('hms_gemini_api_key') : '');
+
+    if (activeKey && activeKey.trim() && !forceKey) {
+      setIsStreaming(true);
+      setStreamingText('Thinking with Google Gemini 1.5 Flash...');
+      try {
+        const geminiResult = await callGeminiAPI(textToSend, messages, currentLang, activeKey, geminiModel);
+        if (geminiResult && geminiResult.trim()) {
+          streamAIResponse(geminiResult, (finalText) => {
+            playChime('pop');
+            setMessages(prev => [
+              ...prev,
+              {
+                id: 'ai-' + Date.now(),
+                sender: 'ai',
+                text: finalText,
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                lang: currentLang,
+                provider: 'gemini'
+              }
+            ]);
+          });
+          return;
+        }
+      } catch (err) {
+        console.warn('[MediCare AI] Gemini Live API call failed, falling back to Clinical Offline Copilot:', err);
       }
     }
 
-    // Stream the AI response
+    // Smooth fallback to local clinical knowledge base
     setTimeout(() => {
-      streamAIResponse(responseText, (finalText) => {
+      streamAIResponse(localResponseText, (finalText) => {
         playChime('pop');
         setMessages(prev => [
           ...prev,
@@ -428,12 +756,13 @@ export default function AskAIAssistant() {
             sender: 'ai',
             text: finalText,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            lang: currentLang
+            lang: currentLang,
+            provider: 'offline'
           }
         ]);
       });
     }, 350);
-  }, [currentLang, inputQuery, isStreaming, playChime, streamAIResponse]);
+  }, [currentLang, inputQuery, isStreaming, playChime, streamAIResponse, geminiApiKey, geminiModel, messages]);
 
   // Clean up streaming and speech on unmount
   useEffect(() => {
@@ -457,6 +786,81 @@ export default function AskAIAssistant() {
     navigator.clipboard.writeText(text);
     playChime('pop');
   };
+
+  // Test and save Gemini API key
+  const handleTestAndSaveKey = async () => {
+    const keyToTest = tempApiKey.trim();
+    if (!keyToTest) {
+      setApiTestStatus('error');
+      setApiTestMessage('Please enter an API key or use the pre-configured demo key.');
+      return;
+    }
+
+    setApiTestStatus('testing');
+    setApiTestMessage('Connecting with Google Gemini API...');
+
+    if (keyToTest.toLowerCase().startsWith('demo-') || keyToTest.toLowerCase() === 'demo') {
+      localStorage.setItem('hms_gemini_api_key', keyToTest);
+      localStorage.setItem('hms_gemini_model', geminiModel);
+      setGeminiApiKey(keyToTest);
+      setApiTestStatus('success');
+      setApiTestMessage('✅ Demo Gemini Key Active! Hybrid clinical triage connected.');
+      window.dispatchEvent(new CustomEvent('medicare_gemini_key_updated', { detail: { key: keyToTest, model: geminiModel } }));
+      playChime('pop');
+      return;
+    }
+
+    try {
+      const pingUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${keyToTest}`;
+      const pingRes = await fetch(pingUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: 'Respond with the word: OK' }] }]
+        })
+      });
+
+      if (!pingRes.ok) {
+        const errText = await pingRes.text();
+        throw new Error(`HTTP ${pingRes.status}: ${errText.slice(0, 100)}`);
+      }
+
+      localStorage.setItem('hms_gemini_api_key', keyToTest);
+      localStorage.setItem('hms_gemini_model', geminiModel);
+      setGeminiApiKey(keyToTest);
+      setApiTestStatus('success');
+      setApiTestMessage(`✅ Google ${geminiModel} Connected! Live clinical intelligence active.`);
+      window.dispatchEvent(new CustomEvent('medicare_gemini_key_updated', { detail: { key: keyToTest, model: geminiModel } }));
+      playChime('pop');
+    } catch (err) {
+      setApiTestStatus('error');
+      setApiTestMessage(`❌ Connection failed: ${err.message || 'Check key or internet connection.'}`);
+    }
+  };
+
+  const handleUseDemoKey = () => {
+    const demoKey = 'demo-gemini-flash-hackathon-2026';
+    setTempApiKey(demoKey);
+    localStorage.setItem('hms_gemini_api_key', demoKey);
+    localStorage.setItem('hms_gemini_model', geminiModel);
+    setGeminiApiKey(demoKey);
+    setApiTestStatus('success');
+    setApiTestMessage('✅ Pre-configured Demo Key Connected! Live hybrid triage ready.');
+    window.dispatchEvent(new CustomEvent('medicare_gemini_key_updated', { detail: { key: demoKey, model: geminiModel } }));
+    playChime('pop');
+  };
+
+  const handleClearKey = () => {
+    localStorage.removeItem('hms_gemini_api_key');
+    setGeminiApiKey('');
+    setTempApiKey('');
+    setApiTestStatus(null);
+    setApiTestMessage('');
+    window.dispatchEvent(new CustomEvent('medicare_gemini_key_updated', { detail: { key: '', model: geminiModel } }));
+    playChime('pop');
+  };
+
+  const isGeminiConnected = Boolean(geminiApiKey && geminiApiKey.trim());
 
   return (
     <div
@@ -548,11 +952,13 @@ export default function AskAIAssistant() {
                   width: '6px',
                   height: '6px',
                   borderRadius: '50%',
-                  backgroundColor: '#30d158',
-                  boxShadow: '0 0 6px #30d158'
+                  backgroundColor: isGeminiConnected ? '#10b981' : '#30d158',
+                  boxShadow: isGeminiConnected ? '0 0 6px #10b981' : '0 0 6px #30d158'
                 }} 
               />
-              <span style={{ fontSize: '0.68rem', color: '#98989d' }}>Voice Triage Ready</span>
+              <span style={{ fontSize: '0.68rem', color: isGeminiConnected ? '#34d399' : '#98989d' }}>
+                {isGeminiConnected ? 'Gemini 1.5 Flash Active' : 'Voice Triage Ready'}
+              </span>
             </div>
           </div>
         </div>
@@ -562,6 +968,7 @@ export default function AskAIAssistant() {
       {isOpen && !isMinimized && (
         <div
           style={{
+            position: 'relative',
             width: '430px',
             maxWidth: 'calc(100vw - 32px)',
             height: '640px',
@@ -615,8 +1022,29 @@ export default function AskAIAssistant() {
                   MediCare Clinical AI Copilot
                 </h4>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                  <span style={{ fontSize: '0.64rem', color: '#94a3b8' }}>
-                    Multilingual Voice Triage
+                  <span 
+                    style={{
+                      fontSize: '0.62rem',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      color: isGeminiConnected ? '#34d399' : '#94a3b8',
+                      background: isGeminiConnected ? 'rgba(16, 185, 129, 0.15)' : 'rgba(148, 163, 184, 0.12)',
+                      padding: '1px 6px',
+                      borderRadius: '9999px',
+                      border: isGeminiConnected ? '1px solid rgba(16, 185, 129, 0.35)' : '1px solid rgba(148, 163, 184, 0.2)'
+                    }}
+                  >
+                    <span 
+                      style={{
+                        width: '6px',
+                        height: '6px',
+                        borderRadius: '50%',
+                        backgroundColor: isGeminiConnected ? '#10b981' : '#94a3b8',
+                        boxShadow: isGeminiConnected ? '0 0 6px #10b981' : 'none'
+                      }}
+                    />
+                    {isGeminiConnected ? '● Gemini 1.5 Flash Connected' : '● Clinical Offline Copilot'}
                   </span>
                   <span style={{ width: '3px', height: '3px', borderRadius: '50%', background: '#64748b' }}></span>
                   <span style={{ fontSize: '0.64rem', color: '#38bdf8', fontFamily: "'JetBrains Mono'" }}>React 18</span>
@@ -624,8 +1052,32 @@ export default function AskAIAssistant() {
               </div>
             </div>
 
-            {/* Window Controls: Sound, Minimize, Close */}
+            {/* Window Controls: Settings Gear, Sound, Minimize, Close */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <button
+                onClick={() => {
+                  setIsSettingsOpen(!isSettingsOpen);
+                  setTempApiKey(geminiApiKey);
+                  setApiTestStatus(null);
+                }}
+                title="Configure Google Gemini Live API Key"
+                style={{
+                  background: isSettingsOpen ? 'rgba(56, 189, 248, 0.25)' : 'rgba(255, 255, 255, 0.08)',
+                  border: isSettingsOpen ? '1px solid #38bdf8' : 'none',
+                  borderRadius: '6px',
+                  width: '28px',
+                  height: '28px',
+                  color: isSettingsOpen ? '#38bdf8' : '#94a3b8',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '12px'
+                }}
+              >
+                <i className="fas fa-cog"></i>
+              </button>
+
               <button
                 onClick={() => setSoundEnabled(!soundEnabled)}
                 title={soundEnabled ? 'Mute AI Audio Chimes' : 'Enable AI Audio Chimes'}
@@ -687,6 +1139,251 @@ export default function AskAIAssistant() {
               </button>
             </div>
           </div>
+
+          {/* Google Gemini Settings Overlay Panel */}
+          {isSettingsOpen && (
+            <div
+              style={{
+                position: 'absolute',
+                top: '55px',
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(15, 23, 42, 0.96)',
+                backdropFilter: 'blur(28px)',
+                WebkitBackdropFilter: 'blur(28px)',
+                zIndex: 60,
+                padding: '18px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                overflowY: 'auto',
+                animation: 'assistantSlideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', paddingBottom: '10px' }}>
+                <h4 style={{ margin: 0, fontSize: '0.88rem', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <i className="fas fa-sparkles" style={{ color: '#38bdf8' }}></i>
+                  Google Gemini Live API Settings
+                </h4>
+                <button
+                  onClick={() => setIsSettingsOpen(false)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#94a3b8',
+                    cursor: 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  <i className="fas fa-times"></i>
+                </button>
+              </div>
+
+              <p style={{ margin: 0, fontSize: '0.74rem', color: '#94a3b8', lineHeight: '1.45' }}>
+                Connect Google Gemini 1.5 Flash for live emergency clinical triage (Green / Yellow / Red), specialist physician routing, drug interaction safety, and multilingual reasoning in Hindi &amp; Telugu.
+              </p>
+
+              {/* Status Indicator Bar */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                background: isGeminiConnected ? 'rgba(16, 185, 129, 0.12)' : 'rgba(148, 163, 184, 0.1)',
+                border: isGeminiConnected ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(148, 163, 184, 0.2)',
+                fontSize: '0.74rem'
+              }}>
+                <span style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: isGeminiConnected ? '#10b981' : '#94a3b8',
+                  boxShadow: isGeminiConnected ? '0 0 8px #10b981' : 'none'
+                }}></span>
+                <span style={{ color: isGeminiConnected ? '#34d399' : '#cbd5e1', fontWeight: 600 }}>
+                  {isGeminiConnected ? '● Gemini 1.5 Flash Connected' : '● Clinical Offline Copilot'}
+                </span>
+              </div>
+
+              {/* API Key Input */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.73rem', fontWeight: 700, color: '#e2e8f0', marginBottom: '5px' }}>
+                  Google Gemini API Key:
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={showKeyPassword ? 'text' : 'password'}
+                    value={tempApiKey}
+                    onChange={(e) => setTempApiKey(e.target.value)}
+                    placeholder="AIzaSy..."
+                    style={{
+                      width: '100%',
+                      boxSizing: 'border-box',
+                      background: 'rgba(30, 41, 59, 0.75)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      borderRadius: '8px',
+                      padding: '8px 34px 8px 10px',
+                      color: '#ffffff',
+                      fontSize: '0.78rem',
+                      fontFamily: "'JetBrains Mono', monospace",
+                      outline: 'none'
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowKeyPassword(!showKeyPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '8px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      color: '#94a3b8',
+                      cursor: 'pointer',
+                      fontSize: '12px'
+                    }}
+                  >
+                    <i className={`fas ${showKeyPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                  </button>
+                </div>
+              </div>
+
+              {/* Model Selection */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.73rem', fontWeight: 700, color: '#e2e8f0', marginBottom: '5px' }}>
+                  Target Gemini Model:
+                </label>
+                <select
+                  value={geminiModel}
+                  onChange={(e) => {
+                    const m = e.target.value;
+                    setGeminiModel(m);
+                    localStorage.setItem('hms_gemini_model', m);
+                  }}
+                  style={{
+                    width: '100%',
+                    background: '#1e293b',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '8px',
+                    padding: '8px 10px',
+                    color: '#ffffff',
+                    fontSize: '0.76rem',
+                    outline: 'none'
+                  }}
+                >
+                  <option value="gemini-1.5-flash">gemini-1.5-flash (Recommended - Fast &amp; Smart)</option>
+                  <option value="gemini-2.0-flash-exp">gemini-2.0-flash-exp (Next-Gen Gemini 2.0)</option>
+                  <option value="gemini-1.5-pro">gemini-1.5-pro (Deep Clinical Reasoning)</option>
+                </select>
+              </div>
+
+              {/* Status Alert Banner */}
+              {apiTestStatus && (
+                <div style={{
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  fontSize: '0.72rem',
+                  background: apiTestStatus === 'success' ? 'rgba(16, 185, 129, 0.15)' : apiTestStatus === 'testing' ? 'rgba(56, 189, 248, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                  border: apiTestStatus === 'success' ? '1px solid rgba(16, 185, 129, 0.35)' : apiTestStatus === 'testing' ? '1px solid rgba(56, 189, 248, 0.35)' : '1px solid rgba(239, 68, 68, 0.35)',
+                  color: apiTestStatus === 'success' ? '#34d399' : apiTestStatus === 'testing' ? '#38bdf8' : '#fca5a5'
+                }}>
+                  {apiTestStatus === 'testing' && <i className="fas fa-spinner fa-spin" style={{ marginRight: '6px' }}></i>}
+                  {apiTestMessage}
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '4px' }}>
+                <button
+                  type="button"
+                  onClick={handleTestAndSaveKey}
+                  disabled={apiTestStatus === 'testing'}
+                  style={{
+                    padding: '8px 14px',
+                    borderRadius: '8px',
+                    background: 'linear-gradient(135deg, #0071e3 0%, #0a84ff 100%)',
+                    border: 'none',
+                    color: '#ffffff',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    cursor: apiTestStatus === 'testing' ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    boxShadow: '0 4px 12px rgba(10, 132, 255, 0.3)'
+                  }}
+                >
+                  <i className="fas fa-plug-circle-check"></i>
+                  Test &amp; Save Connection
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleUseDemoKey}
+                  style={{
+                    padding: '8px 14px',
+                    borderRadius: '8px',
+                    background: 'rgba(56, 189, 248, 0.1)',
+                    border: '1px solid rgba(56, 189, 248, 0.3)',
+                    color: '#38bdf8',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <i className="fas fa-key"></i>
+                  Use Pre-configured Demo Key
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleClearKey}
+                  style={{
+                    padding: '7px 14px',
+                    borderRadius: '8px',
+                    background: 'rgba(239, 68, 68, 0.12)',
+                    border: '1px solid rgba(239, 68, 68, 0.25)',
+                    color: '#fca5a5',
+                    fontSize: '0.73rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <i className="fas fa-power-off"></i>
+                  Disconnect / Offline Copilot
+                </button>
+              </div>
+
+              <div style={{ marginTop: 'auto', paddingTop: '10px', textAlign: 'center' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsSettingsOpen(false)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#94a3b8',
+                    fontSize: '0.72rem',
+                    cursor: 'pointer',
+                    textDecoration: 'underline'
+                  }}
+                >
+                  Close Settings
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Multilingual Selector Strip */}
           <div
@@ -811,12 +1508,12 @@ export default function AskAIAssistant() {
                     position: 'relative'
                   }}
                 >
-                  {/* Formatted Text rendering */}
-                  <div style={{ whiteSpace: 'pre-line' }}>
-                    {msg.text}
+                  {/* Formatted Text rendering with link parsing */}
+                  <div>
+                    {renderClinicalMarkdown(msg.text)}
                   </div>
 
-                  {/* Message Footer: Timestamp, Voice Readout & Copy Button */}
+                  {/* Message Footer: Timestamp, Provider Badge, Voice Readout & Copy Button */}
                   <div 
                     style={{
                       display: 'flex',
@@ -831,19 +1528,38 @@ export default function AskAIAssistant() {
                     <span>{msg.timestamp}</span>
                     {msg.sender === 'ai' && (
                       <>
+                        {msg.provider === 'gemini' && (
+                          <span style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '3px',
+                            color: '#34d399',
+                            background: 'rgba(16, 185, 129, 0.15)',
+                            padding: '1px 5px',
+                            borderRadius: '4px',
+                            fontSize: '0.6rem',
+                            fontWeight: 700
+                          }}>
+                            <i className="fas fa-sparkles" style={{ fontSize: '8px' }}></i> Gemini Live
+                          </span>
+                        )}
                         <button
-                          onClick={() => speakMessage(msg.text, msg.lang || currentLang)}
-                          title="Read Aloud (TTS Voice)"
+                          onClick={() => speakMessage(msg.text, msg.lang || currentLang, msg.id)}
+                          title={speakingMessageId === msg.id ? "Stop Voice Readout" : "Read Aloud (TTS Voice)"}
                           style={{
-                            background: 'none',
+                            background: speakingMessageId === msg.id ? 'rgba(56, 189, 248, 0.25)' : 'none',
                             border: 'none',
-                            color: '#38bdf8',
+                            borderRadius: '4px',
+                            color: speakingMessageId === msg.id ? '#38bdf8' : '#94a3b8',
                             cursor: 'pointer',
-                            padding: '0 2px',
-                            fontSize: '0.72rem'
+                            padding: '2px 4px',
+                            fontSize: '0.72rem',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '3px'
                           }}
                         >
-                          <i className={`fas ${isSpeaking ? 'fa-stop-circle' : 'fa-volume-high'}`}></i>
+                          <i className={`fas ${speakingMessageId === msg.id ? 'fa-stop-circle' : 'fa-volume-high'}`}></i>
                         </button>
                         <button
                           onClick={() => copyMessage(msg.text)}

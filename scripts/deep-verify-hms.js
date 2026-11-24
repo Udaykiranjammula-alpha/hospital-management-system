@@ -144,11 +144,21 @@ async function runAllTests() {
     // ----------------------------------------------------
     // TEST SUITE 7: Multilingual AI Assistant Routing
     // ----------------------------------------------------
-    console.log('\n--- TEST SUITE 7: Multilingual AI Assistant Routing ---');
+    console.log('\n--- TEST SUITE 7: Multilingual AI Assistant Routing & Google Gemini Live Integration ---');
     const askAiJs = fs.readFileSync(path.join(rootDir, 'src/components/AskAIAssistant.jsx'), 'utf8');
     assert(askAiJs.includes("handleSendMessage(kb.knowledge[key].title, key)"), 'handleChipClick routes predefined key explicitly');
     assert(askAiJs.includes("forceKey && activeKb.knowledge && activeKb.knowledge[forceKey]"), 'handleSendMessage prioritizes forceKey without regex misses');
     assert(askAiJs.includes("'en-IN'") && askAiJs.includes("'hi-IN'") && askAiJs.includes("'te-IN'"), 'AskAIAssistant supports EN, HI, and TE');
+    assert(askAiJs.includes('callGeminiAPI'), 'AskAIAssistant implements callGeminiAPI integration');
+    assert(askAiJs.includes('GEMINI_CLINICAL_SYSTEM_PROMPT'), 'AskAIAssistant defines GEMINI_CLINICAL_SYSTEM_PROMPT');
+    assert(askAiJs.includes('[TRIAGE: GREEN') && askAiJs.includes('[TRIAGE: YELLOW') && askAiJs.includes('[TRIAGE: RED'), 'AskAIAssistant defines emergency clinical triage system prompt with Green, Yellow, and Red tiers');
+    assert(askAiJs.includes('Dr. Priya Sharma') && askAiJs.includes('Dr. Rahul Verma') && askAiJs.includes('Dr. Sneha Desai'), 'AskAIAssistant system prompt routes to MediCare specialist doctors');
+    assert(askAiJs.includes('appointments.html?doctor=D001') && askAiJs.includes('appointments.html?doctor=D002'), 'AskAIAssistant includes 1-click booking appointment links for specialists');
+    assert(askAiJs.includes('hms_gemini_api_key'), 'AskAIAssistant persists Gemini API key in localStorage (hms_gemini_api_key)');
+    assert(askAiJs.includes('Gemini 1.5 Flash Connected') && askAiJs.includes('Clinical Offline Copilot'), 'AskAIAssistant shows live Gemini connection status vs offline copilot');
+    assert(askAiJs.includes('isSettingsOpen') && askAiJs.includes('fa-cog'), 'AskAIAssistant includes settings gear and modal for Gemini API configuration');
+    assert(askAiJs.includes('demo-gemini-flash') || askAiJs.includes('handleUseDemoKey'), 'AskAIAssistant supports one-click pre-configured demo key test');
+    assert(askAiJs.includes('SpeechSynthesisUtterance') && askAiJs.includes('speakMessage'), 'AskAIAssistant supports TTS voice readout with toggle');
 
     // ----------------------------------------------------
     // TEST SUITE 8: Virtual Telemedicine & Video Consultation
@@ -368,6 +378,33 @@ async function runAllTests() {
     const swFile = fs.readFileSync(path.join(rootDir, 'sw.js'), 'utf8');
     assert(swFile.includes('ignoreSearch: true'), 'sw.js uses ignoreSearch: true so cache handles query parameters (?v=9.0)');
     assert(swFile.includes('dashboard.html') || swFile.includes('index.html'), 'sw.js provides fallback HTML navigation for offline state');
+
+    // ----------------------------------------------------
+    // TEST SUITE 16: Google Gemini Live API & Universal App Chatbot Integration
+    // ----------------------------------------------------
+    console.log('\n--- TEST SUITE 16: Google Gemini Live API & Universal App Chatbot Integration ---');
+    assert(appJs.includes('callGeminiAPIFromApp'), 'app.js implements callGeminiAPIFromApp for live clinical triage');
+    assert(appJs.includes('openGeminiSettingsModal') && appJs.includes('closeGeminiSettingsModal'), 'app.js implements Gemini settings modal controls');
+    assert(appJs.includes('id="aiGeminiSettingsPanel"'), 'app.js includes #aiGeminiSettingsPanel overlay in chatbot window');
+    assert(appJs.includes('updateAIChatbotConnectionStatus'), 'app.js implements updateAIChatbotConnectionStatus');
+    assert(appJs.includes('testAndSaveGeminiKey'), 'app.js implements testAndSaveGeminiKey for live connection testing');
+    assert(appJs.includes('usePreconfiguredDemoKey'), 'app.js implements one-click pre-configured demo key testing');
+    assert(appJs.includes('clearGeminiKeyAndOffline'), 'app.js implements clean disconnect to offline copilot');
+    assert(appJs.includes('formatGeminiResponseToHtml'), 'app.js formats Gemini markdown headings, bolding, and links to HTML');
+    assert(appJs.includes('hms_gemini_api_key'), 'app.js reads and saves hms_gemini_api_key');
+    assert(appJs.includes('medicare_gemini_key_updated'), 'app.js synchronizes with medicare_gemini_key_updated cross-component event');
+    assert(appJs.includes('generateAIClinicalResponse'), 'app.js maintains bulletproof fallback to clinical rule engine');
+
+    // Test markdown formatter in sandbox
+    const formattedSample = sandbox.formatGeminiResponseToHtml(
+        '### Emergency Triage\n**Status:** Urgent\n• Check SpO2\n[Book with Dr. Priya Sharma](appointments.html?doctor=D001)'
+    );
+    assert(formattedSample.includes('<h5') && formattedSample.includes('<strong>Status:</strong>') && formattedSample.includes('class="ai-action-link"'), 'formatGeminiResponseToHtml correctly parses headings, bold text, and 1-click links');
+
+    // Test offline connection status rendering in sandbox
+    sandbox.localStorage.setItem('hms_gemini_api_key', '');
+    sandbox.updateAIChatbotConnectionStatus();
+    assert(typeof sandbox.updateAIChatbotConnectionStatus === 'function', 'updateAIChatbotConnectionStatus executes safely in sandbox');
 
 
     console.log(`\n====================================================`);

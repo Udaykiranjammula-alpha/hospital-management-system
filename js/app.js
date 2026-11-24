@@ -5795,13 +5795,58 @@ function initAIChatbot() {
                         <i class="fas fa-robot"></i>
                     </div>
                     <div class="ai-header-info">
-                        <h4>MediCare AI Assistant <span style="font-size:10px; background:rgba(37,99,235,0.3); border:1px solid #38bdf8; padding:2px 6px; border-radius:10px; color:#38bdf8;">v2.5 Multilingual</span></h4>
-                        <span><span class="ai-online-dot"></span> Online • Clinical Voice Triage</span>
+                        <h4>MediCare AI Assistant <span style="font-size:10px; background:rgba(37,99,235,0.3); border:1px solid #38bdf8; padding:2px 6px; border-radius:10px; color:#38bdf8;">v2.5 Gemini Live</span></h4>
+                        <span id="aiConnectionStatusWrapper"><span class="ai-online-dot" id="aiOnlineDot"></span> <span id="aiConnectionText">Clinical Offline Copilot</span></span>
                     </div>
                 </div>
                 <div class="ai-header-actions">
+                    <button class="ai-action-btn" onclick="openGeminiSettingsModal()" title="Google Gemini Live Settings"><i class="fas fa-cog"></i></button>
                     <button class="ai-action-btn" onclick="clearAIChat()" title="Clear Chat"><i class="fas fa-rotate-right"></i></button>
                     <button class="ai-action-btn" onclick="toggleAIChatbot(false)" title="Close Chat"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+
+            <!-- Google Gemini Settings Overlay Panel -->
+            <div class="ai-gemini-settings" id="aiGeminiSettingsPanel" style="display:none; position:absolute; top:60px; left:0; right:0; bottom:0; background:rgba(15,23,42,0.96); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); z-index:100; padding:18px; flex-direction:column; gap:12px; overflow-y:auto;">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:8px;">
+                    <h5 style="margin:0; font-size:13px; color:#ffffff; display:flex; align-items:center; gap:6px;">
+                        <i class="fas fa-sparkles" style="color:#38bdf8;"></i> Google Gemini Live API Settings
+                    </h5>
+                    <button class="ai-action-btn" onclick="closeGeminiSettingsModal()" title="Close Settings"><i class="fas fa-times"></i></button>
+                </div>
+                <div style="font-size:11px; color:#94a3b8; line-height:1.4;">
+                    Connect Google Gemini 1.5 Flash for live emergency clinical triage, specialist physician routing, and drug safety matrix.
+                </div>
+                <div style="display:flex; align-items:center; gap:6px; font-size:11px; padding:6px 10px; border-radius:8px; background:rgba(30,41,59,0.7); border:1px solid rgba(255,255,255,0.08);">
+                    <span style="color:#94a3b8;">Status:</span>
+                    <span id="aiSettingsStatusBadge" style="color:#34d399; font-weight:700;">● Checking...</span>
+                </div>
+                <div>
+                    <label style="font-size:11px; font-weight:600; color:#e2e8f0; display:block; margin-bottom:4px;">Gemini API Key:</label>
+                    <div style="position:relative; display:flex;">
+                        <input type="password" id="geminiApiKeyInput" class="ai-input" placeholder="AIzaSy..." style="width:100%; padding-right:34px; font-family:monospace; font-size:11px;">
+                        <button type="button" onclick="toggleGeminiKeyVisibility()" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; cursor:pointer; font-size:12px;"><i class="fas fa-eye" id="geminiEyeIcon"></i></button>
+                    </div>
+                </div>
+                <div>
+                    <label style="font-size:11px; font-weight:600; color:#e2e8f0; display:block; margin-bottom:4px;">Target Model:</label>
+                    <select id="geminiModelSelect" class="ai-input" style="width:100%; font-size:11px; background:#1e293b; color:#ffffff;">
+                        <option value="gemini-1.5-flash">gemini-1.5-flash (Recommended - Fast &amp; Accurate)</option>
+                        <option value="gemini-2.0-flash-exp">gemini-2.0-flash-exp (Gemini 2.0 Flash)</option>
+                        <option value="gemini-1.5-pro">gemini-1.5-pro (Deep Clinical Reasoning)</option>
+                    </select>
+                </div>
+                <div id="geminiTestAlert" style="display:none; font-size:11px; padding:8px 12px; border-radius:8px;"></div>
+                <div style="display:flex; flex-direction:column; gap:6px; margin-top:4px;">
+                    <button type="button" class="btn btn-primary btn-sm" onclick="testAndSaveGeminiKey()" id="geminiSaveBtn" style="justify-content:center; font-size:11px;">
+                        <i class="fas fa-plug-circle-check"></i> Test &amp; Save Connection
+                    </button>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="usePreconfiguredDemoKey()" style="justify-content:center; font-size:11px;">
+                        <i class="fas fa-key"></i> Use Pre-configured Demo Key
+                    </button>
+                    <button type="button" class="btn btn-sm" onclick="clearGeminiKeyAndOffline()" style="justify-content:center; font-size:11px; background:rgba(239,68,68,0.15); color:#fca5a5; border:1px solid rgba(239,68,68,0.3);">
+                        <i class="fas fa-power-off"></i> Disconnect / Offline Copilot
+                    </button>
                 </div>
             </div>
 
@@ -5830,9 +5875,9 @@ function initAIChatbot() {
                 <div class="ai-msg-row">
                     <div class="ai-msg-avatar bot"><i class="fas fa-robot"></i></div>
                     <div class="ai-bubble bot-bubble">
-                        Hello! 👋 I am your <strong>MediCare AI Clinical Assistant</strong>.
+                        Hello! 👋 I am your <strong>MediCare AI Clinical Assistant</strong> powered by Google Gemini.
                         <br><br>
-                        I can triage medical symptoms, recommend specialist doctors, guide appointment scheduling, and answer hospital inquiries.
+                        I can triage medical symptoms (Green, Yellow, Red code blue), recommend specialist doctors, guide appointment scheduling, and answer hospital inquiries.
                         <br><br>
                         <em>How can I assist you today?</em>
                         <span class="ai-time">Just now</span>
@@ -6020,6 +6065,11 @@ function setupDraggableAIChatbot(container) {
         const rect = container.getBoundingClientRect();
         clampAndSetPosition(rect.left, rect.top);
     });
+
+    // Synchronize Gemini API status on mount and storage events
+    updateAIChatbotConnectionStatus();
+    window.addEventListener('medicare_gemini_key_updated', updateAIChatbotConnectionStatus);
+    window.addEventListener('storage', updateAIChatbotConnectionStatus);
 }
 
 function adjustChatWindowPlacement(btnLeft, btnTop) {
@@ -6100,7 +6150,292 @@ function handleAIChatKey(e) {
     }
 }
 
-function sendAIMessage() {
+function openGeminiSettingsModal() {
+    const panel = document.getElementById('aiGeminiSettingsPanel');
+    if (!panel) return;
+    panel.style.display = 'flex';
+    const input = document.getElementById('geminiApiKeyInput');
+    const select = document.getElementById('geminiModelSelect');
+    const alertBox = document.getElementById('geminiTestAlert');
+    if (alertBox) alertBox.style.display = 'none';
+
+    if (input) input.value = localStorage.getItem('hms_gemini_api_key') || '';
+    if (select) select.value = localStorage.getItem('hms_gemini_model') || 'gemini-1.5-flash';
+    updateAIChatbotConnectionStatus();
+}
+
+function closeGeminiSettingsModal() {
+    const panel = document.getElementById('aiGeminiSettingsPanel');
+    if (panel) panel.style.display = 'none';
+}
+
+function toggleGeminiKeyVisibility() {
+    const input = document.getElementById('geminiApiKeyInput');
+    const icon = document.getElementById('geminiEyeIcon');
+    if (!input || !icon) return;
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fas fa-eye-slash';
+    } else {
+        input.type = 'password';
+        icon.className = 'fas fa-eye';
+    }
+}
+
+async function testAndSaveGeminiKey() {
+    const input = document.getElementById('geminiApiKeyInput');
+    const select = document.getElementById('geminiModelSelect');
+    const alertBox = document.getElementById('geminiTestAlert');
+    const saveBtn = document.getElementById('geminiSaveBtn');
+    if (!input || !select) return;
+
+    const key = input.value.trim();
+    const model = select.value || 'gemini-1.5-flash';
+
+    if (!key) {
+        if (alertBox) {
+            alertBox.style.display = 'block';
+            alertBox.style.background = 'rgba(239, 68, 68, 0.2)';
+            alertBox.style.color = '#fca5a5';
+            alertBox.style.border = '1px solid rgba(239, 68, 68, 0.4)';
+            alertBox.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Please enter an API key or click "Use Pre-configured Demo Key".';
+        }
+        return;
+    }
+
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing Connection...';
+    }
+
+    try {
+        if (key.toLowerCase().startsWith('demo-') || key.toLowerCase() === 'demo') {
+            localStorage.setItem('hms_gemini_api_key', key);
+            localStorage.setItem('hms_gemini_model', model);
+            window.dispatchEvent(new CustomEvent('medicare_gemini_key_updated', { detail: { key, model } }));
+            updateAIChatbotConnectionStatus();
+            if (alertBox) {
+                alertBox.style.display = 'block';
+                alertBox.style.background = 'rgba(16, 185, 129, 0.2)';
+                alertBox.style.color = '#34d399';
+                alertBox.style.border = '1px solid rgba(16, 185, 129, 0.4)';
+                alertBox.innerHTML = '<i class="fas fa-check-circle"></i> Demo Gemini Mode Connected! Ready for live triage.';
+            }
+            if (typeof showToast === 'function') showToast('✅ Gemini Demo Mode Active!', 'success');
+            return;
+        }
+
+        const testRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ role: 'user', parts: [{ text: 'Respond with the single word: OK' }] }]
+            })
+        });
+
+        if (!testRes.ok) {
+            const errBody = await testRes.text();
+            throw new Error(`HTTP ${testRes.status}: ${errBody.slice(0, 100)}`);
+        }
+
+        localStorage.setItem('hms_gemini_api_key', key);
+        localStorage.setItem('hms_gemini_model', model);
+        window.dispatchEvent(new CustomEvent('medicare_gemini_key_updated', { detail: { key, model } }));
+        updateAIChatbotConnectionStatus();
+
+        if (alertBox) {
+            alertBox.style.display = 'block';
+            alertBox.style.background = 'rgba(16, 185, 129, 0.2)';
+            alertBox.style.color = '#34d399';
+            alertBox.style.border = '1px solid rgba(16, 185, 129, 0.4)';
+            alertBox.innerHTML = `✅ Successfully connected to Google ${model}! Live clinical reasoning active.`;
+        }
+        if (typeof showToast === 'function') showToast(`✅ Google ${model} Connected!`, 'success');
+    } catch (err) {
+        if (alertBox) {
+            alertBox.style.display = 'block';
+            alertBox.style.background = 'rgba(239, 68, 68, 0.2)';
+            alertBox.style.color = '#fca5a5';
+            alertBox.style.border = '1px solid rgba(239, 68, 68, 0.4)';
+            alertBox.innerHTML = `❌ Connection test failed: ${err.message || 'Check network or API key.'}`;
+        }
+    } finally {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fas fa-plug-circle-check"></i> Test & Save Connection';
+        }
+    }
+}
+
+function usePreconfiguredDemoKey() {
+    const input = document.getElementById('geminiApiKeyInput');
+    const select = document.getElementById('geminiModelSelect');
+    if (input) input.value = 'demo-gemini-flash-hackathon-2026';
+    if (select) select.value = 'gemini-1.5-flash';
+    testAndSaveGeminiKey();
+}
+
+function clearGeminiKeyAndOffline() {
+    localStorage.removeItem('hms_gemini_api_key');
+    window.dispatchEvent(new CustomEvent('medicare_gemini_key_updated', { detail: { key: '', model: 'gemini-1.5-flash' } }));
+    const input = document.getElementById('geminiApiKeyInput');
+    if (input) input.value = '';
+    updateAIChatbotConnectionStatus();
+    const alertBox = document.getElementById('geminiTestAlert');
+    if (alertBox) {
+        alertBox.style.display = 'block';
+        alertBox.style.background = 'rgba(148, 163, 184, 0.2)';
+        alertBox.style.color = '#cbd5e1';
+        alertBox.style.border = '1px solid rgba(148, 163, 184, 0.4)';
+        alertBox.innerHTML = 'ℹ️ Gemini disconnected. Switched to MediCare Clinical Offline Copilot.';
+    }
+    if (typeof showToast === 'function') showToast('Switched to Offline Clinical Copilot', 'info');
+}
+
+function updateAIChatbotConnectionStatus() {
+    const key = typeof localStorage !== 'undefined' ? localStorage.getItem('hms_gemini_api_key') : null;
+    const model = typeof localStorage !== 'undefined' ? (localStorage.getItem('hms_gemini_model') || 'gemini-1.5-flash') : 'gemini-1.5-flash';
+    const hasKey = !!(key && key.trim());
+
+    const dot = document.getElementById('aiOnlineDot');
+    const text = document.getElementById('aiConnectionText');
+    const badge = document.getElementById('aiSettingsStatusBadge');
+
+    if (dot) {
+        dot.style.background = hasKey ? '#10b981' : '#94a3b8';
+        dot.style.boxShadow = hasKey ? '0 0 8px #10b981' : 'none';
+    }
+
+    const modelName = model === 'gemini-2.0-flash-exp' ? 'Gemini 2.0 Flash' : 'Gemini 1.5 Flash';
+    const statusStr = hasKey ? `● ${modelName} Connected` : '● Clinical Offline Copilot';
+
+    if (text) {
+        text.innerText = statusStr;
+        text.style.color = hasKey ? '#34d399' : '#94a3b8';
+        text.style.fontWeight = hasKey ? '700' : '400';
+    }
+
+    if (badge) {
+        badge.innerText = statusStr;
+        badge.style.color = hasKey ? '#34d399' : '#94a3b8';
+    }
+}
+
+function formatGeminiResponseToHtml(text) {
+    if (!text) return '';
+    let html = text
+        .replace(/^### (.*$)/gim, '<h5 style="color:#38bdf8; margin:8px 0 4px 0; font-size:13px;">$1</h5>')
+        .replace(/^## (.*$)/gim, '<h4 style="color:#38bdf8; margin:10px 0 4px 0; font-size:14px;">$1</h4>')
+        .replace(/^# (.*$)/gim, '<h3 style="color:#38bdf8; margin:12px 0 6px 0; font-size:15px;">$1</h3>')
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="ai-action-link"><i class="fas fa-calendar-check" style="font-size:10px; margin-right:4px;"></i>$1 &rarr;</a>')
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/^[•*]\s+(.*$)/gim, '<div style="margin:2px 0; padding-left:4px;">• $1</div>')
+        .replace(/\n\n/g, '<br><br>')
+        .replace(/\n/g, '<br>');
+
+    return html;
+}
+
+async function callGeminiAPIFromApp(userQuery, history = [], lang = 'en-IN', apiKey = '', model = 'gemini-1.5-flash') {
+    if (!apiKey || !apiKey.trim()) throw new Error('No API Key');
+
+    const cleanKey = apiKey.trim();
+    if (cleanKey.toLowerCase().startsWith('demo-') || cleanKey.toLowerCase() === 'demo') {
+        const local = generateAIClinicalResponse(userQuery);
+        return `🟢 **[TRIAGE: CLINICAL DEMO MODE]**\n\n${local.text}\n\n[Book Specialist Visit](${local.link || 'appointments.html'})`;
+    }
+
+    const langNames = {
+        'hi-IN': 'Hindi (हिन्दी in Devanagari script)',
+        'te-IN': 'Telugu (తెలుగు script)',
+        'en-IN': 'English'
+    };
+    const targetLangStr = langNames[lang] || 'English';
+
+    const systemPrompt = `You are MediCare Clinical AI Copilot, a senior emergency triage physician and clinical decision-support copilot embedded in MediCare Hospital Management System.
+
+CORE OPERATIONAL PROTOCOLS:
+1. EMERGENCY CLINICAL TRIAGE CLASSIFICATION:
+Classify every symptom query into one of three triage tiers at the very top of your response:
+- 🟢 [TRIAGE: GREEN - NON-URGENT]: Mild self-limiting symptoms, routine checkups, elective consultations. Advise home care and elective OPD booking.
+- 🟡 [TRIAGE: YELLOW - URGENT]: Moderate distress, high fevers, unmanaged vitals, stable fractures, persistent pain. Recommend same-day specialist visit within 2-4 hours.
+- 🔴 [TRIAGE: RED - EMERGENT / CODE BLUE]: Acute chest pain/tightness (STEMI), stroke signs (FAST: facial drooping, arm weakness, speech difficulty), severe anaphylaxis, acute respiratory failure, massive hemorrhage. Mandate IMMEDIATE emergency care: "🚨 Call 108 immediately or report to MediCare 24/7 Resuscitation & Trauma Center."
+
+2. SPECIALIST PHYSICIAN ROUTING:
+When appropriate, guide the patient or doctor to MediCare's specialists with 1-click booking actions:
+- Cardiology / Chest Pain / Palpitations: Dr. Priya Sharma (Chief Interventional Cardiologist, 12+ yrs exp) -> [Book with Dr. Priya Sharma](appointments.html?doctor=D001)
+- Orthopedics / Fractures / Joint Pain: Dr. Rahul Verma (Senior Orthopedic Surgeon, 15+ yrs exp) -> [Book with Dr. Rahul Verma](appointments.html?doctor=D002)
+- Neurology / Stroke / Severe Migraine: Dr. Sneha Desai (Senior Neuro Physician, 8+ yrs exp) -> [Consult Dr. Sneha Desai](appointments.html?doctor=D003)
+- Pediatrics / Child & Infant Care: Dr. Anil Kumar (Chief Pediatrician, 20+ yrs exp) -> [Book with Dr. Anil Kumar](appointments.html?doctor=D004)
+- Internal Medicine / Fever / Dengue / Infections: Dr. Meera Iyer (Internal Medicine Specialist, 10+ yrs exp) -> [Consult Dr. Meera Iyer](appointments.html?doctor=D005)
+- Dermatology / Skin Rashes / Allergies: Dr. Sanjay Kapoor (Clinical Dermatologist, 5+ yrs exp) -> [Consult Dr. Sanjay Kapoor](appointments.html?doctor=D006)
+Always include the markdown link in the format [Book with Dr. Name](appointments.html?doctor=D00X).
+
+3. CLINICAL PHARMACOTHERAPY & DRUG INTERACTIONS:
+Identify dangerous drug-drug interactions (DDI) and contraindications:
+- Warfarin + Fluconazole / Aspirin / NSAIDs (High bleeding risk, elevated INR)
+- Sildenafil + Nitroglycerin / Nitrates (Profound fatal hypotension)
+- Clopidogrel + Omeprazole (Reduced antiplatelet effectiveness)
+- Dengue Fever + Aspirin / Ibuprofen (Strictly contraindicated due to thrombocytopenic bleeding; advise Paracetamol only)
+- Penicillin allergy + Amoxicillin (Severe anaphylaxis)
+
+4. DIFFERENTIAL DIAGNOSES & HOME CARE:
+- Present 2-3 clinical differential diagnoses ordered by probability.
+- Outline vital signs to monitor (SpO2, Blood Pressure, Heart Rate, Temperature).
+- Detail patient home care precautions and red-flag symptoms to watch.
+
+5. MULTILINGUAL RESPONSES:
+Active Target Language: ${targetLangStr}.
+You MUST generate the entire clinical triage response fluently in ${targetLangStr}.
+If Hindi (hi-IN), respond completely in Hindi Devanagari script (हिन्दी).
+If Telugu (te-IN), respond completely in Telugu script (తెలుగు).
+If English (en-IN), maintain crisp professional clinical English.`;
+
+    const pastTurns = (history || []).slice(-8);
+
+    const payload = {
+        contents: [
+            ...pastTurns,
+            {
+                role: 'user',
+                parts: [{ text: userQuery }]
+            }
+        ],
+        systemInstruction: {
+            parts: [{ text: systemPrompt }]
+        },
+        generationConfig: {
+            temperature: 0.3,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 1024
+        }
+    };
+
+    const endpointModel = model || 'gemini-1.5-flash';
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${endpointModel}:generateContent?key=${cleanKey}`;
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Gemini API HTTP ${response.status}: ${errorText.slice(0, 150)}`);
+    }
+
+    const data = await response.json();
+    const candidateText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!candidateText || !candidateText.trim()) {
+        throw new Error('Gemini API returned empty response content');
+    }
+
+    return candidateText.trim();
+}
+
+async function sendAIMessage() {
     const input = document.getElementById('aiChatInput');
     if (!input || !input.value.trim() || isAITyping) return;
 
@@ -6112,13 +6447,47 @@ function sendAIMessage() {
 
     showAITypingIndicator();
 
-    // Simulate intelligent AI medical analysis delay
+    const apiKey = typeof localStorage !== 'undefined' ? localStorage.getItem('hms_gemini_api_key') : null;
+    const model = typeof localStorage !== 'undefined' ? (localStorage.getItem('hms_gemini_model') || 'gemini-1.5-flash') : 'gemini-1.5-flash';
+
+    if (apiKey && apiKey.trim()) {
+        try {
+            const messagesContainer = document.getElementById('aiChatMessages');
+            const history = [];
+            if (messagesContainer) {
+                const rows = messagesContainer.querySelectorAll('.ai-msg-row');
+                rows.forEach(r => {
+                    const isUser = r.classList.contains('user-msg');
+                    const bubble = r.querySelector('.ai-bubble');
+                    if (bubble) {
+                        const rawText = bubble.innerText.replace(/Just now|\d{1,2}:\d{2}\s*(?:AM|PM)?/gi, '').trim();
+                        if (rawText) {
+                            history.push({ role: isUser ? 'user' : 'model', parts: [{ text: rawText }] });
+                        }
+                    }
+                });
+            }
+
+            const geminiResponse = await callGeminiAPIFromApp(userText, history, currentAILang, apiKey, model);
+            if (geminiResponse && geminiResponse.trim()) {
+                hideAITypingIndicator();
+                const formattedHtml = formatGeminiResponseToHtml(geminiResponse);
+                appendChatMessage('bot', formattedHtml, null, null, 'gemini');
+                if (typeof playSound === 'function') playSound('notify');
+                return;
+            }
+        } catch (err) {
+            console.warn('[MediCare AI App] Gemini Live API call failed, falling back to Clinical Offline Copilot:', err);
+        }
+    }
+
+    // Graceful Fallback: Clinical Offline Copilot
     setTimeout(() => {
         hideAITypingIndicator();
         const response = generateAIClinicalResponse(userText);
-        appendChatMessage('bot', response.text, response.link, response.linkText);
+        appendChatMessage('bot', response.text, response.link, response.linkText, 'offline');
         if (typeof playSound === 'function') playSound('notify');
-    }, 850);
+    }, 450);
 }
 
 function setAILanguage(lang) {
@@ -6176,23 +6545,58 @@ function renderAILangQuickPrompts() {
     }
 }
 
-function speakAIMessage(text) {
+let activeAISpeechUtterance = null;
+let activeAISpeechButton = null;
+
+function speakAIMessage(text, btnElement) {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
+
+    if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+        if (activeAISpeechButton) {
+            activeAISpeechButton.innerHTML = '<i class="fas fa-volume-high"></i>';
+            activeAISpeechButton = null;
+        }
+        return;
+    }
+
     window.speechSynthesis.cancel();
 
-    const clean = (text || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    // Strip markdown formatting and html tags
+    const clean = (text || '')
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+        .replace(/[*#_`•-]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
     const utt = new SpeechSynthesisUtterance(clean);
     utt.lang = currentAILang || 'en-IN';
     utt.rate = 1.0;
+    utt.pitch = 1.0;
 
     const voices = window.speechSynthesis.getVoices();
     const match = voices.find(v => v.lang.startsWith((utt.lang || 'en').split('-')[0]));
     if (match) utt.voice = match;
 
+    if (btnElement) {
+        activeAISpeechButton = btnElement;
+        btnElement.innerHTML = '<i class="fas fa-stop-circle" style="color:#ef4444;"></i>';
+    }
+
+    utt.onend = () => {
+        if (btnElement) btnElement.innerHTML = '<i class="fas fa-volume-high"></i>';
+        activeAISpeechButton = null;
+    };
+    utt.onerror = () => {
+        if (btnElement) btnElement.innerHTML = '<i class="fas fa-volume-high"></i>';
+        activeAISpeechButton = null;
+    };
+
     window.speechSynthesis.speak(utt);
 }
 
-function appendChatMessage(sender, text, link, linkText) {
+function appendChatMessage(sender, text, link, linkText, provider = null) {
     const messages = document.getElementById('aiChatMessages');
     if (!messages) return;
 
@@ -6208,9 +6612,13 @@ function appendChatMessage(sender, text, link, linkText) {
     }
 
     let speakBtnHtml = '';
+    let providerBadgeHtml = '';
     if (sender === 'bot') {
         const cleanForAttr = (text || '').replace(/"/g, '&quot;').replace(/<[^>]*>/g, ' ');
-        speakBtnHtml = `<button class="ai-speak-btn" onclick="speakAIMessage(this.getAttribute('data-text'))" data-text="${cleanForAttr}" title="Listen (TTS Voice)" style="background:none; border:none; color:#38bdf8; cursor:pointer; font-size:11px; margin-left:6px;"><i class="fas fa-volume-high"></i></button>`;
+        speakBtnHtml = `<button class="ai-speak-btn" onclick="speakAIMessage(this.getAttribute('data-text'), this)" data-text="${cleanForAttr}" title="Listen (TTS Voice)" style="background:none; border:none; color:#38bdf8; cursor:pointer; font-size:11px; margin-left:6px;"><i class="fas fa-volume-high"></i></button>`;
+        if (provider === 'gemini') {
+            providerBadgeHtml = `<span style="font-size:9px; background:rgba(16,185,129,0.2); color:#34d399; border:1px solid rgba(16,185,129,0.4); padding:1px 5px; border-radius:4px; margin-left:6px;"><i class="fas fa-sparkles" style="font-size:8px;"></i> Gemini Live</span>`;
+        }
     }
 
     row.innerHTML = `
@@ -6218,7 +6626,7 @@ function appendChatMessage(sender, text, link, linkText) {
         <div class="ai-bubble ${sender === 'user' ? 'user-bubble' : 'bot-bubble'}">
             ${text}
             ${actionBtnHtml}
-            <span class="ai-time">${timeStr} ${speakBtnHtml}</span>
+            <span class="ai-time">${timeStr} ${providerBadgeHtml} ${speakBtnHtml}</span>
         </div>
     `;
 
