@@ -922,6 +922,10 @@ function applyPageGuard() {
     if (currentPath === 'index.html' || currentPath === 'slides.html') {
         return true;
     }
+    // Allow public third-party prescription verification (QR scan from external smartphone)
+    if (currentPath === 'prescriptions.html' && typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('verify')) {
+        return true;
+    }
 
     // Check authentication
     const isAuth = localStorage.getItem('hms_authenticated') === 'true';
