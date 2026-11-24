@@ -245,15 +245,26 @@ export function buildGeminiContents(history = [], currentQuery = '') {
 
 export function sanitizeGeminiKey(rawKey) {
   if (!rawKey) return '';
-  let k = String(rawKey);
-  k = k.replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '').trim();
+  let k = String(rawKey).replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '').trim();
+
+  // High-precision Google AI Studio Key pattern matching
+  const aizaMatch = k.match(/AIza[A-Za-z0-9_\-]{33,45}/);
+  if (aizaMatch) {
+    return aizaMatch[0];
+  }
+
+  // Pre-configured demo key
+  if (k.toLowerCase().startsWith('demo-') || k.toLowerCase() === 'demo') {
+    return k;
+  }
+
   k = k.replace(/^["'`]|["'`]$/g, '').trim();
   if (k.includes('=')) {
     k = k.split('=').pop().trim();
   } else if (k.includes(':') && !k.startsWith('http')) {
     k = k.split(':').pop().trim();
   }
-  k = k.replace(/^["'`]|["'`]$/g, '').trim();
+  k = k.replace(/^["'`{}]|["'`{}]$/g, '').trim();
   if (k.toLowerCase().startsWith('bearer ')) {
     k = k.substring(7).trim();
   }
@@ -261,7 +272,7 @@ export function sanitizeGeminiKey(rawKey) {
 }
 
 /**
- * callGeminiAPI - Invokes Google Gemini Live REST API with Clinical System Prompt
+ * callGeminiAPI - Invokes Google Gemini Live REST API with Clinical System Prompt and Multi-Model Failover
  */
 export async function callGeminiAPI(query, history = [], lang = 'en-IN', apiKey = '', model = 'gemini-1.5-flash') {
   const cleanKey = sanitizeGeminiKey(apiKey);
@@ -298,27 +309,52 @@ export async function callGeminiAPI(query, history = [], lang = 'en-IN', apiKey 
     }
   };
 
-  const endpointModel = (model || 'gemini-1.5-flash').replace(/^models\//, '');
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${endpointModel}:generateContent?key=${cleanKey}`;
+  const requestedModel = (model || 'gemini-1.5-flash').replace(/^models\//, '');
+  const candidateModels = [
+    requestedModel,
+    'gemini-1.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-pro',
+    'gemini-1.5-flash-8b'
+  ];
+  const uniqueModels = Array.from(new Set(candidateModels));
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
+  let lastError = null;
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Gemini API HTTP ${response.status}: ${errorText.slice(0, 150)}`);
+  for (const m of uniqueModels) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${cleanKey}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const candidateText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (candidateText && candidateText.trim()) {
+          if (typeof localStorage !== 'undefined' && m !== requestedModel) {
+            localStorage.setItem('hms_gemini_model', m);
+          }
+          return candidateText.trim();
+        }
+      } else {
+        const errorText = await response.text();
+        lastError = new Error(`Gemini API HTTP ${response.status}: ${errorText.slice(0, 150)}`);
+        // If 404 or 400 (model issue or unsupported alias), retry next candidate model
+        if (response.status === 404 || response.status === 400) {
+          continue;
+        }
+        // If 403 or 401, stop retrying models
+        break;
+      }
+    } catch (err) {
+      lastError = err;
+    }
   }
 
-  const data = await response.json();
-  const candidateText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!candidateText || !candidateText.trim()) {
-    throw new Error('Gemini API returned empty response content');
-  }
-
-  return candidateText.trim();
+  throw lastError || new Error('Gemini API request failed across all candidate models');
 }
 
 /**
@@ -975,35 +1011,66 @@ export default function AskAIAssistant() {
     setApiTestStatus('testing');
     setApiTestMessage('Verifying connection with Google Gemini API...');
 
-    try {
-      const pingUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${keyToTest}`;
-      const pingRes = await fetch(pingUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: 'Respond with the word: OK' }] }]
-        })
-      });
+    const candidateModels = [
+      geminiModel,
+      'gemini-1.5-flash',
+      'gemini-2.0-flash',
+      'gemini-1.5-pro'
+    ];
+    const uniqueModels = Array.from(new Set(candidateModels));
+    let verifiedModel = null;
+    let lastErrorMsg = '';
 
-      if (!pingRes.ok) {
-        const errText = await pingRes.text();
-        let reason = `HTTP ${pingRes.status}`;
-        try {
-          const parsed = JSON.parse(errText);
-          if (parsed.error?.message) reason = parsed.error.message;
-        } catch (_) {}
+    for (const modelToTry of uniqueModels) {
+      try {
+        const pingUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelToTry}:generateContent?key=${keyToTest}`;
+        const pingRes = await fetch(pingUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ role: 'user', parts: [{ text: 'Respond with the word: OK' }] }]
+          })
+        });
 
-        setApiTestStatus('warning');
-        setApiTestMessage(`⚠️ Key Saved! (Google notice: ${reason.slice(0, 110)}). Key is stored and ready for live triage.`);
-        return;
+        if (pingRes.ok) {
+          verifiedModel = modelToTry;
+          break;
+        } else {
+          const errText = await pingRes.text();
+          let reason = `HTTP ${pingRes.status}`;
+          try {
+            const parsed = JSON.parse(errText);
+            if (parsed.error?.message) reason = parsed.error.message;
+          } catch (_) {}
+          lastErrorMsg = reason;
+          if (pingRes.status === 404 || pingRes.status === 400) {
+            continue; // try next model
+          }
+          break; // auth/permission error, don't keep polling
+        }
+      } catch (netErr) {
+        lastErrorMsg = netErr.message || 'Network error';
+        break;
       }
+    }
 
+    if (verifiedModel) {
+      setGeminiModel(verifiedModel);
+      localStorage.setItem('hms_gemini_model', verifiedModel);
       setApiTestStatus('success');
-      setApiTestMessage(`✅ Google ${geminiModel} Verified! Live clinical intelligence active.`);
+      setApiTestMessage(`✅ Google ${verifiedModel} Verified! Live clinical intelligence active.`);
       playChime('pop');
-    } catch (err) {
+    } else {
+      let advice = lastErrorMsg;
+      if (lastErrorMsg.includes('Generative Language API')) {
+        advice = 'Generative Language API is disabled in your Google Cloud Project. Please enable it in Google Cloud Console or generate an unrestricted key at https://aistudio.google.com/app/apikey';
+      } else if (lastErrorMsg.includes('referer') || lastErrorMsg.includes('referrer')) {
+        advice = 'API key has HTTP referrer restrictions. Please remove website restrictions in Google Cloud Console.';
+      } else if (lastErrorMsg.includes('API key not valid')) {
+        advice = 'API key not valid. Verify the key starting with AIzaSy... from https://aistudio.google.com/app/apikey';
+      }
       setApiTestStatus('warning');
-      setApiTestMessage(`⚠️ Key Saved! (Network ping notice: ${err.message || 'offline'}). Clinical Copilot ready.`);
+      setApiTestMessage(`⚠️ Key Saved! (Google notice: ${advice.slice(0, 130)}). Stored for chat.`);
     }
   };
 
@@ -1460,9 +1527,28 @@ export default function AskAIAssistant() {
                   padding: '8px 12px',
                   borderRadius: '8px',
                   fontSize: '0.72rem',
-                  background: apiTestStatus === 'success' ? 'rgba(16, 185, 129, 0.15)' : apiTestStatus === 'testing' ? 'rgba(56, 189, 248, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                  border: apiTestStatus === 'success' ? '1px solid rgba(16, 185, 129, 0.35)' : apiTestStatus === 'testing' ? '1px solid rgba(56, 189, 248, 0.35)' : '1px solid rgba(239, 68, 68, 0.35)',
-                  color: apiTestStatus === 'success' ? '#34d399' : apiTestStatus === 'testing' ? '#38bdf8' : '#fca5a5'
+                  lineHeight: '1.4',
+                  background: apiTestStatus === 'success'
+                    ? 'rgba(16, 185, 129, 0.15)'
+                    : apiTestStatus === 'testing'
+                      ? 'rgba(56, 189, 248, 0.15)'
+                      : apiTestStatus === 'warning'
+                        ? 'rgba(245, 158, 11, 0.18)'
+                        : 'rgba(239, 68, 68, 0.15)',
+                  border: apiTestStatus === 'success'
+                    ? '1px solid rgba(16, 185, 129, 0.4)'
+                    : apiTestStatus === 'testing'
+                      ? '1px solid rgba(56, 189, 248, 0.4)'
+                      : apiTestStatus === 'warning'
+                        ? '1px solid rgba(245, 158, 11, 0.45)'
+                        : '1px solid rgba(239, 68, 68, 0.4)',
+                  color: apiTestStatus === 'success'
+                    ? '#34d399'
+                    : apiTestStatus === 'testing'
+                      ? '#38bdf8'
+                      : apiTestStatus === 'warning'
+                        ? '#fde047'
+                        : '#fca5a5'
                 }}>
                   {apiTestStatus === 'testing' && <i className="fas fa-spinner fa-spin" style={{ marginRight: '6px' }}></i>}
                   {apiTestMessage}

@@ -1,12 +1,20 @@
 /**
- * MediCare HMS - Resilient Zero-Fault Service Worker v2.1
+ * MediCare HMS - Resilient Zero-Fault Service Worker v2.2 (upgraded from medicare-hms-core-v2.1)
  * PWA Installability + Safe Edge Passthrough
  */
 
-const CACHE_NAME = 'medicare-hms-core-v2.1';
+const CACHE_NAME = 'medicare-hms-core-v2.2'; // Prunes medicare-hms-core-v2.1 on activate
 // Offline fallback references: './dashboard.html', './index.html'
 
-// Install: Activate immediately
+// Error guards to prevent any uncaught exceptions
+self.addEventListener('error', (e) => {
+    console.warn('[MediCare SW Error Guard]', e);
+});
+self.addEventListener('unhandledrejection', (e) => {
+    console.warn('[MediCare SW Rejection Guard]', e);
+});
+
+// Install: Skip waiting and activate immediately
 self.addEventListener('install', (event) => {
     self.skipWaiting();
 });
@@ -37,12 +45,14 @@ self.addEventListener('fetch', (event) => {
         return; // Handled 100% natively by browser network engine
     }
 
-    // 2. Ignore non-GET or non-http requests
-    if (request.method !== 'GET' || !request.url.startsWith('http')) {
+    // 2. Ignore non-GET, non-http, or external AI/Avatar API requests
+    if (request.method !== 'GET' || !request.url.startsWith('http') ||
+        request.url.includes('googleapis.com') ||
+        request.url.includes('ui-avatars.com')) {
         return;
     }
 
-    // 3. For static assets (CSS, JS, fonts, images), cache with network fallback
+    // 3. For local static assets (CSS, JS, fonts, images), cache with network fallback
     event.respondWith(
         caches.match(request, { ignoreSearch: true }).then((cachedResponse) => {
             if (cachedResponse) {
@@ -65,6 +75,6 @@ self.addEventListener('fetch', (event) => {
             }).catch(() => {
                 return new Response('', { status: 408 });
             });
-        })
+        }).catch(() => fetch(request))
     );
 });

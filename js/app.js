@@ -6220,15 +6220,26 @@ function toggleGeminiKeyVisibility() {
 
 function sanitizeGeminiKey(rawKey) {
     if (!rawKey) return '';
-    let k = String(rawKey);
-    k = k.replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '').trim();
+    let k = String(rawKey).replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '').trim();
+
+    // High-precision Google AI Studio Key pattern matching
+    const aizaMatch = k.match(/AIza[A-Za-z0-9_\-]{33,45}/);
+    if (aizaMatch) {
+        return aizaMatch[0];
+    }
+
+    // Pre-configured demo key
+    if (k.toLowerCase().startsWith('demo-') || k.toLowerCase() === 'demo') {
+        return k;
+    }
+
     k = k.replace(/^["'`]|["'`]$/g, '').trim();
     if (k.includes('=')) {
         k = k.split('=').pop().trim();
     } else if (k.includes(':') && !k.startsWith('http')) {
         k = k.split(':').pop().trim();
     }
-    k = k.replace(/^["'`]|["'`]$/g, '').trim();
+    k = k.replace(/^["'`{}]|["'`{}]$/g, '').trim();
     if (k.toLowerCase().startsWith('bearer ')) {
         k = k.substring(7).trim();
     }
@@ -6281,55 +6292,83 @@ async function testAndSaveGeminiKey(skipTest = false) {
         saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
     }
 
-    try {
-        const testRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ role: 'user', parts: [{ text: 'Respond with the single word: OK' }] }]
-            })
-        });
+    const candidateModels = [
+        model,
+        'gemini-1.5-flash',
+        'gemini-2.0-flash',
+        'gemini-1.5-pro'
+    ];
+    const uniqueModels = Array.from(new Set(candidateModels));
+    let verifiedModel = null;
+    let lastErrorMsg = '';
 
-        if (testRes.ok) {
-            if (alertBox) {
-                alertBox.style.display = 'block';
-                alertBox.style.background = 'rgba(16, 185, 129, 0.2)';
-                alertBox.style.color = '#34d399';
-                alertBox.style.border = '1px solid rgba(16, 185, 129, 0.4)';
-                alertBox.innerHTML = `✅ Successfully connected to Google ${model}! Live clinical reasoning active.`;
-            }
-            if (typeof showToast === 'function') showToast(`✅ Google ${model} Connected!`, 'success');
-        } else {
-            const errBody = await testRes.text();
-            let userMsg = `HTTP ${testRes.status}`;
-            try {
-                const parsed = JSON.parse(errBody);
-                if (parsed.error?.message) userMsg = parsed.error.message;
-            } catch (_) {}
+    for (const modelToTry of uniqueModels) {
+        try {
+            const testRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelToTry}:generateContent?key=${key}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ role: 'user', parts: [{ text: 'Respond with the single word: OK' }] }]
+                })
+            });
 
-            if (alertBox) {
-                alertBox.style.display = 'block';
-                alertBox.style.background = 'rgba(245, 158, 11, 0.2)';
-                alertBox.style.color = '#fde047';
-                alertBox.style.border = '1px solid rgba(245, 158, 11, 0.4)';
-                alertBox.innerHTML = `<i class="fas fa-check-circle"></i> <strong>Key Saved!</strong> (Google ping notice: ${userMsg.slice(0, 110)}). Key is stored and ready for chat queries.`;
+            if (testRes.ok) {
+                verifiedModel = modelToTry;
+                break;
+            } else {
+                const errBody = await testRes.text();
+                let userMsg = `HTTP ${testRes.status}`;
+                try {
+                    const parsed = JSON.parse(errBody);
+                    if (parsed.error?.message) userMsg = parsed.error.message;
+                } catch (_) {}
+                lastErrorMsg = userMsg;
+
+                if (testRes.status === 404 || testRes.status === 400) {
+                    continue; // try next candidate model
+                }
+                break; // auth or quota error, stop looping
             }
-            if (typeof showToast === 'function') showToast('Key saved in settings', 'info');
+        } catch (err) {
+            lastErrorMsg = err.message || 'Network error';
+            break;
         }
-    } catch (err) {
+    }
+
+    if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="fas fa-plug-circle-check"></i> Test & Save';
+    }
+
+    if (verifiedModel) {
+        select.value = verifiedModel;
+        localStorage.setItem('hms_gemini_model', verifiedModel);
         if (alertBox) {
             alertBox.style.display = 'block';
-            alertBox.style.background = 'rgba(245, 158, 11, 0.2)';
+            alertBox.style.background = 'rgba(16, 185, 129, 0.2)';
+            alertBox.style.color = '#34d399';
+            alertBox.style.border = '1px solid rgba(16, 185, 129, 0.4)';
+            alertBox.innerHTML = `✅ Successfully connected to Google ${verifiedModel}! Live clinical reasoning active.`;
+        }
+        if (typeof showToast === 'function') showToast(`✅ Google ${verifiedModel} Connected!`, 'success');
+    } else {
+        let advice = lastErrorMsg;
+        if (lastErrorMsg.includes('Generative Language API')) {
+            advice = 'Generative Language API is disabled in your Google Cloud Project. Enable it in Google Cloud Console or generate an unrestricted key at https://aistudio.google.com/app/apikey';
+        } else if (lastErrorMsg.includes('referer') || lastErrorMsg.includes('referrer')) {
+            advice = 'API key has HTTP referrer restrictions. Please remove website restrictions in Google Cloud Console.';
+        } else if (lastErrorMsg.includes('API key not valid')) {
+            advice = 'API key not valid. Verify the key starting with AIzaSy... from https://aistudio.google.com/app/apikey';
+        }
+
+        if (alertBox) {
+            alertBox.style.display = 'block';
+            alertBox.style.background = 'rgba(245, 158, 11, 0.18)';
             alertBox.style.color = '#fde047';
-            alertBox.style.border = '1px solid rgba(245, 158, 11, 0.4)';
-            alertBox.innerHTML = `<i class="fas fa-check-circle"></i> <strong>Key Saved!</strong> (Network ping notice: ${err.message || 'offline'}). Key is active.`;
+            alertBox.style.border = '1px solid rgba(245, 158, 11, 0.45)';
+            alertBox.innerHTML = `<i class="fas fa-check-circle"></i> <strong>Key Saved!</strong> (Google ping notice: ${advice.slice(0, 130)}). Key is stored and ready for chat queries.`;
         }
         if (typeof showToast === 'function') showToast('Key saved in settings', 'info');
-    } finally {
-        if (saveBtn) {
-            saveBtn.disabled = false;
-            saveBtn.innerHTML = '<i class="fas fa-plug-circle-check"></i> Test & Save';
-        }
     }
 }
 
@@ -6650,27 +6689,49 @@ If English (en-IN), maintain crisp professional clinical English.`;
         }
     };
 
-    const endpointModel = (model || 'gemini-1.5-flash').replace(/^models\//, '');
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${endpointModel}:generateContent?key=${cleanKey}`;
+    const requestedModel = (model || 'gemini-1.5-flash').replace(/^models\//, '');
+    const candidateModels = [
+        requestedModel,
+        'gemini-1.5-flash',
+        'gemini-2.0-flash',
+        'gemini-1.5-pro',
+        'gemini-1.5-flash-8b'
+    ];
+    const uniqueModels = Array.from(new Set(candidateModels));
+    let lastError = null;
 
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    });
+    for (const m of uniqueModels) {
+        try {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${cleanKey}`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
 
-    if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Gemini API HTTP ${response.status}: ${errorText.slice(0, 150)}`);
+            if (response.ok) {
+                const data = await response.json();
+                const candidateText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (candidateText && candidateText.trim()) {
+                    if (typeof localStorage !== 'undefined' && m !== requestedModel) {
+                        localStorage.setItem('hms_gemini_model', m);
+                    }
+                    return candidateText.trim();
+                }
+            } else {
+                const errorText = await response.text();
+                lastError = new Error(`Gemini API HTTP ${response.status}: ${errorText.slice(0, 150)}`);
+                if (response.status === 404 || response.status === 400) {
+                    continue; // try next candidate model
+                }
+                break;
+            }
+        } catch (err) {
+            lastError = err;
+        }
     }
 
-    const data = await response.json();
-    const candidateText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!candidateText || !candidateText.trim()) {
-        throw new Error('Gemini API returned empty response content');
-    }
-
-    return candidateText.trim();
+    throw lastError || new Error('Gemini API request failed across all candidate models');
 }
 
 async function sendAIMessage() {

@@ -4804,6 +4804,7 @@ body[data-theme="frost-light"] .live-clock-widget {
     box-sizing: border-box !important;
     flex-shrink: 0 !important;
     white-space: nowrap !important;
+    overflow: hidden !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
 }
 
@@ -4812,6 +4813,7 @@ body[data-theme="frost-light"] .live-clock-widget {
     flex-direction: column !important;
     justify-content: center !important;
     white-space: nowrap !important;
+    overflow: hidden !important;
     line-height: 1.15 !important;
 }
 
@@ -4835,6 +4837,17 @@ body[data-theme="frost-light"] .live-clock-widget {
     text-overflow: ellipsis !important;
     max-width: 130px !important;
     line-height: 1.1 !important;
+}
+
+.user-info > span {
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+    color: #f8fafc !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 130px !important;
+    line-height: 1.15 !important;
 }
 
 .user-info img,

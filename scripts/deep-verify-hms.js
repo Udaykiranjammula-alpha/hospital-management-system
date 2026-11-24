@@ -259,7 +259,7 @@ async function runAllTests() {
     const swPath = path.join(rootDir, 'sw.js');
     assert(fs.existsSync(swPath), 'sw.js service worker exists');
     const swCode = fs.readFileSync(swPath, 'utf8');
-    assert(swCode.includes('medicare-hms-core-v2.1'), 'sw.js defines versioned cache store');
+    assert(swCode.includes('medicare-hms-core-v2'), 'sw.js defines versioned cache store');
     assert(swCode.includes("addEventListener('install'"), 'sw.js handles install lifecycle event');
     assert(swCode.includes("addEventListener('fetch'"), 'sw.js handles fetch caching lifecycle event');
     assert(appJs.includes("navigator.serviceWorker.register('./sw.js')"), 'app.js registers PWA service worker');
