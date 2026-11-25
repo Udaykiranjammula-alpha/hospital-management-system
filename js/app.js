@@ -10575,44 +10575,120 @@ function startTelemedPatientStream() {
         }
         ctx.stroke();
 
-        // Render simulated remote patient figure / avatar representation
-        const centerX = w / 2;
-        const centerY = h / 2 - 20;
+        // Resolve active patient for remote feed identity
+        const patients = loadData('hms_patients', defaultPatients);
+        const activePatient = patients.find(p => p.id === telemedCurrentPatientId) || patients[0] || { id: 'P001', name: 'Rajesh Kumar', age: 45, gender: 'Male', condition: 'Follow-up' };
 
-        // Soft backlight glow behind patient
-        const glow = ctx.createRadialGradient(centerX, centerY, 20, centerX, centerY, 140);
-        glow.addColorStop(0, 'rgba(14, 165, 233, 0.22)');
+        // Render realistic animated remote patient video representation
+        const centerX = w / 2;
+        const centerY = h / 2 - 22;
+
+        // Soft indoor telemedicine room backlight glow behind patient
+        const glow = ctx.createRadialGradient(centerX, centerY, 20, centerX, centerY, 170);
+        glow.addColorStop(0, 'rgba(56, 189, 248, 0.24)');
+        glow.addColorStop(0.6, 'rgba(14, 165, 233, 0.08)');
         glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
         ctx.fillStyle = glow;
         ctx.beginPath();
-        ctx.arc(centerX, centerY, 140, 0, Math.PI * 2);
+        ctx.arc(centerX, centerY, 170, 0, Math.PI * 2);
         ctx.fill();
 
-        // Stylized patient silhouette with breathing motion
-        const breathe = Math.sin(frame * 0.04) * 4;
-        
-        // Torso / Shoulders
-        ctx.fillStyle = '#0f2744';
+        const breathe = Math.sin(frame * 0.045) * 3.5;
+        const isBlink = (frame % 180) > 173;
+        const talkPulse = isTelemedMicMuted ? 0 : Math.abs(Math.sin(frame * 0.22)) * 3.5;
+
+        // Shoulders & Patient Attire
+        const torsoGrad = ctx.createLinearGradient(centerX - 100, centerY + 55, centerX + 100, centerY + 170);
+        torsoGrad.addColorStop(0, '#1e3a5f');
+        torsoGrad.addColorStop(1, '#0f172a');
+        ctx.fillStyle = torsoGrad;
         ctx.beginPath();
-        ctx.ellipse(centerX, centerY + 110 + breathe * 0.5, 95, 60, 0, 0, Math.PI * 2);
+        ctx.ellipse(centerX, centerY + 118 + breathe * 0.5, 102, 64, 0, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.55)';
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        // Head
-        ctx.fillStyle = '#1e3a5f';
+        // Collar V-neck detail
+        ctx.fillStyle = '#0b1526';
         ctx.beginPath();
-        ctx.arc(centerX, centerY + breathe, 48, 0, Math.PI * 2);
+        ctx.moveTo(centerX - 24, centerY + 62 + breathe * 0.5);
+        ctx.lineTo(centerX, centerY + 94 + breathe * 0.5);
+        ctx.lineTo(centerX + 24, centerY + 62 + breathe * 0.5);
+        ctx.closePath();
         ctx.fill();
+
+        // Neck
+        ctx.fillStyle = '#d49a73';
+        ctx.fillRect(centerX - 16, centerY + 34 + breathe * 0.8, 32, 34);
+
+        // Head
+        const headY = centerY + breathe;
+        const faceGrad = ctx.createRadialGradient(centerX - 10, headY - 10, 8, centerX, headY, 50);
+        faceGrad.addColorStop(0, '#eab693');
+        faceGrad.addColorStop(1, '#c88b65');
+        ctx.fillStyle = faceGrad;
+        ctx.beginPath();
+        ctx.arc(centerX, headY, 46, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+        ctx.lineWidth = 1.5;
         ctx.stroke();
 
-        // Patient Face Icon / Wireframe
-        ctx.fillStyle = '#38bdf8';
-        ctx.font = '28px "Font Awesome 6 Free"';
-        ctx.textAlign = 'center';
+        // Hair
+        ctx.fillStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.arc(centerX, headY - 12, 46, Math.PI * 1.05, Math.PI * 1.95);
+        ctx.fill();
+
+        // Eyes (with natural blink)
+        ctx.fillStyle = '#0f172a';
+        if (isBlink) {
+            ctx.lineWidth = 2.5;
+            ctx.strokeStyle = '#0f172a';
+            ctx.beginPath();
+            ctx.moveTo(centerX - 20, headY - 4); ctx.lineTo(centerX - 10, headY - 4);
+            ctx.moveTo(centerX + 10, headY - 4); ctx.lineTo(centerX + 20, headY - 4);
+            ctx.stroke();
+        } else {
+            ctx.beginPath();
+            ctx.arc(centerX - 15, headY - 4, 3.8, 0, Math.PI * 2);
+            ctx.arc(centerX + 15, headY - 4, 3.8, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Mouth (subtle speaking animation when mic active)
+        ctx.strokeStyle = '#7c2d12';
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.ellipse(centerX, headY + 18, 9, 2 + talkPulse * 0.8, 0, 0, Math.PI);
+        ctx.stroke();
+
+        // Clear Remote Patient Identity Pill directly under bust
+        const badgeW = 280;
+        const badgeH = 34;
+        const badgeX = centerX - badgeW / 2;
+        const badgeY = centerY + 148;
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.86)';
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 17);
+        else ctx.rect(badgeX, badgeY, badgeW, badgeH);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.55)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Live green peer dot
+        ctx.fillStyle = '#10b981';
+        ctx.beginPath();
+        ctx.arc(badgeX + 18, badgeY + badgeH / 2, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#f8fafc';
+        ctx.font = 'bold 12px "Plus Jakarta Sans", sans-serif';
+        ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
-        ctx.fillText('\uf007', centerX, centerY + breathe);
+        ctx.fillText(`PATIENT: ${activePatient.name.toUpperCase()} (${activePatient.id}) • LIVE`, badgeX + 30, badgeY + badgeH / 2);
 
         // Medical Target Crosshairs & Corner Reticles
         const cornerSize = 24;
