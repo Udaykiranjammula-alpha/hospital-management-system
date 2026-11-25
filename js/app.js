@@ -855,6 +855,76 @@ function checkActionPermission(permName, actionDesc) {
     return true;
 }
 
+function openShiftHandoverModal() {
+    const patients = loadData('hms_patients', defaultPatients);
+    const staff = loadData('hms_staff', defaultStaff);
+    const resources = loadData('hms_resources', defaultResources);
+    const bloodStock = loadData('hms_blood_stock', { 'A+': 18, 'A-': 6, 'B+': 22, 'B-': 4, 'AB+': 9, 'AB-': 3, 'O+': 28, 'O-': 5 });
+    const totalBloodUnits = Object.values(bloodStock).reduce((sum, u) => sum + Number(u || 0), 0);
+    const lowGroups = Object.entries(bloodStock).filter(([, u]) => Number(u) < 5).map(([g, u]) => `${g}: ${u}u`);
+    const safe = (v) => String(v).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    let modal = document.getElementById('shiftHandoverModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'shiftHandoverModal';
+        modal.className = 'modal-overlay';
+        modal.style.display = 'none';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 720px;">
+                <div class="modal-header">
+                    <h3 class="modal-title" style="color: #38bdf8;"><i class="fas fa-clipboard-list"></i> Hospital Shift Handover Report</h3>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="window.print()"><i class="fas fa-print"></i> Print Handover</button>
+                        <button class="modal-close" onclick="closeModal('shiftHandoverModal')">&times;</button>
+                    </div>
+                </div>
+                <div id="shiftHandoverBody" class="modal-body" style="line-height:1.6;"></div>
+            </div>`;
+        document.body.appendChild(modal);
+    }
+
+    const body = document.getElementById('shiftHandoverBody');
+    if (body) {
+        body.innerHTML = `
+            <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; border-bottom:1px solid rgba(56,189,248,0.25); padding-bottom:12px; margin-bottom:16px;">
+                <div><strong>Facility:</strong> MediCare Super Specialty Hospital</div>
+                <div style="color:var(--text-muted);"><strong>Generated:</strong> ${new Date().toLocaleString()}</div>
+            </div>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:16px;">
+                <div style="background:rgba(15,23,42,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px;">
+                    <div style="font-size:0.72rem; color:#94a3b8;">TOTAL PATIENTS</div>
+                    <div style="font-size:1.25rem; font-weight:700; color:#38bdf8;">${patients.length}</div>
+                </div>
+                <div style="background:rgba(15,23,42,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px;">
+                    <div style="font-size:0.72rem; color:#94a3b8;">ACTIVE STAFF</div>
+                    <div style="font-size:1.25rem; font-weight:700; color:#34d399;">${staff.length}</div>
+                </div>
+                <div style="background:rgba(15,23,42,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px;">
+                    <div style="font-size:0.72rem; color:#94a3b8;">RESOURCE UNITS</div>
+                    <div style="font-size:1.25rem; font-weight:700; color:#fbbf24;">${resources.length}</div>
+                </div>
+                <div style="background:rgba(15,23,42,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px;">
+                    <div style="font-size:0.72rem; color:#94a3b8;">BLOOD INVENTORY</div>
+                    <div style="font-size:1.25rem; font-weight:700; color:#f87171;">${totalBloodUnits} units</div>
+                </div>
+            </div>
+            <div style="margin-bottom:14px;">
+                <div style="font-size:0.78rem; color:#94a3b8; text-transform:uppercase; margin-bottom:4px;">Blood Bank Low-Stock Alerts</div>
+                <div style="background:rgba(15,23,42,0.45); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:10px;">
+                    ${lowGroups.length ? safe(lowGroups.join(' | ')) : 'All blood groups above critical threshold (>= 5 units).'}
+                </div>
+            </div>
+            <div>
+                <div style="font-size:0.78rem; color:#94a3b8; text-transform:uppercase; margin-bottom:4px;">On-Duty Staff Summary</div>
+                <div style="background:rgba(15,23,42,0.45); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:10px; font-size:0.86rem;">
+                    ${staff.slice(0, 6).map(s => `&bull; <strong>${safe(s.name)}</strong> (${safe(s.role)} - ${safe(s.department)}, ${safe(s.shift)})`).join('<br>')}
+                </div>
+            </div>`;
+    }
+    openModal('shiftHandoverModal');
+}
+
 function showAccessDeniedModal(title, msg) {
     let overlay = document.getElementById('accessDeniedModal');
     if (!overlay) {
@@ -1022,6 +1092,76 @@ function applyPageGuard() {
     }
 
     return true;
+}
+
+function openShiftHandoverModal() {
+    const patients = loadData('hms_patients', defaultPatients);
+    const staff = loadData('hms_staff', defaultStaff);
+    const resources = loadData('hms_resources', defaultResources);
+    const bloodStock = loadData('hms_blood_stock', { 'A+': 18, 'A-': 6, 'B+': 22, 'B-': 4, 'AB+': 9, 'AB-': 3, 'O+': 28, 'O-': 5 });
+    const totalBloodUnits = Object.values(bloodStock).reduce((sum, u) => sum + Number(u || 0), 0);
+    const lowGroups = Object.entries(bloodStock).filter(([, u]) => Number(u) < 5).map(([g, u]) => `${g}: ${u}u`);
+    const safe = (v) => String(v).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    let modal = document.getElementById('shiftHandoverModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'shiftHandoverModal';
+        modal.className = 'modal-overlay';
+        modal.style.display = 'none';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 720px;">
+                <div class="modal-header">
+                    <h3 class="modal-title" style="color: #38bdf8;"><i class="fas fa-clipboard-list"></i> Hospital Shift Handover Report</h3>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="window.print()"><i class="fas fa-print"></i> Print Handover</button>
+                        <button class="modal-close" onclick="closeModal('shiftHandoverModal')">&times;</button>
+                    </div>
+                </div>
+                <div id="shiftHandoverBody" class="modal-body" style="line-height:1.6;"></div>
+            </div>`;
+        document.body.appendChild(modal);
+    }
+
+    const body = document.getElementById('shiftHandoverBody');
+    if (body) {
+        body.innerHTML = `
+            <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; border-bottom:1px solid rgba(56,189,248,0.25); padding-bottom:12px; margin-bottom:16px;">
+                <div><strong>Facility:</strong> MediCare Super Specialty Hospital</div>
+                <div style="color:var(--text-muted);"><strong>Generated:</strong> ${new Date().toLocaleString()}</div>
+            </div>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:16px;">
+                <div style="background:rgba(15,23,42,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px;">
+                    <div style="font-size:0.72rem; color:#94a3b8;">TOTAL PATIENTS</div>
+                    <div style="font-size:1.25rem; font-weight:700; color:#38bdf8;">${patients.length}</div>
+                </div>
+                <div style="background:rgba(15,23,42,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px;">
+                    <div style="font-size:0.72rem; color:#94a3b8;">ACTIVE STAFF</div>
+                    <div style="font-size:1.25rem; font-weight:700; color:#34d399;">${staff.length}</div>
+                </div>
+                <div style="background:rgba(15,23,42,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px;">
+                    <div style="font-size:0.72rem; color:#94a3b8;">RESOURCE UNITS</div>
+                    <div style="font-size:1.25rem; font-weight:700; color:#fbbf24;">${resources.length}</div>
+                </div>
+                <div style="background:rgba(15,23,42,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px;">
+                    <div style="font-size:0.72rem; color:#94a3b8;">BLOOD INVENTORY</div>
+                    <div style="font-size:1.25rem; font-weight:700; color:#f87171;">${totalBloodUnits} units</div>
+                </div>
+            </div>
+            <div style="margin-bottom:14px;">
+                <div style="font-size:0.78rem; color:#94a3b8; text-transform:uppercase; margin-bottom:4px;">Blood Bank Low-Stock Alerts</div>
+                <div style="background:rgba(15,23,42,0.45); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:10px;">
+                    ${lowGroups.length ? safe(lowGroups.join(' | ')) : 'All blood groups above critical threshold (>= 5 units).'}
+                </div>
+            </div>
+            <div>
+                <div style="font-size:0.78rem; color:#94a3b8; text-transform:uppercase; margin-bottom:4px;">On-Duty Staff Summary</div>
+                <div style="background:rgba(15,23,42,0.45); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:10px; font-size:0.86rem;">
+                    ${staff.slice(0, 6).map(s => `&bull; <strong>${safe(s.name)}</strong> (${safe(s.role)} - ${safe(s.department)}, ${safe(s.shift)})`).join('<br>')}
+                </div>
+            </div>`;
+    }
+    openModal('shiftHandoverModal');
 }
 
 function switchUserRole(username) {
@@ -2604,6 +2744,36 @@ function initLoginPage() {
 // ==========================================
 // 9. PAGE: DASHBOARD (dashboard.html)
 // ==========================================
+function renderDashboardLivePulse() {
+    const el = document.getElementById('dashboardLivePulseStrip');
+    if (!el) return;
+    const patients = loadData('hms_patients', defaultPatients);
+    const rxs = loadData('hms_prescriptions', defaultPrescriptions);
+    const bloodStock = loadData('hms_blood_stock', { 'A+': 18, 'A-': 6, 'B+': 22, 'B-': 4, 'AB+': 9, 'AB-': 3, 'O+': 28, 'O-': 5 });
+    const lowGroups = Object.entries(bloodStock).filter(([, units]) => Number(units) < 5).map(([g, u]) => `${g} (${u}u)`);
+    const admittedCount = patients.filter(p => (p.status || '').toLowerCase().includes('admit') || (p.status || '').toLowerCase().includes('icu')).length;
+
+    el.innerHTML = `
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <span class="badge badge-info" style="background:rgba(16,185,129,0.16); color:#34d399; border:1px solid rgba(16,185,129,0.35);">
+                    <i class="fas fa-wave-square"></i> LIVE HOSPITAL PULSE
+                </span>
+                <span style="font-size:0.84rem; color:#cbd5e1;">
+                    <strong>${admittedCount}</strong> Active Inpatients &bull; <strong>${rxs.length}</strong> Verified e-Rx &bull;
+                    ${lowGroups.length
+                        ? `<span style="color:#fbbf24;"><i class="fas fa-droplet"></i> Low Blood Stock: ${lowGroups.join(', ')}</span>`
+                        : `<span style="color:#34d399;"><i class="fas fa-droplet"></i> Blood Bank Optimal</span>`}
+                </span>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <a href="emergency.html" class="btn btn-sm btn-outline" style="font-size:0.75rem;"><i class="fas fa-heartbeat"></i> Biometric PPG</a>
+                <a href="telemedicine.html" class="btn btn-sm btn-outline" style="font-size:0.75rem;"><i class="fas fa-video"></i> Live Telemedicine</a>
+                <button type="button" class="btn btn-sm btn-primary" onclick="toggleCommandPalette(true)" style="font-size:0.75rem;"><i class="fas fa-compass"></i> Judge Tour</button>
+            </div>
+        </div>`;
+}
+
 function initDashboardPage() {
     const user = getCurrentUser();
     if (user.role === 'Doctor') {
@@ -2617,6 +2787,7 @@ function initDashboardPage() {
     } else {
         renderAdminDashboard();
     }
+    renderDashboardLivePulse();
 }
 
 function renderAdminDashboard() {
@@ -5165,6 +5336,76 @@ function resetToDemoData(skipConfirm = false) {
     return true;
 }
 
+function openShiftHandoverModal() {
+    const patients = loadData('hms_patients', defaultPatients);
+    const staff = loadData('hms_staff', defaultStaff);
+    const resources = loadData('hms_resources', defaultResources);
+    const bloodStock = loadData('hms_blood_stock', { 'A+': 18, 'A-': 6, 'B+': 22, 'B-': 4, 'AB+': 9, 'AB-': 3, 'O+': 28, 'O-': 5 });
+    const totalBloodUnits = Object.values(bloodStock).reduce((sum, u) => sum + Number(u || 0), 0);
+    const lowGroups = Object.entries(bloodStock).filter(([, u]) => Number(u) < 5).map(([g, u]) => `${g}: ${u}u`);
+    const safe = (v) => String(v).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    let modal = document.getElementById('shiftHandoverModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'shiftHandoverModal';
+        modal.className = 'modal-overlay';
+        modal.style.display = 'none';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 720px;">
+                <div class="modal-header">
+                    <h3 class="modal-title" style="color: #38bdf8;"><i class="fas fa-clipboard-list"></i> Hospital Shift Handover Report</h3>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="window.print()"><i class="fas fa-print"></i> Print Handover</button>
+                        <button class="modal-close" onclick="closeModal('shiftHandoverModal')">&times;</button>
+                    </div>
+                </div>
+                <div id="shiftHandoverBody" class="modal-body" style="line-height:1.6;"></div>
+            </div>`;
+        document.body.appendChild(modal);
+    }
+
+    const body = document.getElementById('shiftHandoverBody');
+    if (body) {
+        body.innerHTML = `
+            <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; border-bottom:1px solid rgba(56,189,248,0.25); padding-bottom:12px; margin-bottom:16px;">
+                <div><strong>Facility:</strong> MediCare Super Specialty Hospital</div>
+                <div style="color:var(--text-muted);"><strong>Generated:</strong> ${new Date().toLocaleString()}</div>
+            </div>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:16px;">
+                <div style="background:rgba(15,23,42,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px;">
+                    <div style="font-size:0.72rem; color:#94a3b8;">TOTAL PATIENTS</div>
+                    <div style="font-size:1.25rem; font-weight:700; color:#38bdf8;">${patients.length}</div>
+                </div>
+                <div style="background:rgba(15,23,42,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px;">
+                    <div style="font-size:0.72rem; color:#94a3b8;">ACTIVE STAFF</div>
+                    <div style="font-size:1.25rem; font-weight:700; color:#34d399;">${staff.length}</div>
+                </div>
+                <div style="background:rgba(15,23,42,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px;">
+                    <div style="font-size:0.72rem; color:#94a3b8;">RESOURCE UNITS</div>
+                    <div style="font-size:1.25rem; font-weight:700; color:#fbbf24;">${resources.length}</div>
+                </div>
+                <div style="background:rgba(15,23,42,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px;">
+                    <div style="font-size:0.72rem; color:#94a3b8;">BLOOD INVENTORY</div>
+                    <div style="font-size:1.25rem; font-weight:700; color:#f87171;">${totalBloodUnits} units</div>
+                </div>
+            </div>
+            <div style="margin-bottom:14px;">
+                <div style="font-size:0.78rem; color:#94a3b8; text-transform:uppercase; margin-bottom:4px;">Blood Bank Low-Stock Alerts</div>
+                <div style="background:rgba(15,23,42,0.45); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:10px;">
+                    ${lowGroups.length ? safe(lowGroups.join(' | ')) : 'All blood groups above critical threshold (>= 5 units).'}
+                </div>
+            </div>
+            <div>
+                <div style="font-size:0.78rem; color:#94a3b8; text-transform:uppercase; margin-bottom:4px;">On-Duty Staff Summary</div>
+                <div style="background:rgba(15,23,42,0.45); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:10px; font-size:0.86rem;">
+                    ${staff.slice(0, 6).map(s => `&bull; <strong>${safe(s.name)}</strong> (${safe(s.role)} - ${safe(s.department)}, ${safe(s.shift)})`).join('<br>')}
+                </div>
+            </div>`;
+    }
+    openModal('shiftHandoverModal');
+}
+
 // ==========================================
 // 18. NOTIFICATION CENTER MODULE
 // ==========================================
@@ -5370,6 +5611,28 @@ function searchCommandPalette(query) {
     const appts = loadData('hms_appointments', defaultAppointments);
     const bills = loadData('hms_bills', defaultBills);
     const rxs = loadData('hms_prescriptions', defaultPrescriptions);
+
+    // 0. Hackathon Judge Demo Tour (1-Click Flagship Stops)
+    const demoStops = [
+        { name: '1. Emergency Biometric PPG', desc: 'Live webcam heart-rate PPG triage & ambulance dispatch', url: 'emergency.html', icon: 'fa-heartbeat' },
+        { name: '2. AI Radiology Heatmap', desc: 'Chest X-Ray Grad-CAM overlay & printable pathology report', url: 'laboratory.html', icon: 'fa-x-ray' },
+        { name: '3. 2-Way WebRTC Telemedicine', desc: 'HD video call, QR invite, live chat & SOAP Rx summary', url: 'telemedicine.html', icon: 'fa-video' },
+        { name: '4. Verifiable QR e-Prescription', desc: 'Digitally signed Rx with SVG QR verification', url: 'prescriptions.html', icon: 'fa-qrcode' },
+        { name: '5. Blood Bank Live Inventory', desc: 'Stock +/-/Edit/Clear controls & donor registry', url: 'blood-bank.html', icon: 'fa-droplet' }
+    ];
+
+    demoStops.forEach(d => {
+        if (!query || d.name.toLowerCase().includes(query) || d.desc.toLowerCase().includes(query) || 'demo tour'.includes(query)) {
+            results.push({
+                group: 'Judge Demo Tour',
+                title: d.name,
+                subtitle: d.desc,
+                badge: 'Flagship',
+                icon: d.icon,
+                action: () => { window.location.href = d.url; }
+            });
+        }
+    });
 
     // 1. Navigation Routes
     const navs = [
@@ -5932,8 +6195,18 @@ function initGlobalHUD() {
     updateNotificationBadge();
     updateGlobalUserHUD();
 
-    // Ensure header has Search Pill and Notification Bell if not in static HTML
+    // Ensure header has Search Pill, Demo Tour Pill, and Notification Bell if not in static HTML
     document.querySelectorAll('.header .header-right').forEach(right => {
+        if (!right.querySelector('.header-demo-pill')) {
+            const demoPill = document.createElement('button');
+            demoPill.type = 'button';
+            demoPill.className = 'header-demo-pill';
+            demoPill.setAttribute('onclick', 'toggleCommandPalette(true)');
+            demoPill.setAttribute('title', 'Open 1-Click Judge Demo Tour (Ctrl + K)');
+            demoPill.innerHTML = `<i class="fas fa-compass"></i><span>Demo Tour</span>`;
+            right.prepend(demoPill);
+        }
+
         if (!right.querySelector('.header-search-pill')) {
             const searchPill = document.createElement('div');
             searchPill.className = 'header-search-pill';

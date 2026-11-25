@@ -4156,6 +4156,26 @@ body[data-theme="frost-light"] .btn-outline {
     color: #1d1d1f !important;
 }
 
+.header-demo-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    background: rgba(14, 165, 233, 0.12);
+    color: #38bdf8;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.header-demo-pill:hover {
+    background: rgba(14, 165, 233, 0.22);
+    transform: translateY(-1px);
+}
+
 /* 8. Apple Modal Sheet Presentation */
 html {
     scroll-behavior: smooth;
