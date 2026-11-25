@@ -24,7 +24,13 @@ const defaultDoctors = [
     { id: 'D003', name: 'Dr. Sneha Desai', specialization: 'Senior Neuro Physician', department: 'Neurology', phone: '9876543003', email: 'sneha.desai@hospital.com', experience: '8 years', availability: 'Available', schedule: {Mon:'9AM-4PM',Tue:'9AM-4PM',Wed:'9AM-4PM',Thu:'9AM-4PM',Fri:'9AM-4PM',Sat:'Off',Sun:'Off'} },
     { id: 'D004', name: 'Dr. Anil Kumar', specialization: 'Chief Pediatrician', department: 'Pediatrics', phone: '9876543004', email: 'anil.kumar@hospital.com', experience: '20 years', availability: 'Available', schedule: {Mon:'8AM-2PM',Tue:'8AM-2PM',Wed:'8AM-2PM',Thu:'8AM-2PM',Fri:'8AM-2PM',Sat:'8AM-12PM',Sun:'Off'} },
     { id: 'D005', name: 'Dr. Meera Iyer', specialization: 'Internal Medicine Specialist', department: 'General Medicine', phone: '9876543005', email: 'meera.iyer@hospital.com', experience: '10 years', availability: 'Available', schedule: {Mon:'11AM-7PM',Tue:'11AM-7PM',Wed:'11AM-7PM',Thu:'11AM-7PM',Fri:'11AM-7PM',Sat:'Off',Sun:'Off'} },
-    { id: 'D006', name: 'Dr. Sanjay Kapoor', specialization: 'Clinical Dermatologist', department: 'Dermatology', phone: '9876543006', email: 'sanjay.kapoor@hospital.com', experience: '5 years', availability: 'Available', schedule: {Mon:'9AM-5PM',Tue:'9AM-5PM',Wed:'9AM-5PM',Thu:'9AM-5PM',Fri:'Off',Sat:'9AM-2PM',Sun:'Off'} }
+    { id: 'D006', name: 'Dr. Sanjay Kapoor', specialization: 'Clinical Dermatologist', department: 'Dermatology', phone: '9876543006', email: 'sanjay.kapoor@hospital.com', experience: '5 years', availability: 'Available', schedule: {Mon:'9AM-5PM',Tue:'9AM-5PM',Wed:'9AM-5PM',Thu:'9AM-5PM',Fri:'Off',Sat:'9AM-2PM',Sun:'Off'} },
+    { id: 'D007', name: 'Dr. Vikram Malhotra', specialization: 'Medical Oncologist', department: 'Oncology', phone: '9876543007', email: 'vikram.malhotra@hospital.com', experience: '14 years', availability: 'Available', schedule: {Mon:'9AM-5PM',Tue:'9AM-5PM',Wed:'9AM-5PM',Thu:'9AM-5PM',Fri:'9AM-5PM',Sat:'Off',Sun:'Off'} },
+    { id: 'D008', name: 'Dr. Kavita Krishnan', specialization: 'Senior OB-GYN Consultant', department: 'Gynecology', phone: '9876543008', email: 'kavita.krishnan@hospital.com', experience: '16 years', availability: 'Available', schedule: {Mon:'9AM-4PM',Tue:'9AM-4PM',Wed:'9AM-4PM',Thu:'9AM-4PM',Fri:'9AM-4PM',Sat:'10AM-2PM',Sun:'Off'} },
+    { id: 'D009', name: 'Dr. Arjun Nair', specialization: 'Respiratory & Critical Care', department: 'Pulmonology', phone: '9876543009', email: 'arjun.nair@hospital.com', experience: '11 years', availability: 'Available', schedule: {Mon:'10AM-6PM',Tue:'10AM-6PM',Wed:'10AM-6PM',Thu:'10AM-6PM',Fri:'10AM-6PM',Sat:'Off',Sun:'Off'} },
+    { id: 'D010', name: 'Dr. Deepika Rao', specialization: 'Diabetologist & Thyroid Specialist', department: 'Endocrinology', phone: '9876543010', email: 'deepika.rao@hospital.com', experience: '9 years', availability: 'Available', schedule: {Mon:'9AM-5PM',Tue:'9AM-5PM',Wed:'Off',Thu:'9AM-5PM',Fri:'9AM-5PM',Sat:'9AM-1PM',Sun:'Off'} },
+    { id: 'D011', name: 'Dr. Rohan Deshmukh', specialization: 'Hepatology & GI Endoscopy', department: 'Gastroenterology', phone: '9876543011', email: 'rohan.deshmukh@hospital.com', experience: '13 years', availability: 'Available', schedule: {Mon:'10AM-5PM',Tue:'10AM-5PM',Wed:'10AM-5PM',Thu:'10AM-5PM',Fri:'10AM-5PM',Sat:'Off',Sun:'Off'} },
+    { id: 'D012', name: 'Dr. Nisha Kulkarni', specialization: 'Vitreoretinal & Cataract Surgeon', department: 'Ophthalmology', phone: '9876543012', email: 'nisha.kulkarni@hospital.com', experience: '7 years', availability: 'Available', schedule: {Mon:'9AM-4PM',Tue:'9AM-4PM',Wed:'9AM-4PM',Thu:'9AM-4PM',Fri:'9AM-4PM',Sat:'10AM-1PM',Sun:'Off'} }
 ];
 
 const defaultAppointments = [
@@ -199,7 +205,10 @@ const defaultBloodDonors = [
     { id: 'DNR-102', name: 'Anjali Nair', age: 27, gender: 'Female', bloodGroup: 'A+', hemoglobin: 13.2, weight: 58, lastDonation: '2026-05-15', status: 'Eligible', phone: '9822334455' },
     { id: 'DNR-103', name: 'Karthik Sundaram', age: 41, gender: 'Male', bloodGroup: 'B+', hemoglobin: 15.1, weight: 82, lastDonation: '2026-07-01', status: 'Eligible', phone: '9833445566' },
     { id: 'DNR-104', name: 'Preeti Desai', age: 23, gender: 'Female', bloodGroup: 'AB-', hemoglobin: 11.8, weight: 48, lastDonation: '2026-08-20', status: 'Deferred', phone: '9844556677' },
-    { id: 'DNR-105', name: 'Farhan Akhtar', age: 36, gender: 'Male', bloodGroup: 'O-', hemoglobin: 15.6, weight: 78, lastDonation: '2026-04-12', status: 'Eligible', phone: '9855667788' }
+    { id: 'DNR-105', name: 'Farhan Akhtar', age: 36, gender: 'Male', bloodGroup: 'O-', hemoglobin: 15.6, weight: 78, lastDonation: '2026-04-12', status: 'Eligible', phone: '9855667788' },
+    { id: 'DNR-106', name: 'Meenakshi Iyer', age: 29, gender: 'Female', bloodGroup: 'A-', hemoglobin: 13.5, weight: 60, lastDonation: '2026-05-22', status: 'Eligible', phone: '9866778899' },
+    { id: 'DNR-107', name: 'Suresh Menon', age: 34, gender: 'Male', bloodGroup: 'B-', hemoglobin: 14.9, weight: 75, lastDonation: '2026-06-18', status: 'Eligible', phone: '9877889900' },
+    { id: 'DNR-108', name: 'Divya Sharma', age: 31, gender: 'Female', bloodGroup: 'AB+', hemoglobin: 13.8, weight: 62, lastDonation: '2026-07-09', status: 'Eligible', phone: '9888990011' }
 ];
 
 const defaultBloodRequests = [
