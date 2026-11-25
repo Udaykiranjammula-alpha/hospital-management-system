@@ -570,6 +570,19 @@ async function runAllTests() {
 
     sandbox.fetch = originalFetch;
 
+    // --- TEST SUITE 17: Pharmacy Drug Modal & Bed Transfer Regression Checks ---
+    console.log('\n--- TEST SUITE 17: Pharmacy Drug Modal & Bed Transfer Regression Checks ---');
+    const pharmacyMarkup = fs.readFileSync(path.join(rootDir, 'pharmacy.html'), 'utf8');
+    const adminMarkup = fs.readFileSync(path.join(rootDir, 'admin.html'), 'utf8');
+    const dashboardMarkup = fs.readFileSync(path.join(rootDir, 'dashboard.html'), 'utf8');
+
+    assert(pharmacyMarkup.includes('onsubmit="event.preventDefault(); saveDrugItem();"'), 'pharmacy.html #drugForm calls saveDrugItem()');
+    assert(!pharmacyMarkup.includes('saveDrug('), 'pharmacy.html does not reference undefined saveDrug()');
+    assert(pharmacyMarkup.includes('id="drugDosage"') && pharmacyMarkup.includes('id="drugFormType"') && pharmacyMarkup.includes('id="drugUnitPrice"'), 'pharmacy.html #drugModal has #drugDosage, #drugFormType, and #drugUnitPrice');
+    assert(pharmacyMarkup.includes('id="drugCode"') && pharmacyMarkup.includes('id="drugId"') && pharmacyMarkup.includes('id="pharmacyDrugsTableBody"'), 'pharmacy.html has #drugCode, #drugId, and #pharmacyDrugsTableBody');
+    assert(appJs.includes('already exists in formulary'), 'app.js saveDrugItem() guards against duplicate medication codes');
+    assert(!adminMarkup.includes('updateTransferSourceInfo'), 'admin.html does not reference undefined updateTransferSourceInfo()');
+    assert(!dashboardMarkup.includes('updateTransferSourceInfo'), 'dashboard.html does not reference undefined updateTransferSourceInfo()');
 
     console.log(`\n====================================================`);
     console.log(`TOTAL TESTS: ${totalTests} | PASSED: ${passedTests} | FAILED: ${failedTests}`);

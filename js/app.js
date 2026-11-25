@@ -8253,11 +8253,27 @@ function saveDrugItem() {
     if (editingDrugId) {
         const idx = drugs.findIndex(d => d.id === editingDrugId);
         if (idx > -1) {
-            drugs[idx] = { ...drugs[idx], id: code || drugs[idx].id, name, dosage, category, form, stock, minStock, unitPrice, batchNo, expiry, supplier };
+            const targetId = code || drugs[idx].id;
+            if (drugs.some((d, i) => i !== idx && d.id.toLowerCase() === targetId.toLowerCase())) {
+                showToast(`Medication code ${targetId} already exists in formulary.`, 'error');
+                return;
+            }
+            drugs[idx] = { ...drugs[idx], id: targetId, name, dosage, category, form, stock, minStock, unitPrice, batchNo, expiry, supplier };
             showToast(`Medication ${drugs[idx].id} updated!`, 'success');
         }
     } else {
-        const newId = code || ('DRUG-' + String(drugs.length + 1).padStart(3, '0'));
+        if (code && drugs.some(d => d.id.toLowerCase() === code.toLowerCase())) {
+            showToast(`Medication code ${code} already exists in formulary.`, 'error');
+            return;
+        }
+        let newId = code;
+        if (!newId) {
+            let nextNum = drugs.length + 1;
+            while (drugs.some(d => d.id.toLowerCase() === ('drug-' + String(nextNum).padStart(3, '0')))) {
+                nextNum++;
+            }
+            newId = 'DRUG-' + String(nextNum).padStart(3, '0');
+        }
         drugs.push({ id: newId, name, dosage, category, form, stock, minStock, unitPrice, batchNo, expiry, supplier });
         showToast(`New medication ${newId} added to formulary!`, 'success');
     }
