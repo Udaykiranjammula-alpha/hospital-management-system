@@ -597,6 +597,9 @@ async function runAllTests() {
     assert(appJs.includes('function hostPeerTelemedRoom('), 'app.js defines hostPeerTelemedRoom');
     assert(appJs.includes('function joinPeerTelemedRoom('), 'app.js defines joinPeerTelemedRoom');
     assert(appJs.includes('function endPeerTelemedCall('), 'app.js defines endPeerTelemedCall');
+    assert(appJs.includes('function adjustBloodStock('), 'app.js defines adjustBloodStock for +/- blood stock');
+    assert(appJs.includes('function openEditBloodStockModal('), 'app.js defines openEditBloodStockModal');
+    assert(appJs.includes('function deleteBloodDonor('), 'app.js defines deleteBloodDonor');
 
     console.log(`\n====================================================`);
     console.log(`TOTAL TESTS: ${totalTests} | PASSED: ${passedTests} | FAILED: ${failedTests}`);

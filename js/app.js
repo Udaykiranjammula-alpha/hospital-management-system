@@ -567,7 +567,9 @@ function saveData(key, val, skipMesh = false) {
                 'hms_lab_tests': 'Diagnostic lab orders updated',
                 'hms_emergency_triage': 'Emergency triage pipeline updated',
                 'hms_icu_monitors': 'ICU telemetry monitors updated',
-                'hms_er_triage': 'ER triage pipeline updated'
+                'hms_er_triage': 'ER triage pipeline updated',
+                'hms_blood_inventory': 'Blood Bank inventory updated',
+                'hms_blood_donors': 'Blood donor registry updated'
             };
             if (labelMap[key]) {
                 broadcastHospitalEvent(key.replace('hms_', ''), { key }, labelMap[key]);
@@ -11632,9 +11634,126 @@ function renderBloodInventoryGrid() {
                 <div style="font-size:1.35rem; font-weight:800; color:#fff; font-family:'JetBrains Mono';">${item.units} <span style="font-size:0.75rem; color:#94a3b8; font-weight:500;">Units</span></div>
                 <div style="font-size:0.72rem; color:var(--text-muted); margin-top:2px;">Capacity: ${item.maxCapacity}</div>
                 <div style="font-size:0.7rem; color:#fca5a5; margin-top:6px;"><i class="fas fa-clock"></i> Exp in ${item.expiringInDays}d</div>
+                <div style="display:flex; justify-content:center; align-items:center; gap:6px; margin-top:10px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.08);">
+                    <button type="button" class="btn btn-sm btn-outline" onclick="adjustBloodStock('${item.group}', -1)" title="Remove 1 Unit from ${item.group}" style="padding:3px 9px; min-width:30px; color:#fca5a5; border-color:rgba(239,68,68,0.4);">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline" onclick="openEditBloodStockModal('${item.group}')" title="Edit ${item.group} Stock &amp; Capacity" style="padding:3px 8px; font-size:0.7rem;">
+                        <i class="fas fa-pen"></i> Edit
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline" onclick="adjustBloodStock('${item.group}', 1)" title="Add 1 Unit to ${item.group}" style="padding:3px 9px; min-width:30px; color:#34d399; border-color:rgba(16,185,129,0.4);">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
             </div>
         `;
     }).join('');
+}
+
+function adjustBloodStock(group, delta) {
+    let inventory = loadData('hms_blood_inventory', defaultBloodInventory);
+    const item = inventory.find(i => i.group === group);
+    if (!item) return;
+
+    const nextUnits = Math.max(0, (parseInt(item.units, 10) || 0) + delta);
+    if (nextUnits === item.units && delta < 0) {
+        if (typeof showToast === 'function') showToast(`${group} stock is already at 0 Units.`, 'warning');
+        return;
+    }
+
+    item.units = nextUnits;
+    if (item.units > item.maxCapacity) item.maxCapacity = item.units;
+    item.status = item.units < 5 ? 'Critical Shortage' : (item.units <= 10 ? 'Low Stock' : 'Optimal');
+    saveData('hms_blood_inventory', inventory);
+    renderBloodInventoryGrid();
+    updateBloodBankKPIs();
+    if (typeof playSound === 'function') playSound('click');
+    if (typeof showToast === 'function') {
+        showToast(`${delta < 0 ? 'Removed' : 'Added'} 1 Unit (${group}) — Now ${item.units} Units`, delta < 0 ? 'info' : 'success');
+    }
+}
+
+let editingBloodGroup = null;
+
+function openEditBloodStockModal(group) {
+    const inventory = loadData('hms_blood_inventory', defaultBloodInventory);
+    const item = inventory.find(i => i.group === group);
+    if (!item) return;
+    editingBloodGroup = group;
+
+    let modal = document.getElementById('editBloodStockModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'editBloodStockModal';
+        modal.className = 'modal-overlay';
+        modal.style.display = 'none';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 400px;">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="editBloodModalTitle"><i class="fas fa-droplet" style="color:#f43f5e;"></i> Edit Blood Stock</h3>
+                    <button class="modal-close" onclick="closeModal('editBloodStockModal')">&times;</button>
+                </div>
+                <form onsubmit="event.preventDefault(); saveEditedBloodStock();" style="padding: 18px; display: flex; flex-direction: column; gap: 12px;">
+                    <div class="form-group">
+                        <label class="form-label">Available Units (Set 0 to clear stock)</label>
+                        <input type="number" id="editBloodUnitsInput" class="form-control" min="0" max="500" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Max Storage Capacity</label>
+                        <input type="number" id="editBloodCapInput" class="form-control" min="1" max="500" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Days Until Next Batch Expiry</label>
+                        <input type="number" id="editBloodExpInput" class="form-control" min="1" max="90" required>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; gap:8px; margin-top:6px;">
+                        <button type="button" class="btn btn-danger btn-sm" onclick="clearBloodGroupStock()">
+                            <i class="fas fa-trash"></i> Clear to 0
+                        </button>
+                        <div style="display:flex; gap:8px; margin-left:auto;">
+                            <button type="button" class="btn btn-outline" onclick="closeModal('editBloodStockModal')">Cancel</button>
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Stock</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    document.getElementById('editBloodModalTitle').innerHTML = `<i class="fas fa-droplet" style="color:#f43f5e;"></i> Edit ${group} Blood Stock`;
+    document.getElementById('editBloodUnitsInput').value = item.units;
+    document.getElementById('editBloodCapInput').value = item.maxCapacity;
+    document.getElementById('editBloodExpInput').value = item.expiringInDays;
+    openModal('editBloodStockModal');
+}
+
+function saveEditedBloodStock() {
+    if (!editingBloodGroup) return;
+    let inventory = loadData('hms_blood_inventory', defaultBloodInventory);
+    const item = inventory.find(i => i.group === editingBloodGroup);
+    if (!item) return;
+
+    const units = Math.max(0, parseInt(document.getElementById('editBloodUnitsInput').value, 10) || 0);
+    const cap = Math.max(1, parseInt(document.getElementById('editBloodCapInput').value, 10) || item.maxCapacity);
+    const exp = Math.max(1, parseInt(document.getElementById('editBloodExpInput').value, 10) || item.expiringInDays);
+
+    item.units = units;
+    item.maxCapacity = Math.max(cap, units);
+    item.expiringInDays = exp;
+    item.status = units < 5 ? 'Critical Shortage' : (units <= 10 ? 'Low Stock' : 'Optimal');
+
+    saveData('hms_blood_inventory', inventory);
+    renderBloodInventoryGrid();
+    updateBloodBankKPIs();
+    closeModal('editBloodStockModal');
+    if (typeof showToast === 'function') showToast(`✅ ${editingBloodGroup} stock updated to ${units} Units!`, 'success');
+}
+
+function clearBloodGroupStock() {
+    if (!editingBloodGroup) return;
+    document.getElementById('editBloodUnitsInput').value = 0;
+    saveEditedBloodStock();
 }
 
 function renderBloodDonorsTable() {
@@ -11658,12 +11777,26 @@ function renderBloodDonorsTable() {
                 </span>
             </td>
             <td>
-                <button class="btn btn-sm btn-outline" onclick="intakeRepeatDonation('${d.id}')" title="Record New Blood Intake">
-                    <i class="fas fa-plus"></i> Intake
-                </button>
+                <div style="display:flex; gap:6px; align-items:center;">
+                    <button class="btn btn-sm btn-outline" onclick="intakeRepeatDonation('${d.id}')" title="Record New Blood Intake">
+                        <i class="fas fa-plus"></i> Intake
+                    </button>
+                    <button class="btn btn-sm btn-outline" onclick="deleteBloodDonor('${d.id}')" title="Remove Donor" style="color:#fca5a5; border-color:rgba(239,68,68,0.35);">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
             </td>
         </tr>
     `).join('');
+}
+
+function deleteBloodDonor(donorId) {
+    let donors = loadData('hms_blood_donors', defaultBloodDonors);
+    donors = donors.filter(d => d.id !== donorId);
+    saveData('hms_blood_donors', donors);
+    renderBloodDonorsTable();
+    updateBloodBankKPIs();
+    if (typeof showToast === 'function') showToast('Donor removed from registry.', 'info');
 }
 
 function renderBloodRequestsTable() {
