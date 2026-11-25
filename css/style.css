@@ -4153,13 +4153,30 @@ body[data-theme="frost-light"] .btn-outline {
 }
 
 .modal-close {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
+    flex-shrink: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
     border-radius: 50% !important;
-    background: rgba(120, 120, 128, 0.20) !important;
+    background: rgba(120, 120, 128, 0.24) !important;
+    color: #f8fafc !important;
+    font-size: 1.2rem !important;
+    line-height: 1 !important;
+    cursor: pointer !important;
     transition: all 0.2s cubic-bezier(0.32, 0.72, 0, 1) !important;
 }
 
 .modal-close:hover {
-    background: rgba(120, 120, 128, 0.35) !important;
+    background: rgba(239, 68, 68, 0.3) !important;
+    border-color: rgba(239, 68, 68, 0.55) !important;
+    color: #ffffff !important;
+    transform: scale(1.06);
 }
 
 /* 9. Apple Form Controls & System Focus Rings */
