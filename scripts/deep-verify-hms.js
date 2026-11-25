@@ -451,6 +451,18 @@ async function runAllTests() {
     assert(appJs.includes('showBookAppointmentModal(selectedDoctorId)'), 'showBookAppointmentModal supports direct physician pre-selection');
     assert(appJs.includes('handleSpecialistAppointmentLink'), 'app.js defines handleSpecialistAppointmentLink for instant modal popup without reload');
 
+    // Test Gemini deprecation recovery, model suggestion extraction, and version scoring
+    const extractedModels = sandbox.extractSuggestedGeminiModelsFromApp(
+        'This model models/gemini-2.0-flash is no longer available. Please update your code to use models/gemini-3.8-flash for the latest features.',
+        'gemini-2.0-flash'
+    );
+    assert(extractedModels.length === 1 && extractedModels[0] === 'gemini-3.8-flash', 'extractSuggestedGeminiModelsFromApp extracts replacement model from Google deprecation notice');
+    assert(sandbox.scoreGeminiModelNameFromApp('gemini-3.8-flash') > sandbox.scoreGeminiModelNameFromApp('gemini-2.5-flash'), 'scoreGeminiModelNameFromApp ranks gemini-3.8-flash above gemini-2.5-flash');
+    assert(sandbox.scoreGeminiModelNameFromApp('gemini-2.5-flash') > sandbox.scoreGeminiModelNameFromApp('gemini-2.0-flash'), 'scoreGeminiModelNameFromApp ranks gemini-2.5-flash above gemini-2.0-flash');
+    assert(sandbox.formatGeminiModelNameFromApp('gemini-3.8-flash') === 'Gemini 3.8 Flash', 'formatGeminiModelNameFromApp formats dynamic model names cleanly');
+    assert(!askAiJs.includes('<option value="gemini-1.5-pro">'), 'AskAIAssistant dropdown no longer lists retired gemini-1.5-pro');
+    assert(askAiJs.includes('extractSuggestedGeminiModels'), 'AskAIAssistant extracts suggested replacement models from Google deprecation errors');
+
 
     console.log(`\n====================================================`);
     console.log(`TOTAL TESTS: ${totalTests} | PASSED: ${passedTests} | FAILED: ${failedTests}`);

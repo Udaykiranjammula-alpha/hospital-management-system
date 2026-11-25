@@ -5954,9 +5954,9 @@ function initAIChatbot() {
                     <label style="font-size:11px; font-weight:600; color:#e2e8f0; display:block; margin-bottom:4px;">Target Model:</label>
                     <select id="geminiModelSelect" class="ai-input" style="width:100%; font-size:11px; background:#1e293b; color:#ffffff;">
                         <option value="gemini-2.5-flash">gemini-2.5-flash (Latest Recommended - Fast &amp; Accurate)</option>
-                        <option value="gemini-2.0-flash">gemini-2.0-flash (Stable Gemini 2.0 Flash)</option>
+                        <option value="gemini-3.8-flash">gemini-3.8-flash (Next-Gen Flash)</option>
                         <option value="gemini-2.5-pro">gemini-2.5-pro (Deep Clinical Reasoning)</option>
-                        <option value="gemini-1.5-flash">gemini-1.5-flash (Legacy Alias)</option>
+                        <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite (Ultra-Fast Low Latency)</option>
                     </select>
                 </div>
                 <div id="geminiTestAlert" style="display:none; font-size:11px; padding:8px 12px; border-radius:8px;"></div>
@@ -6288,7 +6288,20 @@ function openGeminiSettingsModal() {
     if (alertBox) alertBox.style.display = 'none';
 
     if (input) input.value = localStorage.getItem('hms_gemini_api_key') || '';
-    if (select) select.value = localStorage.getItem('hms_gemini_model') || 'gemini-1.5-flash';
+    if (select) {
+        let savedModel = localStorage.getItem('hms_gemini_model');
+        if (!savedModel || savedModel === 'gemini-1.5-flash' || savedModel === 'gemini-1.5-pro' || savedModel === 'gemini-2.0-flash-exp') {
+            savedModel = 'gemini-2.5-flash';
+            localStorage.setItem('hms_gemini_model', savedModel);
+        }
+        if (!Array.from(select.options).some(opt => opt.value === savedModel)) {
+            const opt = document.createElement('option');
+            opt.value = savedModel;
+            opt.textContent = `${savedModel} (Active Verified Model)`;
+            select.appendChild(opt);
+        }
+        select.value = savedModel;
+    }
     updateAIChatbotConnectionStatus();
 }
 
@@ -6338,6 +6351,42 @@ function sanitizeGeminiKey(rawKey) {
     return k.trim();
 }
 
+function formatGeminiModelNameFromApp(model) {
+    const m = String(model || 'gemini-2.5-flash').replace(/^models\//, '');
+    if (!m) return 'Gemini Live';
+    return m
+        .split('-')
+        .map((part) => (/^[a-z]+$/i.test(part) ? part.charAt(0).toUpperCase() + part.slice(1) : part))
+        .join(' ');
+}
+
+function extractSuggestedGeminiModelsFromApp(errorText, currentModel = '') {
+    if (!errorText) return [];
+    const matches = String(errorText).matchAll(/models\/([a-zA-Z0-9._-]+)/g);
+    const suggestions = [];
+    for (const match of matches) {
+        const candidate = match[1];
+        if (candidate && candidate !== currentModel && candidate.includes('gemini') && !suggestions.includes(candidate)) {
+            suggestions.push(candidate);
+        }
+    }
+    return suggestions;
+}
+
+function scoreGeminiModelNameFromApp(name) {
+    const n = String(name || '').replace(/^models\//, '').toLowerCase();
+    const verMatch = n.match(/gemini-(\d+)(?:\.(\d+))?/);
+    const major = verMatch ? parseInt(verMatch[1], 10) : 1;
+    const minor = verMatch && verMatch[2] ? parseInt(verMatch[2], 10) : 0;
+    let score = major * 100 + minor * 10;
+    if (n.includes('flash') && !n.includes('lite')) score += 50;
+    else if (n.includes('flash')) score += 35;
+    else if (n.includes('pro')) score += 20;
+    if (n.includes('preview') || n.includes('exp') || n.includes('tts') || n.includes('audio') || n.includes('image')) score -= 40;
+    if (n.includes('latest')) score += 5;
+    return score;
+}
+
 async function discoverWorkingGeminiModelsFromApp(apiKey) {
     try {
         const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
@@ -6346,20 +6395,9 @@ async function discoverWorkingGeminiModelsFromApp(apiKey) {
         const models = (data.models || [])
             .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
             .map(m => String(m.name || '').replace(/^models\//, ''))
-            .filter(name => name.includes('gemini') && !name.includes('embedding') && !name.includes('imagen'));
+            .filter(name => name.includes('gemini') && !name.includes('embedding') && !name.includes('imagen') && !name.includes('veo') && !name.includes('tts'));
 
-        models.sort((a, b) => {
-            const score = (n) => {
-                if (n === 'gemini-2.5-flash') return 100;
-                if (n === 'gemini-2.0-flash') return 90;
-                if (n.includes('2.5') && n.includes('flash')) return 85;
-                if (n.includes('2.0') && n.includes('flash')) return 80;
-                if (n.includes('flash')) return 70;
-                if (n.includes('pro')) return 50;
-                return 10;
-            };
-            return score(b) - score(a);
-        });
+        models.sort((a, b) => scoreGeminiModelNameFromApp(b) - scoreGeminiModelNameFromApp(a));
         return models;
     } catch (_) {
         return [];
@@ -6376,7 +6414,7 @@ async function testAndSaveGeminiKey(skipTest = false) {
     const rawKey = input.value;
     const key = sanitizeGeminiKey(rawKey);
     input.value = key;
-    const model = (select.value || 'gemini-1.5-flash').trim();
+    const model = (select.value || 'gemini-2.5-flash').trim();
 
     if (!key) {
         if (alertBox) {
@@ -6415,15 +6453,17 @@ async function testAndSaveGeminiKey(skipTest = false) {
     const candidateModels = [
         model,
         'gemini-2.5-flash',
-        'gemini-2.0-flash',
+        'gemini-3.8-flash',
+        'gemini-3.0-flash',
         'gemini-2.5-flash-lite',
         'gemini-2.5-pro',
-        'gemini-1.5-flash'
+        'gemini-2.0-flash'
     ];
     let uniqueModels = Array.from(new Set(candidateModels));
     let verifiedModel = null;
     let lastErrorMsg = '';
     let triedCount = 0;
+    let discoveredOnce = false;
 
     for (let i = 0; i < uniqueModels.length; i++) {
         const modelToTry = uniqueModels[i];
@@ -6449,8 +6489,15 @@ async function testAndSaveGeminiKey(skipTest = false) {
                 } catch (_) {}
                 lastErrorMsg = userMsg;
 
-                if (testRes.status === 404 || testRes.status === 400) {
-                    if (i === uniqueModels.length - 1 && triedCount < 12) {
+                if (testRes.status === 404 || testRes.status === 400 || testRes.status === 410) {
+                    const suggested = extractSuggestedGeminiModelsFromApp(userMsg, modelToTry);
+                    for (const sm of suggested) {
+                        if (!uniqueModels.includes(sm)) {
+                            uniqueModels.splice(i + 1, 0, sm);
+                        }
+                    }
+                    if (!discoveredOnce && triedCount < 14) {
+                        discoveredOnce = true;
                         const discovered = await discoverWorkingGeminiModelsFromApp(key);
                         for (const dm of discovered) {
                             if (!uniqueModels.includes(dm)) uniqueModels.push(dm);
@@ -6472,8 +6519,16 @@ async function testAndSaveGeminiKey(skipTest = false) {
     }
 
     if (verifiedModel) {
+        if (!Array.from(select.options).some(opt => opt.value === verifiedModel)) {
+            const opt = document.createElement('option');
+            opt.value = verifiedModel;
+            opt.textContent = `${verifiedModel} (Active Verified Model)`;
+            select.appendChild(opt);
+        }
         select.value = verifiedModel;
         localStorage.setItem('hms_gemini_model', verifiedModel);
+        window.dispatchEvent(new CustomEvent('medicare_gemini_key_updated', { detail: { key, model: verifiedModel } }));
+        updateAIChatbotConnectionStatus();
         if (alertBox) {
             alertBox.style.display = 'block';
             alertBox.style.background = 'rgba(16, 185, 129, 0.2)';
@@ -6507,13 +6562,13 @@ function usePreconfiguredDemoKey() {
     const input = document.getElementById('geminiApiKeyInput');
     const select = document.getElementById('geminiModelSelect');
     if (input) input.value = 'demo-gemini-flash-hackathon-2026';
-    if (select) select.value = 'gemini-1.5-flash';
+    if (select) select.value = 'gemini-2.5-flash';
     testAndSaveGeminiKey();
 }
 
 function clearGeminiKeyAndOffline() {
     localStorage.removeItem('hms_gemini_api_key');
-    window.dispatchEvent(new CustomEvent('medicare_gemini_key_updated', { detail: { key: '', model: 'gemini-1.5-flash' } }));
+    window.dispatchEvent(new CustomEvent('medicare_gemini_key_updated', { detail: { key: '', model: 'gemini-2.5-flash' } }));
     const input = document.getElementById('geminiApiKeyInput');
     if (input) input.value = '';
     updateAIChatbotConnectionStatus();
@@ -6530,7 +6585,8 @@ function clearGeminiKeyAndOffline() {
 
 function updateAIChatbotConnectionStatus() {
     const key = typeof localStorage !== 'undefined' ? localStorage.getItem('hms_gemini_api_key') : null;
-    const model = typeof localStorage !== 'undefined' ? (localStorage.getItem('hms_gemini_model') || 'gemini-1.5-flash') : 'gemini-1.5-flash';
+    const rawModel = typeof localStorage !== 'undefined' ? localStorage.getItem('hms_gemini_model') : null;
+    const model = (!rawModel || rawModel === 'gemini-1.5-flash' || rawModel === 'gemini-1.5-pro' || rawModel === 'gemini-2.0-flash-exp') ? 'gemini-2.5-flash' : rawModel;
     const hasKey = !!(key && key.trim());
 
     const dot = document.getElementById('aiOnlineDot');
@@ -6542,7 +6598,7 @@ function updateAIChatbotConnectionStatus() {
         dot.style.boxShadow = hasKey ? '0 0 8px #10b981' : 'none';
     }
 
-    const modelName = model === 'gemini-2.0-flash-exp' ? 'Gemini 2.0 Flash' : 'Gemini 1.5 Flash';
+    const modelName = formatGeminiModelNameFromApp(model);
     const statusStr = hasKey ? `● ${modelName} Connected` : '● Clinical Offline Copilot';
 
     if (text) {
@@ -6820,18 +6876,20 @@ If English (en-IN), maintain crisp professional clinical English.`;
         }
     };
 
-    const requestedModel = (model || 'gemini-1.5-flash').replace(/^models\//, '');
+    const requestedModel = (model || 'gemini-2.5-flash').replace(/^models\//, '');
     const candidateModels = [
         requestedModel,
         'gemini-2.5-flash',
-        'gemini-2.0-flash',
+        'gemini-3.8-flash',
+        'gemini-3.0-flash',
         'gemini-2.5-flash-lite',
         'gemini-2.5-pro',
-        'gemini-1.5-flash'
+        'gemini-2.0-flash'
     ];
     let uniqueModels = Array.from(new Set(candidateModels));
     let lastError = null;
     let triedCount = 0;
+    let discoveredOnce = false;
 
     for (let i = 0; i < uniqueModels.length; i++) {
         const m = uniqueModels[i];
@@ -6856,8 +6914,15 @@ If English (en-IN), maintain crisp professional clinical English.`;
             } else {
                 const errorText = await response.text();
                 lastError = new Error(`Gemini API HTTP ${response.status}: ${errorText.slice(0, 150)}`);
-                if (response.status === 404 || response.status === 400) {
-                    if (i === uniqueModels.length - 1 && triedCount < 12) {
+                if (response.status === 404 || response.status === 400 || response.status === 410) {
+                    const suggested = extractSuggestedGeminiModelsFromApp(errorText, m);
+                    for (const sm of suggested) {
+                        if (!uniqueModels.includes(sm)) {
+                            uniqueModels.splice(i + 1, 0, sm);
+                        }
+                    }
+                    if (!discoveredOnce && triedCount < 14) {
+                        discoveredOnce = true;
                         const discovered = await discoverWorkingGeminiModelsFromApp(cleanKey);
                         for (const dm of discovered) {
                             if (!uniqueModels.includes(dm)) uniqueModels.push(dm);
@@ -6888,7 +6953,7 @@ async function sendAIMessage() {
     showAITypingIndicator();
 
     const apiKey = typeof localStorage !== 'undefined' ? localStorage.getItem('hms_gemini_api_key') : null;
-    const model = typeof localStorage !== 'undefined' ? (localStorage.getItem('hms_gemini_model') || 'gemini-1.5-flash') : 'gemini-1.5-flash';
+    const model = typeof localStorage !== 'undefined' ? (localStorage.getItem('hms_gemini_model') || 'gemini-2.5-flash') : 'gemini-2.5-flash';
 
     if (apiKey && apiKey.trim()) {
         try {

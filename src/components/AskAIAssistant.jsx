@@ -271,6 +271,42 @@ export function sanitizeGeminiKey(rawKey) {
   return k.trim();
 }
 
+export function formatGeminiModelName(model) {
+  const m = String(model || 'gemini-2.5-flash').replace(/^models\//, '');
+  if (!m) return 'Gemini Live';
+  return m
+    .split('-')
+    .map((part) => (/^[a-z]+$/i.test(part) ? part.charAt(0).toUpperCase() + part.slice(1) : part))
+    .join(' ');
+}
+
+export function extractSuggestedGeminiModels(errorText, currentModel = '') {
+  if (!errorText) return [];
+  const matches = String(errorText).matchAll(/models\/([a-zA-Z0-9._-]+)/g);
+  const suggestions = [];
+  for (const match of matches) {
+    const candidate = match[1];
+    if (candidate && candidate !== currentModel && candidate.includes('gemini') && !suggestions.includes(candidate)) {
+      suggestions.push(candidate);
+    }
+  }
+  return suggestions;
+}
+
+export function scoreGeminiModelName(name) {
+  const n = String(name || '').replace(/^models\//, '').toLowerCase();
+  const verMatch = n.match(/gemini-(\d+)(?:\.(\d+))?/);
+  const major = verMatch ? parseInt(verMatch[1], 10) : 1;
+  const minor = verMatch && verMatch[2] ? parseInt(verMatch[2], 10) : 0;
+  let score = major * 100 + minor * 10;
+  if (n.includes('flash') && !n.includes('lite')) score += 50;
+  else if (n.includes('flash')) score += 35;
+  else if (n.includes('pro')) score += 20;
+  if (n.includes('preview') || n.includes('exp') || n.includes('tts') || n.includes('audio') || n.includes('image')) score -= 40;
+  if (n.includes('latest')) score += 5;
+  return score;
+}
+
 export async function discoverWorkingGeminiModels(apiKey) {
   try {
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
@@ -279,20 +315,9 @@ export async function discoverWorkingGeminiModels(apiKey) {
     const models = (data.models || [])
       .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
       .map(m => String(m.name || '').replace(/^models\//, ''))
-      .filter(name => name.includes('gemini') && !name.includes('embedding') && !name.includes('imagen'));
+      .filter(name => name.includes('gemini') && !name.includes('embedding') && !name.includes('imagen') && !name.includes('veo') && !name.includes('tts'));
 
-    models.sort((a, b) => {
-      const score = (n) => {
-        if (n === 'gemini-2.5-flash') return 100;
-        if (n === 'gemini-2.0-flash') return 90;
-        if (n.includes('2.5') && n.includes('flash')) return 85;
-        if (n.includes('2.0') && n.includes('flash')) return 80;
-        if (n.includes('flash')) return 70;
-        if (n.includes('pro')) return 50;
-        return 10;
-      };
-      return score(b) - score(a);
-    });
+    models.sort((a, b) => scoreGeminiModelName(b) - scoreGeminiModelName(a));
     return models;
   } catch (_) {
     return [];
@@ -341,14 +366,16 @@ export async function callGeminiAPI(query, history = [], lang = 'en-IN', apiKey 
   const staticCandidates = [
     requestedModel,
     'gemini-2.5-flash',
-    'gemini-2.0-flash',
+    'gemini-3.8-flash',
+    'gemini-3.0-flash',
     'gemini-2.5-flash-lite',
     'gemini-2.5-pro',
-    'gemini-1.5-flash'
+    'gemini-2.0-flash'
   ];
   let uniqueModels = Array.from(new Set(staticCandidates));
   let lastError = null;
   let triedCount = 0;
+  let discoveredOnce = false;
 
   for (let i = 0; i < uniqueModels.length; i++) {
     const m = uniqueModels[i];
@@ -373,9 +400,15 @@ export async function callGeminiAPI(query, history = [], lang = 'en-IN', apiKey 
       } else {
         const errorText = await response.text();
         lastError = new Error(`Gemini API HTTP ${response.status}: ${errorText.slice(0, 150)}`);
-        if (response.status === 404 || response.status === 400) {
-          // On last static candidate, auto-discover live models from Google ListModels API
-          if (i === uniqueModels.length - 1 && triedCount < 12) {
+        if (response.status === 404 || response.status === 400 || response.status === 410) {
+          const suggested = extractSuggestedGeminiModels(errorText, m);
+          for (const sm of suggested) {
+            if (!uniqueModels.includes(sm)) {
+              uniqueModels.splice(i + 1, 0, sm);
+            }
+          }
+          if (!discoveredOnce && triedCount < 14) {
+            discoveredOnce = true;
             const discovered = await discoverWorkingGeminiModels(cleanKey);
             for (const dm of discovered) {
               if (!uniqueModels.includes(dm)) uniqueModels.push(dm);
@@ -653,7 +686,8 @@ export default function AskAIAssistant() {
         if (e.detail.model !== undefined) setGeminiModel(e.detail.model);
       } else if (typeof localStorage !== 'undefined') {
         setGeminiApiKey(localStorage.getItem('hms_gemini_api_key') || '');
-        setGeminiModel(localStorage.getItem('hms_gemini_model') || 'gemini-1.5-flash');
+        const syncedModel = localStorage.getItem('hms_gemini_model');
+        setGeminiModel(!syncedModel || syncedModel === 'gemini-1.5-flash' || syncedModel === 'gemini-1.5-pro' || syncedModel === 'gemini-2.0-flash-exp' ? 'gemini-2.5-flash' : syncedModel);
       }
     };
     window.addEventListener('medicare_gemini_key_updated', handleKeySync);
@@ -955,7 +989,7 @@ export default function AskAIAssistant() {
 
     if (activeKey && activeKey.trim() && !forceKey) {
       setIsStreaming(true);
-      const thinkingModel = geminiModel === 'gemini-2.0-flash-exp' ? 'Gemini 2.0 Flash' : geminiModel === 'gemini-1.5-pro' ? 'Gemini 1.5 Pro' : 'Gemini 1.5 Flash';
+      const thinkingModel = formatGeminiModelName(geminiModel);
       setStreamingText(`Thinking with Google ${thinkingModel}...`);
       try {
         const geminiResult = await callGeminiAPI(textToSend, messages, currentLang, activeKey, geminiModel);
@@ -1055,15 +1089,17 @@ export default function AskAIAssistant() {
     const candidateModels = [
       geminiModel,
       'gemini-2.5-flash',
-      'gemini-2.0-flash',
+      'gemini-3.8-flash',
+      'gemini-3.0-flash',
       'gemini-2.5-flash-lite',
       'gemini-2.5-pro',
-      'gemini-1.5-flash'
+      'gemini-2.0-flash'
     ];
     let uniqueModels = Array.from(new Set(candidateModels));
     let verifiedModel = null;
     let lastErrorMsg = '';
     let triedCount = 0;
+    let discoveredOnce = false;
 
     for (let i = 0; i < uniqueModels.length; i++) {
       const modelToTry = uniqueModels[i];
@@ -1089,8 +1125,15 @@ export default function AskAIAssistant() {
             if (parsed.error?.message) reason = parsed.error.message;
           } catch (_) {}
           lastErrorMsg = reason;
-          if (pingRes.status === 404 || pingRes.status === 400) {
-            if (i === uniqueModels.length - 1 && triedCount < 12) {
+          if (pingRes.status === 404 || pingRes.status === 400 || pingRes.status === 410) {
+            const suggested = extractSuggestedGeminiModels(reason, modelToTry);
+            for (const sm of suggested) {
+              if (!uniqueModels.includes(sm)) {
+                uniqueModels.splice(i + 1, 0, sm);
+              }
+            }
+            if (!discoveredOnce && triedCount < 14) {
+              discoveredOnce = true;
               const discovered = await discoverWorkingGeminiModels(keyToTest);
               for (const dm of discovered) {
                 if (!uniqueModels.includes(dm)) uniqueModels.push(dm);
@@ -1149,15 +1192,7 @@ export default function AskAIAssistant() {
   };
 
   const isGeminiConnected = Boolean(geminiApiKey && geminiApiKey.trim());
-  const modelDisplayName = geminiModel.includes('2.5-flash')
-    ? 'Gemini 2.5 Flash'
-    : geminiModel.includes('2.5-pro')
-      ? 'Gemini 2.5 Pro'
-      : geminiModel.includes('2.0-flash')
-        ? 'Gemini 2.0 Flash'
-        : geminiModel === 'gemini-1.5-pro'
-          ? 'Gemini 1.5 Pro'
-          : 'Gemini Live';
+  const modelDisplayName = formatGeminiModelName(geminiModel);
 
   return (
     <div
@@ -1572,9 +1607,12 @@ export default function AskAIAssistant() {
                   }}
                 >
                   <option value="gemini-2.5-flash">gemini-2.5-flash (Latest Recommended - Fast &amp; Smart)</option>
-                  <option value="gemini-2.0-flash">gemini-2.0-flash (Stable Gemini 2.0 Flash)</option>
+                  <option value="gemini-3.8-flash">gemini-3.8-flash (Next-Gen Flash)</option>
                   <option value="gemini-2.5-pro">gemini-2.5-pro (Deep Clinical Reasoning)</option>
-                  <option value="gemini-1.5-flash">gemini-1.5-flash (Legacy Alias)</option>
+                  <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite (Ultra-Fast Low Latency)</option>
+                  {!['gemini-2.5-flash', 'gemini-3.8-flash', 'gemini-2.5-pro', 'gemini-2.5-flash-lite'].includes(geminiModel) && (
+                    <option value={geminiModel}>{geminiModel} (Active Verified Model)</option>
+                  )}
                 </select>
               </div>
 
