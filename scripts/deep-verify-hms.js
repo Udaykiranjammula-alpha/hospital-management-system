@@ -730,6 +730,26 @@ async function runAllTests() {
     assert(fs.readFileSync(path.join(rootDir, 'index.html'), 'utf8').includes('id="loginPatientSelect"'), 'index.html has #loginPatientSelect for all patients');
     assert(fs.readFileSync(path.join(rootDir, 'index.html'), 'utf8').includes('id="btnPublicHospitalInfo"'), 'index.html has #btnPublicHospitalInfo for new visitors');
 
+    // ----------------------------------------------------
+    // TEST SUITE 23: WebRTC Connection Resilience & Zero-Error Signaling
+    // ----------------------------------------------------
+    console.log('\n--- TEST SUITE 23: WebRTC Connection Resilience & Zero-Error Signaling ---');
+    assert(!appJs.includes('stun.relay.metered.ca:80'), 'Removed unreachable stun.relay.metered.ca:80 STUN URL');
+    assert(typeof qualitySandbox.parseTelemedRoomId === 'function', 'app.js exposes parseTelemedRoomId');
+    assert(qualitySandbox.parseTelemedRoomId('hms-4512') === 'HMS-4512', 'parseTelemedRoomId normalizes raw room code');
+    assert(qualitySandbox.parseTelemedRoomId('https://hospital-management-system-msz2.vercel.app/patient-portal.html?room=HMS-9081&turn=abc') === 'HMS-9081', 'parseTelemedRoomId extracts room ID from pasted invite URLs');
+    const dedupedIce = qualitySandbox.dedupeIceServers([
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun.l.google.com:19302' },
+        null,
+        { urls: '' },
+        { urls: 'stun:stun.cloudflare.com:3478' }
+    ]);
+    assert(dedupedIce.length === 2, 'dedupeIceServers removes duplicates and empty ICE entries');
+    assert(appJs.includes('function ensurePeerJsLoaded('), 'app.js provides PeerJS CDN fallback loader');
+    assert(appJs.includes('restartIce'), 'attachIceDiagnostics recovers disconnected ICE paths via restartIce()');
+    assert(appJs.includes('clearTelemedPendingTimers'), 'endPeerTelemedCall clears pending signaling/retry timers');
+
     console.log(`\n====================================================`);
     console.log(`TOTAL TESTS: ${totalTests} | PASSED: ${passedTests} | FAILED: ${failedTests}`);
     console.log(`====================================================\n`);

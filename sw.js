@@ -1,9 +1,9 @@
 /**
- * MediCare HMS - Resilient Zero-Fault Service Worker v2.4 (upgraded from medicare-hms-core-v2.3)
+ * MediCare HMS - Resilient Zero-Fault Service Worker v2.5 (upgraded from medicare-hms-core-v2.4)
  * PWA Installability + Safe Edge Passthrough + Network-First Fresh Assets
  */
 
-const CACHE_NAME = 'medicare-hms-core-v2.4'; // Prunes legacy caches on activate
+const CACHE_NAME = 'medicare-hms-core-v2.5'; // Prunes legacy caches on activate
 // Offline fallback references: './dashboard.html', './index.html'
 
 // Error guards to prevent any uncaught exceptions

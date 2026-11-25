@@ -1217,11 +1217,14 @@ function renderDoctorScopeNotice(pageContext, user) {
 // ==========================================
 let audioCtx = null;
 function getAudioContext() {
+    if (typeof navigator !== 'undefined' && navigator.userActivation && !navigator.userActivation.hasBeenActive) {
+        return null;
+    }
     if (!audioCtx && (window.AudioContext || window.webkitAudioContext)) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
     if (audioCtx && audioCtx.state === 'suspended') {
-        audioCtx.resume();
+        audioCtx.resume().catch(() => {});
     }
     return audioCtx;
 }
@@ -11193,6 +11196,72 @@ let telemedEffectivePreset = telemedQualityPreset;
 let telemedStatsInterval = null;
 let telemedLastStatsSnapshot = null;
 let telemedGoodNetworkStreak = 0;
+let telemedJoinRetryTimer = null;
+let telemedJoinTimeoutTimer = null;
+let telemedHostOpenTimer = null;
+let telemedConnectAttemptToken = 0;
+let telemedActiveHostRoomId = null;
+let telemedSdkLoadPromise = null;
+
+function clearTelemedPendingTimers() {
+    if (telemedJoinRetryTimer) { clearTimeout(telemedJoinRetryTimer); telemedJoinRetryTimer = null; }
+    if (telemedJoinTimeoutTimer) { clearTimeout(telemedJoinTimeoutTimer); telemedJoinTimeoutTimer = null; }
+    if (telemedHostOpenTimer) { clearTimeout(telemedHostOpenTimer); telemedHostOpenTimer = null; }
+}
+
+function setPeerCallStatus(badgeEl, patStatusEl, badgeText, patText, color) {
+    if (badgeEl && badgeText) {
+        badgeEl.style.display = 'inline-block';
+        if (color) badgeEl.style.color = color;
+        badgeEl.textContent = badgeText;
+    }
+    if (patStatusEl && patText) {
+        if (color) patStatusEl.style.color = color;
+        patStatusEl.textContent = patText;
+    }
+}
+
+function parseTelemedRoomId(rawInput = '') {
+    let raw = String(rawInput || '').trim();
+    if (!raw) return '';
+    try {
+        if (raw.includes('://') || raw.includes('room=')) {
+            const urlObj = new URL(raw.includes('://') ? raw : ('https://hms.local/?' + raw.replace(/^\?/, '')));
+            const turnParam = urlObj.searchParams.get('turn');
+            if (turnParam && typeof localStorage !== 'undefined') {
+                try {
+                    const decoded = JSON.parse(atob(decodeURIComponent(turnParam)));
+                    if (decoded && (decoded.apiUrl || decoded.urls)) {
+                        localStorage.setItem('hms_turn_config', JSON.stringify(decoded));
+                    }
+                } catch (_) {}
+            }
+            const extracted = urlObj.searchParams.get('room');
+            if (extracted) raw = extracted;
+        }
+    } catch (_) {
+        const match = raw.match(/[?&]room=([A-Z0-9-]+)/i);
+        if (match) raw = match[1];
+    }
+    return raw.trim().toUpperCase().replace(/[^A-Z0-9-]/g, '');
+}
+
+async function ensurePeerJsLoaded() {
+    if (typeof window !== 'undefined' && typeof window.Peer !== 'undefined') return true;
+    if (typeof document === 'undefined' || !document.head) return false;
+    if (!telemedSdkLoadPromise) {
+        telemedSdkLoadPromise = new Promise((resolve) => {
+            const finish = (ok) => { resolve(ok && typeof window.Peer !== 'undefined'); };
+            const s = document.createElement('script');
+            s.src = 'https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js';
+            const timer = setTimeout(() => finish(false), 6500);
+            s.onload = () => { clearTimeout(timer); finish(true); };
+            s.onerror = () => { clearTimeout(timer); telemedSdkLoadPromise = null; finish(false); };
+            document.head.appendChild(s);
+        });
+    }
+    return telemedSdkLoadPromise;
+}
 
 const TELEMED_QUALITY_PROFILES = {
     auto: {
@@ -11317,6 +11386,12 @@ function sendPatientLiveVitals() {
 function bindPeerDataConnection(conn) {
     if (!conn) return;
     telemedDataConn = conn;
+    if (typeof conn.on === 'function') {
+        conn.on('error', () => {});
+        conn.on('close', () => {
+            if (telemedDataConn === conn) telemedDataConn = null;
+        });
+    }
     conn.on('data', (payload) => {
         if (!payload) return;
         if (payload.type === 'vitals') {
@@ -11391,8 +11466,7 @@ function getTelemedIceConfig() {
     const iceServers = [
         { urls: 'stun:stun.l.google.com:19302' },
         { urls: 'stun:stun1.l.google.com:19302' },
-        { urls: 'stun:stun.cloudflare.com:3478' },
-        { urls: 'stun:stun.relay.metered.ca:80' }
+        { urls: 'stun:stun.cloudflare.com:3478' }
     ];
     const savedTurn = getTelemedTurnConfig();
     if (savedTurn && savedTurn.urls && savedTurn.username && savedTurn.credential) {
@@ -11406,58 +11480,94 @@ function getTelemedIceConfig() {
     }
     return {
         iceServers,
-        iceCandidatePoolSize: 8,
+        iceCandidatePoolSize: 6,
         bundlePolicy: 'max-bundle',
         rtcpMuxPolicy: 'require'
     };
+}
+
+function dedupeIceServers(servers = []) {
+    const seen = new Set();
+    return servers.filter((s) => {
+        if (!s || !s.urls) return false;
+        const key = `${Array.isArray(s.urls) ? s.urls.join(',') : s.urls}|${s.username || ''}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
 }
 
 async function resolveTelemedIceConfig() {
     const base = getTelemedIceConfig();
     const savedTurn = getTelemedTurnConfig();
     if (savedTurn && savedTurn.apiUrl && typeof fetch === 'function') {
+        const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        const fetchTimeout = controller ? setTimeout(() => controller.abort(), 3000) : null;
         try {
-            const resp = await fetch(savedTurn.apiUrl);
+            const resp = await fetch(savedTurn.apiUrl, controller ? { signal: controller.signal } : undefined);
+            if (fetchTimeout) clearTimeout(fetchTimeout);
             if (resp.ok) {
                 const dynamicServers = await resp.json();
                 if (Array.isArray(dynamicServers) && dynamicServers.length > 0) {
-                    const merged = [...dynamicServers, ...base.iceServers];
+                    const merged = dedupeIceServers([...dynamicServers, ...base.iceServers]);
                     return { ...base, iceServers: merged };
                 }
             }
-        } catch (_) {}
+        } catch (_) {
+            if (fetchTimeout) clearTimeout(fetchTimeout);
+        }
     }
-    return base;
+    return { ...base, iceServers: dedupeIceServers(base.iceServers) };
 }
 
-function attachIceDiagnostics(call, badgeEl, patStatusEl) {
+function attachIceDiagnostics(call, badgeEl, patStatusEl, attemptToken = telemedConnectAttemptToken) {
     if (!call || !call.peerConnection) return;
     const pc = call.peerConnection;
+    let failedHandled = false;
+    let restartTried = false;
+    let disconnectedTimer = null;
+
     const updateIceStatus = () => {
+        if (attemptToken !== telemedConnectAttemptToken || telemedActiveCall !== call) return;
         const st = pc.iceConnectionState || pc.connectionState || '';
-        if (st === 'failed') {
-            if (badgeEl) {
-                badgeEl.style.display = 'inline-block';
-                badgeEl.style.color = '#f87171';
-                badgeEl.textContent = 'NAT Blocked — Enable TURN Relay';
+        if (st === 'connected' || st === 'completed') {
+            if (disconnectedTimer) { clearTimeout(disconnectedTimer); disconnectedTimer = null; }
+            setPeerCallStatus(badgeEl, patStatusEl, '● 2-WAY LIVE CONNECTED', '● Live Connected', '#34d399');
+        } else if (st === 'disconnected') {
+            setPeerCallStatus(badgeEl, patStatusEl, 'Reconnecting P2P link...', 'Reconnecting video link...', '#fbbf24');
+            if (!restartTried && typeof pc.restartIce === 'function' && !disconnectedTimer) {
+                disconnectedTimer = setTimeout(() => {
+                    disconnectedTimer = null;
+                    if (attemptToken !== telemedConnectAttemptToken || telemedActiveCall !== call) return;
+                    if ((pc.iceConnectionState === 'disconnected' || pc.connectionState === 'disconnected') && !restartTried) {
+                        restartTried = true;
+                        try { pc.restartIce(); } catch (_) {}
+                    }
+                }, 2000);
             }
-            if (patStatusEl) {
-                patStatusEl.style.color = '#f87171';
-                patStatusEl.textContent = 'Wi-Fi/NAT blocked direct call — configure Cross-Wi-Fi TURN';
-            }
+        } else if (st === 'failed' && !failedHandled) {
+            failedHandled = true;
+            if (disconnectedTimer) { clearTimeout(disconnectedTimer); disconnectedTimer = null; }
+            if (telemedJoinTimeoutTimer) { clearTimeout(telemedJoinTimeoutTimer); telemedJoinTimeoutTimer = null; }
+            if (telemedJoinRetryTimer) { clearTimeout(telemedJoinRetryTimer); telemedJoinRetryTimer = null; }
+            setPeerCallStatus(
+                badgeEl,
+                patStatusEl,
+                'NAT Blocked — Enable TURN Relay',
+                'Wi-Fi/NAT blocked direct call — click TURN to relay',
+                '#f87171'
+            );
             if (typeof showToast === 'function') {
-                showToast('⚠️ Cross-Wi-Fi/carrier NAT blocked direct WebRTC. Click "Cross-Wi-Fi TURN" to connect over a relay server.', 'warning');
+                showToast('⚠️ Cross-Wi-Fi/carrier NAT blocked direct P2P. Click the "TURN" button to connect via relay server.', 'warning');
             }
         } else if (st === 'checking') {
-            if (patStatusEl) {
-                patStatusEl.style.color = '#38bdf8';
-                patStatusEl.textContent = 'Negotiating NAT / P2P path...';
-            }
+            setPeerCallStatus(badgeEl, patStatusEl, null, 'Negotiating P2P path...', '#38bdf8');
         }
     };
     if (typeof pc.addEventListener === 'function') {
         pc.addEventListener('iceconnectionstatechange', updateIceStatus);
         pc.addEventListener('connectionstatechange', updateIceStatus);
+        pc.addEventListener('icecandidateerror', () => {});
     }
 }
 
@@ -11590,14 +11700,14 @@ function clearTurnRelayConfig() {
     if (outEl) outEl.textContent = 'Cleared custom TURN config (using public STUN defaults).';
 }
 
-function createSyntheticFallbackStream() {
+function createSyntheticFallbackStream(label = 'MediCare Live Video Participant') {
     const c = document.createElement('canvas');
     c.width = 1280;
     c.height = 720;
     const ctx = c.getContext('2d');
     let f = 0;
     const draw = () => {
-        if (!c.isConnected && f > 1800) return;
+        if (!ctx) return;
         const g = ctx.createLinearGradient(0, 0, 1280, 720);
         g.addColorStop(0, '#0f172a');
         g.addColorStop(1, '#1e3a5f');
@@ -11605,17 +11715,29 @@ function createSyntheticFallbackStream() {
         ctx.fillRect(0, 0, 1280, 720);
         ctx.fillStyle = '#38bdf8';
         ctx.beginPath();
-        ctx.arc(640, 300 + Math.sin(f * 0.05) * 6, 80, 0, Math.PI * 2);
+        ctx.arc(640, 300 + Math.sin(f * 0.12) * 6, 80, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = '#f8fafc';
-        ctx.font = 'bold 32px sans-serif';
+        ctx.font = 'bold 30px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('MediCare Live Video Participant (HD Cam Fallback)', 640, 460);
+        ctx.fillText(label, 640, 460);
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '20px sans-serif';
+        ctx.fillText('Camera unavailable — audio / fallback stream active', 640, 505);
         f++;
-        requestAnimationFrame(draw);
     };
     draw();
-    return c.captureStream ? c.captureStream(30) : new MediaStream();
+    const stream = c.captureStream ? c.captureStream(15) : new MediaStream();
+    const timer = setInterval(draw, 67);
+    stream.getVideoTracks().forEach((track) => {
+        const origStop = track.stop.bind(track);
+        track.stop = () => {
+            clearInterval(timer);
+            return origStop();
+        };
+        track.addEventListener?.('ended', () => clearInterval(timer));
+    });
+    return stream;
 }
 
 async function acquireTelemedLocalMedia(preset = telemedQualityPreset) {
@@ -11628,30 +11750,27 @@ async function acquireTelemedLocalMedia(preset = telemedQualityPreset) {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         try {
             stream = await navigator.mediaDevices.getUserMedia(primaryConstraints);
-        } catch (_) {
-            try {
-                stream = await navigator.mediaDevices.getUserMedia(getTelemedMediaConstraints('hd'));
-            } catch (_) {
-                try {
-                    stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: primaryConstraints.audio });
-                } catch (_) {
-                    try {
-                        stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                    } catch (_) {
-                        try {
-                            stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                        } catch (_) {
-                            stream = null;
-                        }
-                    }
-                }
+        } catch (err) {
+            const name = err && err.name ? err.name : '';
+            if (name === 'OverconstrainedError') {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: primaryConstraints.audio }).catch(() => null);
+            }
+            if (!stream && name !== 'NotAllowedError' && name !== 'PermissionDeniedError' && name !== 'SecurityError') {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true }).catch(() => null);
+            }
+            if (!stream) {
+                stream = await navigator.mediaDevices.getUserMedia({ audio: true }).catch(() => null);
             }
         }
     }
     if (!stream) {
         stream = createSyntheticFallbackStream();
-        if (typeof showToast === 'function') showToast('📷 Camera busy/unavailable — using fallback video stream so call still connects!', 'info');
+        if (typeof showToast === 'function') showToast('📷 Camera busy/unavailable — using fallback video stream so call still connects.', 'info');
     } else {
+        if (stream.getVideoTracks().length === 0) {
+            const fallbackVideo = createSyntheticFallbackStream('Mic-Only Mode (Live Audio Active)').getVideoTracks()[0];
+            if (fallbackVideo) stream.addTrack(fallbackVideo);
+        }
         stream.getVideoTracks().forEach((track) => {
             try {
                 if ('contentHint' in track) track.contentHint = profile.contentHint;
@@ -11663,13 +11782,19 @@ async function acquireTelemedLocalMedia(preset = telemedQualityPreset) {
     const selfVid = document.getElementById('telemedSelfPreviewVideo');
     const docFallback = document.getElementById('telemedDoctorFallback');
     if (selfVid) {
+        selfVid.muted = true;
+        selfVid.playsInline = true;
         selfVid.srcObject = stream;
         selfVid.style.display = 'block';
+        selfVid.play?.().catch(() => {});
         if (docFallback) docFallback.style.display = 'none';
     }
     const patSelfVid = document.getElementById('patientLocalSelfVideo');
     if (patSelfVid) {
+        patSelfVid.muted = true;
+        patSelfVid.playsInline = true;
         patSelfVid.srcObject = stream;
+        patSelfVid.play?.().catch(() => {});
     }
     return stream;
 }
@@ -11971,10 +12096,28 @@ async function showPeerRoomInviteModal(roomId, joinUrl) {
 
     const openTabBtn = document.getElementById('peerInviteOpenTabBtn');
     if (openTabBtn) {
-        openTabBtn.onclick = () => window.open(joinUrl, '_blank');
+        const localSameOrigin = (typeof window !== 'undefined' && window.location && window.location.protocol && window.location.protocol.startsWith('http'))
+            ? `${window.location.origin}/patient-portal.html?room=${encodeURIComponent(roomId)}`
+            : joinUrl;
+        openTabBtn.onclick = () => window.open(localSameOrigin, '_blank');
     }
 
     openModal('peerInviteModal');
+}
+
+function playVideoElementSafe(videoEl) {
+    if (!videoEl) return;
+    videoEl.playsInline = true;
+    const p = videoEl.play();
+    if (p && typeof p.catch === 'function') {
+        p.catch(() => {
+            videoEl.muted = true;
+            videoEl.play().catch(() => {});
+            if (typeof showToast === 'function') {
+                showToast('🔊 Connected! Tap the video player if browser muted audio.', 'info');
+            }
+        });
+    }
 }
 
 function attachRemotePeerStream(remoteStream) {
@@ -11984,7 +12127,7 @@ function attachRemotePeerStream(remoteStream) {
     if (remoteVid) {
         remoteVid.srcObject = remoteStream;
         remoteVid.style.display = 'block';
-        remoteVid.play().catch(() => {});
+        playVideoElementSafe(remoteVid);
         if (canvas) canvas.style.display = 'none';
     }
     const patRemoteVid = document.getElementById('patientRemoteDoctorVideo');
@@ -11992,41 +12135,36 @@ function attachRemotePeerStream(remoteStream) {
     if (patRemoteVid) {
         patRemoteVid.srcObject = remoteStream;
         patRemoteVid.style.display = 'block';
-        patRemoteVid.play().catch(() => {});
+        playVideoElementSafe(patRemoteVid);
         if (patPlaceholder) patPlaceholder.style.display = 'none';
     }
     const badge = document.getElementById('peerRoomStatusBadge');
-    if (badge) {
-        badge.style.display = 'inline-block';
-        badge.textContent = '● 2-WAY LIVE CONNECTED';
-        badge.style.color = '#34d399';
-    }
     const patStatus = document.getElementById('patientPeerStatus');
-    if (patStatus) {
-        patStatus.textContent = '● Live Connected';
-        patStatus.style.color = '#34d399';
-    }
+    setPeerCallStatus(badge, patStatus, '● 2-WAY LIVE CONNECTED', '● Live Connected', '#34d399');
     if (typeof playSound === 'function') playSound('success');
     if (typeof showToast === 'function') showToast('🎥 Live 2-Way Video Call Connected!', 'success');
 }
 
-function bindPeerReconnectHandler(peer, badgeEl, patStatusEl) {
+function bindPeerReconnectHandler(peer, badgeEl, patStatusEl, attemptToken = telemedConnectAttemptToken) {
     if (!peer || typeof peer.on !== 'function') return;
+    let reconnectAttempts = 0;
+    let reconnectTimer = null;
     peer.on('disconnected', () => {
-        if (peer.destroyed) return;
-        if (badgeEl) {
-            badgeEl.style.display = 'inline-block';
-            badgeEl.style.color = '#fbbf24';
-            badgeEl.textContent = 'Reconnecting signaling...';
+        if (peer.destroyed || attemptToken !== telemedConnectAttemptToken) return;
+        if (reconnectAttempts >= 3) {
+            setPeerCallStatus(badgeEl, patStatusEl, 'Signaling offline — retry call', 'Disconnected — click Connect to retry', '#f87171');
+            return;
         }
-        if (patStatusEl) {
-            patStatusEl.style.color = '#fbbf24';
-            patStatusEl.textContent = 'Reconnecting...';
-        }
-        try {
-            peer.reconnect();
-        } catch (_) {}
+        reconnectAttempts++;
+        const delayMs = 1200 * reconnectAttempts;
+        setPeerCallStatus(badgeEl, patStatusEl, 'Reconnecting signaling...', 'Reconnecting...', '#fbbf24');
+        if (reconnectTimer) clearTimeout(reconnectTimer);
+        reconnectTimer = setTimeout(() => {
+            if (peer.destroyed || !peer.disconnected || attemptToken !== telemedConnectAttemptToken) return;
+            try { peer.reconnect(); } catch (_) {}
+        }, delayMs);
     });
+    peer.on('open', () => { reconnectAttempts = 0; });
 }
 
 function exportTelemedSummaryReport() {
@@ -12109,166 +12247,242 @@ function exportTelemedSummaryReport() {
     openModal('telemedSummaryModal');
 }
 
-async function hostPeerTelemedRoom() {
-    if (typeof window.Peer === 'undefined') {
-        showToast('WebRTC signaling library is still loading. Please retry in a moment.', 'warning');
+async function hostPeerTelemedRoom(retryCount = 0) {
+    const sdkReady = await ensurePeerJsLoaded();
+    if (!sdkReady || typeof window.Peer === 'undefined') {
+        showToast('Unable to load WebRTC signaling SDK. Check internet connection and retry.', 'error');
         return;
     }
     const input = document.getElementById('peerJoinRoomInput');
-    const rawRoom = (input && input.value.trim()) ? input.value.trim().toUpperCase() : `HMS-${Math.floor(1000 + Math.random() * 9000)}`;
-    const roomId = rawRoom.replace(/[^A-Z0-9-]/g, '');
+    const typedRaw = parseTelemedRoomId(input ? input.value : '');
+    const needFreshRoom = !typedRaw || (typedRaw === telemedActiveHostRoomId && retryCount === 0);
+    const roomId = needFreshRoom ? `HMS-${Math.floor(1000 + Math.random() * 9000)}` : typedRaw;
     if (input) input.value = roomId;
 
     const badge = document.getElementById('peerRoomStatusBadge');
-    if (badge) {
-        badge.style.display = 'inline-block';
-        badge.style.color = '#38bdf8';
-        badge.textContent = `Connecting ${roomId}...`;
-    }
+    setPeerCallStatus(badge, null, `Connecting ${roomId}...`, null, '#38bdf8');
 
     try {
         const localStream = await acquireTelemedLocalMedia();
         const iceCfg = await resolveTelemedIceConfig();
         endPeerTelemedCall(true);
-        telemedPeer = new window.Peer(`medicare-${roomId}`, { config: iceCfg, pingInterval: 5000 });
-        bindPeerReconnectHandler(telemedPeer, badge, null);
+        const attemptToken = telemedConnectAttemptToken;
+        telemedActiveHostRoomId = roomId;
 
-        telemedPeer.on('open', () => {
+        const peer = new window.Peer(`medicare-${roomId}`, { config: iceCfg, pingInterval: 5000, debug: 0 });
+        telemedPeer = peer;
+        bindPeerReconnectHandler(peer, badge, null, attemptToken);
+
+        telemedHostOpenTimer = setTimeout(() => {
+            if (attemptToken !== telemedConnectAttemptToken || peer.open || peer.destroyed) return;
+            setPeerCallStatus(badge, null, `Signaling timeout (${roomId})`, null, '#f87171');
+            showToast('Signaling server timed out. Check internet/firewall and click Host Live Call again.', 'warning');
+        }, 9000);
+
+        peer.on('open', () => {
+            if (attemptToken !== telemedConnectAttemptToken) return;
+            if (telemedHostOpenTimer) { clearTimeout(telemedHostOpenTimer); telemedHostOpenTimer = null; }
             const savedTurn = getTelemedTurnConfig();
             const turnSuffix = savedTurn ? `&turn=${encodeURIComponent(btoa(JSON.stringify(savedTurn)))}` : '';
             const joinUrl = `${getTelemedShareOrigin()}/patient-portal.html?room=${encodeURIComponent(roomId)}${turnSuffix}`;
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(joinUrl).catch(() => {});
             }
-            if (badge) {
-                badge.style.display = 'inline-block';
-                badge.style.color = '#fde047';
-                badge.textContent = `Room ${roomId} Ready (Link Copied)`;
-            }
+            setPeerCallStatus(badge, null, `Room ${roomId} Ready (Link Copied)`, null, '#fde047');
             showPeerRoomInviteModal(roomId, joinUrl);
             showToast(`📡 Room ${roomId} live! Share ID "${roomId}" or scan QR on the other device.`, 'success');
         });
 
-        telemedPeer.on('connection', bindPeerDataConnection);
+        peer.on('connection', bindPeerDataConnection);
 
-        telemedPeer.on('call', (call) => {
+        peer.on('call', (call) => {
+            if (attemptToken !== telemedConnectAttemptToken) return;
+            if (telemedActiveCall && telemedActiveCall !== call) {
+                try { telemedActiveCall.close(); } catch (_) {}
+            }
             telemedActiveCall = call;
-            call.answer(localStream);
-            attachIceDiagnostics(call, badge, null);
+            try {
+                call.answer(localStream);
+            } catch (ansErr) {
+                showToast(`Could not answer incoming video stream: ${ansErr.message || 'Media error'}`, 'error');
+                return;
+            }
+            attachIceDiagnostics(call, badge, null, attemptToken);
             startTelemedStatsMonitor(call);
             call.on('stream', (remoteStream) => {
+                if (attemptToken !== telemedConnectAttemptToken) return;
                 attachRemotePeerStream(remoteStream);
                 applyPeerCallQualityParameters(call.peerConnection, telemedEffectivePreset);
             });
-            call.on('close', () => endPeerTelemedCall(false));
+            call.on('error', (callErr) => {
+                if (attemptToken !== telemedConnectAttemptToken) return;
+                setPeerCallStatus(badge, null, `Stream issue (${callErr?.type || 'error'})`, null, '#fbbf24');
+            });
+            call.on('close', () => {
+                if (telemedActiveCall === call) endPeerTelemedCall(true);
+            });
         });
 
-        telemedPeer.on('error', (err) => {
-            if (err && err.type === 'unavailable-id') {
+        peer.on('error', (err) => {
+            if (attemptToken !== telemedConnectAttemptToken) return;
+            if (telemedHostOpenTimer) { clearTimeout(telemedHostOpenTimer); telemedHostOpenTimer = null; }
+            if (err && err.type === 'unavailable-id' && retryCount < 2) {
                 const freshId = `HMS-${Math.floor(1000 + Math.random() * 9000)}`;
                 if (input) input.value = freshId;
-                hostPeerTelemedRoom();
+                telemedActiveHostRoomId = null;
+                setTimeout(() => hostPeerTelemedRoom(retryCount + 1), 150);
                 return;
             }
-            showToast(`Call signaling notice: ${err.message || err.type}`, 'warning');
+            setPeerCallStatus(badge, null, `Room error (${err?.type || 'signaling'})`, null, '#f87171');
+            showToast(`Call signaling notice: ${err?.message || err?.type || 'Connection error'}`, 'warning');
         });
     } catch (err) {
-        showToast(`Camera/Mic required for live call: ${err.message}`, 'error');
+        showToast(`Could not start live room: ${err.message}`, 'error');
     }
 }
 
 async function joinPeerTelemedRoom(customRoomId = '') {
-    if (typeof window.Peer === 'undefined') {
-        showToast('WebRTC signaling library is still loading. Please retry in a moment.', 'warning');
+    const sdkReady = await ensurePeerJsLoaded();
+    if (!sdkReady || typeof window.Peer === 'undefined') {
+        showToast('Unable to load WebRTC signaling SDK. Check internet connection and retry.', 'error');
         return;
     }
     const raw = customRoomId || document.getElementById('peerJoinRoomInput')?.value || document.getElementById('patientPeerRoomInput')?.value || '';
-    const roomId = raw.trim().toUpperCase().replace(/[^A-Z0-9-]/g, '');
+    const roomId = parseTelemedRoomId(raw);
+    const patInput = document.getElementById('patientPeerRoomInput');
+    if (patInput && roomId && patInput.value !== roomId) patInput.value = roomId;
     if (!roomId) {
         showToast('Please enter the Room ID shared by the host (e.g. HMS-1234).', 'warning');
         return;
     }
 
     if (telemedPeer && !telemedPeer.destroyed && telemedPeer.id === `medicare-${roomId}`) {
-        showToast(`You are hosting Room ${roomId} here! Open the copied link on the OTHER phone or browser tab to join.`, 'info');
+        showToast(`You are hosting Room ${roomId} here! Open the copied link on the OTHER phone or tab to join.`, 'info');
         return;
     }
 
     const badge = document.getElementById('peerRoomStatusBadge');
-    if (badge) {
-        badge.style.display = 'inline-block';
-        badge.style.color = '#38bdf8';
-        badge.textContent = `Joining ${roomId}...`;
-    }
     const patStatus = document.getElementById('patientPeerStatus');
-    if (patStatus) {
-        patStatus.textContent = `Joining ${roomId}...`;
-        patStatus.style.color = '#38bdf8';
-    }
+    setPeerCallStatus(badge, patStatus, `Joining ${roomId}...`, `Joining ${roomId}...`, '#38bdf8');
 
     try {
         const localStream = await acquireTelemedLocalMedia();
         const iceCfg = await resolveTelemedIceConfig();
         endPeerTelemedCall(true);
-        telemedPeer = new window.Peer(undefined, { config: iceCfg, pingInterval: 5000 });
-        bindPeerReconnectHandler(telemedPeer, badge, patStatus);
+        const attemptToken = telemedConnectAttemptToken;
+
+        const peer = new window.Peer(undefined, { config: iceCfg, pingInterval: 5000, debug: 0 });
+        telemedPeer = peer;
+        bindPeerReconnectHandler(peer, badge, patStatus, attemptToken);
 
         let connected = false;
-        const joinTimeout = setTimeout(() => {
-            if (!connected) {
-                if (badge) {
-                    badge.style.color = '#fca5a5';
-                    badge.textContent = `Host not found (${roomId})`;
-                }
-                if (patStatus) {
-                    patStatus.style.color = '#fca5a5';
-                    patStatus.textContent = `Host not found for ${roomId} — click Host Live Call on Device 1 first`;
-                }
-                showToast(`No active host found for Room ${roomId}. Make sure Device 1 clicked "Host Live Call" first!`, 'warning');
-            }
-        }, 12000);
+        let retryAttempt = 0;
 
-        telemedPeer.on('open', () => {
-            const dataConn = telemedPeer.connect(`medicare-${roomId}`);
-            bindPeerDataConnection(dataConn);
-            const call = telemedPeer.call(`medicare-${roomId}`, localStream);
+        telemedJoinTimeoutTimer = setTimeout(() => {
+            telemedJoinTimeoutTimer = null;
+            if (connected || attemptToken !== telemedConnectAttemptToken) return;
+            clearTelemedPendingTimers();
+            setPeerCallStatus(
+                badge,
+                patStatus,
+                `Host not reachable (${roomId})`,
+                `Host offline for ${roomId} — confirm Device 1 started Host Live Call`,
+                '#fca5a5'
+            );
+            showToast(`Could not reach Room ${roomId}. Make sure Device 1 clicked "Host Live Call" first.`, 'warning');
+        }, 16000);
+
+        const openDataChannel = () => {
+            if (attemptToken !== telemedConnectAttemptToken || peer.destroyed || peer.disconnected) return;
+            try {
+                const dc = peer.connect(`medicare-${roomId}`);
+                if (dc) bindPeerDataConnection(dc);
+            } catch (_) {}
+        };
+
+        const dialHost = () => {
+            if (connected || attemptToken !== telemedConnectAttemptToken || peer.destroyed) return;
+            if (telemedActiveCall) {
+                try { telemedActiveCall.close(); } catch (_) {}
+                telemedActiveCall = null;
+            }
+            let call = null;
+            try {
+                call = peer.call(`medicare-${roomId}`, localStream);
+            } catch (_) {
+                call = null;
+            }
+            if (!call) {
+                setPeerCallStatus(badge, patStatus, `Dial failed (${roomId})`, 'Could not initialize video call', '#f87171');
+                return;
+            }
             telemedActiveCall = call;
-            attachIceDiagnostics(call, badge, patStatus);
+            attachIceDiagnostics(call, badge, patStatus, attemptToken);
             startTelemedStatsMonitor(call);
+
             call.on('stream', (remoteStream) => {
+                if (attemptToken !== telemedConnectAttemptToken) return;
                 connected = true;
-                clearTimeout(joinTimeout);
+                clearTelemedPendingTimers();
                 attachRemotePeerStream(remoteStream);
                 applyPeerCallQualityParameters(call.peerConnection, telemedEffectivePreset);
+                openDataChannel();
+            });
+            call.on('error', () => {
+                if (attemptToken !== telemedConnectAttemptToken || connected) return;
+                setPeerCallStatus(badge, patStatus, `Retrying ${roomId}...`, `Connecting ${roomId}...`, '#fbbf24');
             });
             call.on('close', () => {
-                clearTimeout(joinTimeout);
-                endPeerTelemedCall(false);
+                if (telemedActiveCall === call && attemptToken === telemedConnectAttemptToken && connected) {
+                    endPeerTelemedCall(false);
+                }
             });
+        };
+
+        peer.on('open', () => {
+            if (attemptToken !== telemedConnectAttemptToken) return;
+            dialHost();
         });
 
-        telemedPeer.on('error', (err) => {
-            clearTimeout(joinTimeout);
+        peer.on('error', (err) => {
+            if (attemptToken !== telemedConnectAttemptToken) return;
+            if (err && err.type === 'peer-unavailable' && retryAttempt < 3 && !connected) {
+                retryAttempt++;
+                setPeerCallStatus(
+                    badge,
+                    patStatus,
+                    `Waiting for host (${retryAttempt}/3)...`,
+                    `Waiting for Doctor in ${roomId} (retry ${retryAttempt}/3)...`,
+                    '#fbbf24'
+                );
+                if (telemedJoinRetryTimer) clearTimeout(telemedJoinRetryTimer);
+                telemedJoinRetryTimer = setTimeout(dialHost, 1800);
+                return;
+            }
+            clearTelemedPendingTimers();
             if (err && err.type === 'peer-unavailable') {
-                if (badge) {
-                    badge.style.color = '#fca5a5';
-                    badge.textContent = `Room ${roomId} not hosted`;
-                }
-                if (patStatus) {
-                    patStatus.style.color = '#fca5a5';
-                    patStatus.textContent = `Room ${roomId} is not hosted yet`;
-                }
+                setPeerCallStatus(
+                    badge,
+                    patStatus,
+                    `Room ${roomId} not hosted`,
+                    `Room ${roomId} is not hosted yet — ask Doctor to click Host Live Call`,
+                    '#fca5a5'
+                );
                 showToast(`Room ${roomId} is not hosted yet. Click "Host Live Call" on Device 1 first!`, 'warning');
                 return;
             }
-            showToast(`Could not join room ${roomId}: ${err.message || err.type}`, 'error');
+            setPeerCallStatus(badge, patStatus, `Join error (${err?.type || 'network'})`, `Connection error: ${err?.type || 'retry'}`, '#f87171');
+            showToast(`Could not connect to Room ${roomId}: ${err?.message || err?.type}`, 'error');
         });
     } catch (err) {
-        showToast(`Camera/Mic required to join call: ${err.message}`, 'error');
+        showToast(`Could not join call: ${err.message}`, 'error');
     }
 }
 
 function endPeerTelemedCall(keepStream = false) {
+    telemedConnectAttemptToken++;
+    telemedActiveHostRoomId = null;
+    clearTelemedPendingTimers();
     stopTelemedStatsMonitor();
     if (telemedDataConn) {
         try { telemedDataConn.close(); } catch (_) {}
@@ -12653,12 +12867,21 @@ async function toggleRealCameraStream() {
     const btnLabel = document.getElementById('telemedCamBtnLabel');
 
     if (isTelemedCameraActive) {
-        // Turn off real camera
         if (telemedMediaStream) {
             telemedMediaStream.getTracks().forEach(t => t.stop());
             telemedMediaStream = null;
         }
         isTelemedCameraActive = false;
+        if (telemedActiveCall && telemedActiveCall.peerConnection && typeof telemedActiveCall.peerConnection.getSenders === 'function') {
+            const fallback = createSyntheticFallbackStream('Dr. Admin (Camera Off)');
+            telemedMediaStream = fallback;
+            const fbTrack = fallback.getVideoTracks()[0];
+            for (const sender of telemedActiveCall.peerConnection.getSenders()) {
+                if (sender.track && sender.track.kind === 'video' && fbTrack && typeof sender.replaceTrack === 'function') {
+                    await sender.replaceTrack(fbTrack).catch(() => {});
+                }
+            }
+        }
         if (selfVideo) selfVideo.style.display = 'none';
         if (fallbackBox) fallbackBox.style.display = 'flex';
         if (btnLabel) btnLabel.textContent = 'Enable Live WebRTC Webcam';
@@ -12674,7 +12897,11 @@ async function toggleRealCameraStream() {
         let stream = null;
         try {
             stream = await navigator.mediaDevices.getUserMedia(getTelemedMediaConstraints(telemedQualityPreset));
-        } catch (_) {
+        } catch (firstErr) {
+            const errName = firstErr && firstErr.name ? firstErr.name : '';
+            if (errName === 'NotAllowedError' || errName === 'PermissionDeniedError' || errName === 'SecurityError') {
+                throw firstErr;
+            }
             stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         }
         telemedMediaStream = stream;
@@ -12702,16 +12929,18 @@ async function toggleRealCameraStream() {
         }
 
         if (selfVideo) {
+            selfVideo.muted = true;
+            selfVideo.playsInline = true;
             selfVideo.srcObject = stream;
             selfVideo.style.display = 'block';
+            selfVideo.play?.().catch(() => {});
         }
         if (fallbackBox) fallbackBox.style.display = 'none';
         if (btnLabel) btnLabel.textContent = 'Disable Live Webcam (PiP Active)';
 
         if (typeof playSound === 'function') playSound('success');
         showToast('🎥 Live WebRTC Camera Connected! Self-view active in PiP dock.', 'success');
-    } catch (err) {
-        console.warn('Real webcam permission or device note:', err);
+    } catch (_) {
         showToast('⚠️ Webcam not accessible; running simulated doctor PiP view.', 'warning');
     }
 }
