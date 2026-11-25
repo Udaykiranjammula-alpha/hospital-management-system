@@ -5253,7 +5253,7 @@ function resetToDemoData(skipConfirm = false) {
 
     if (typeof localStorage !== 'undefined') {
         const preserveKeys = new Set([
-            'hms_gemini_api_key', 'hms_theme', 'hms_authenticated', 'hms_user',
+            'hms_gemini_api_key', 'hms_theme', 'hms_authenticated', 'hms_user', 'hms_turn_config',
             'hms_user_role', 'hms_login_category', 'hms_username', 'hms_display_name',
             'hms_doctor_id', 'hms_patient_id', 'hms_department'
         ]);
@@ -11332,32 +11332,241 @@ function sendPeerChatMessage(roleLabel = 'doctor') {
     appendPeerChatLine('You', text, true);
 }
 
-function getTelemedIceConfig() {
-    return {
-        iceServers: [
-            { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:stun1.l.google.com:19302' },
-            { urls: 'stun:stun2.l.google.com:19302' },
-            {
-                urls: 'turn:openrelay.metered.ca:80',
-                username: 'openrelayproject',
-                credential: 'openrelayproject'
-            },
-            {
-                urls: 'turn:openrelay.metered.ca:443',
-                username: 'openrelayproject',
-                credential: 'openrelayproject'
-            },
-            {
-                urls: 'turns:openrelay.metered.ca:443?transport=tcp',
-                username: 'openrelayproject',
-                credential: 'openrelayproject'
+function getTelemedShareOrigin() {
+    if (typeof window === 'undefined' || !window.location) {
+        return 'https://hospital-management-system-msz2.vercel.app';
+    }
+    const host = window.location.hostname || '';
+    if (!host || host === 'localhost' || host === '127.0.0.1' || window.location.protocol === 'file:') {
+        return 'https://hospital-management-system-msz2.vercel.app';
+    }
+    return window.location.origin;
+}
+
+function getTelemedTurnConfig() {
+    try {
+        if (typeof window !== 'undefined' && window.location && window.location.search) {
+            const params = new URLSearchParams(window.location.search);
+            const tParam = params.get('turn');
+            if (tParam) {
+                const decoded = JSON.parse(atob(decodeURIComponent(tParam)));
+                if (decoded && (decoded.apiUrl || decoded.urls)) {
+                    if (typeof localStorage !== 'undefined') {
+                        localStorage.setItem('hms_turn_config', JSON.stringify(decoded));
+                    }
+                    return decoded;
+                }
             }
-        ],
-        iceCandidatePoolSize: 6,
+        }
+        if (typeof localStorage !== 'undefined') {
+            const raw = localStorage.getItem('hms_turn_config');
+            if (raw) return JSON.parse(raw);
+        }
+    } catch (_) {}
+    return null;
+}
+
+function getTelemedIceConfig() {
+    const iceServers = [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun.cloudflare.com:3478' },
+        { urls: 'stun:stun.relay.metered.ca:80' }
+    ];
+    const savedTurn = getTelemedTurnConfig();
+    if (savedTurn && savedTurn.urls && savedTurn.username && savedTurn.credential) {
+        iceServers.push({
+            urls: savedTurn.urls,
+            username: savedTurn.username,
+            credential: savedTurn.credential
+        });
+    } else if (savedTurn && Array.isArray(savedTurn.iceServers)) {
+        savedTurn.iceServers.forEach(s => { if (s && s.urls) iceServers.push(s); });
+    }
+    return {
+        iceServers,
+        iceCandidatePoolSize: 8,
         bundlePolicy: 'max-bundle',
         rtcpMuxPolicy: 'require'
     };
+}
+
+async function resolveTelemedIceConfig() {
+    const base = getTelemedIceConfig();
+    const savedTurn = getTelemedTurnConfig();
+    if (savedTurn && savedTurn.apiUrl && typeof fetch === 'function') {
+        try {
+            const resp = await fetch(savedTurn.apiUrl);
+            if (resp.ok) {
+                const dynamicServers = await resp.json();
+                if (Array.isArray(dynamicServers) && dynamicServers.length > 0) {
+                    const merged = [...dynamicServers, ...base.iceServers];
+                    return { ...base, iceServers: merged };
+                }
+            }
+        } catch (_) {}
+    }
+    return base;
+}
+
+function attachIceDiagnostics(call, badgeEl, patStatusEl) {
+    if (!call || !call.peerConnection) return;
+    const pc = call.peerConnection;
+    const updateIceStatus = () => {
+        const st = pc.iceConnectionState || pc.connectionState || '';
+        if (st === 'failed') {
+            if (badgeEl) {
+                badgeEl.style.display = 'inline-block';
+                badgeEl.style.color = '#f87171';
+                badgeEl.textContent = 'NAT Blocked — Enable TURN Relay';
+            }
+            if (patStatusEl) {
+                patStatusEl.style.color = '#f87171';
+                patStatusEl.textContent = 'Wi-Fi/NAT blocked direct call — configure Cross-Wi-Fi TURN';
+            }
+            if (typeof showToast === 'function') {
+                showToast('⚠️ Cross-Wi-Fi/carrier NAT blocked direct WebRTC. Click "Cross-Wi-Fi TURN" to connect over a relay server.', 'warning');
+            }
+        } else if (st === 'checking') {
+            if (patStatusEl) {
+                patStatusEl.style.color = '#38bdf8';
+                patStatusEl.textContent = 'Negotiating NAT / P2P path...';
+            }
+        }
+    };
+    if (typeof pc.addEventListener === 'function') {
+        pc.addEventListener('iceconnectionstatechange', updateIceStatus);
+        pc.addEventListener('connectionstatechange', updateIceStatus);
+    }
+}
+
+function openTurnConfigModal() {
+    const saved = getTelemedTurnConfig() || {};
+    let modal = document.getElementById('turnConfigModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'turnConfigModal';
+        modal.className = 'modal-overlay';
+        modal.style.display = 'none';
+        modal.style.zIndex = '100008';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 520px;">
+                <div class="modal-header">
+                    <h3 class="modal-title" style="color: #38bdf8;"><i class="fas fa-network-wired"></i> Cross-Wi-Fi / Mobile Network TURN Relay</h3>
+                    <button class="modal-close" onclick="closeModal('turnConfigModal')">&times;</button>
+                </div>
+                <div class="modal-body" style="padding: 20px;">
+                    <div style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 10px; padding: 12px; font-size: 0.82rem; color: #cbd5e1; margin-bottom: 14px; line-height: 1.5;">
+                        <strong>Why needed across separate Wi-Fi / 4G/5G:</strong> Direct P2P works on the same Wi-Fi via Google/Cloudflare STUN, but mobile CGNAT and strict routers require a <strong>TURN relay</strong>. Get a free 20 GB/month key at <a href="https://www.metered.ca/tools/openrelay/" target="_blank" style="color:#38bdf8; text-decoration:underline;">metered.ca/tools/openrelay</a> and paste its Credentials URL or host details below (it also auto-syncs into the QR join link!).
+                    </div>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label class="form-label">Metered Credentials API URL (Recommended, 1-step)</label>
+                        <input type="text" id="turnApiUrlInput" class="form-control" placeholder="https://yourapp.metered.live/api/v1/turn/credentials?apiKey=...">
+                    </div>
+                    <div style="font-size:0.75rem; color:var(--text-muted); text-align:center; margin: 8px 0;">— OR Manual TURN Credentials —</div>
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label class="form-label">TURN Server URL</label>
+                        <input type="text" id="turnManualUrlInput" class="form-control" placeholder="turn:global.relay.metered.ca:443?transport=tcp">
+                    </div>
+                    <div class="form-row" style="display:flex; gap:10px; margin-bottom: 14px;">
+                        <div class="form-group" style="flex:1;">
+                            <label class="form-label">Username</label>
+                            <input type="text" id="turnUsernameInput" class="form-control" placeholder="TURN username">
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label class="form-label">Credential / Password</label>
+                            <input type="password" id="turnCredentialInput" class="form-control" placeholder="TURN credential">
+                        </div>
+                    </div>
+                    <div id="turnProbeResult" style="font-size:0.8rem; font-family:'JetBrains Mono', monospace; color:#94a3b8; margin-bottom:12px;"></div>
+                    <div style="display:flex; gap:10px;">
+                        <button type="button" id="btnTestSaveTurn" class="btn btn-primary" style="flex:1;" onclick="testAndSaveTurnRelay()">
+                            <i class="fas fa-check-circle"></i> Test NAT &amp; Save TURN Relay
+                        </button>
+                        <button type="button" class="btn btn-outline" onclick="clearTurnRelayConfig()">Reset</button>
+                    </div>
+                </div>
+            </div>`;
+        document.body.appendChild(modal);
+    }
+    const apiEl = document.getElementById('turnApiUrlInput');
+    const urlEl = document.getElementById('turnManualUrlInput');
+    const uEl = document.getElementById('turnUsernameInput');
+    const cEl = document.getElementById('turnCredentialInput');
+    if (apiEl) apiEl.value = saved.apiUrl || '';
+    if (urlEl) urlEl.value = saved.urls || '';
+    if (uEl) uEl.value = saved.username || '';
+    if (cEl) cEl.value = saved.credential || '';
+    openModal('turnConfigModal');
+}
+
+async function testAndSaveTurnRelay() {
+    const apiUrl = document.getElementById('turnApiUrlInput')?.value.trim() || '';
+    const urls = document.getElementById('turnManualUrlInput')?.value.trim() || '';
+    const username = document.getElementById('turnUsernameInput')?.value.trim() || '';
+    const credential = document.getElementById('turnCredentialInput')?.value.trim() || '';
+    const outEl = document.getElementById('turnProbeResult');
+    if (outEl) {
+        outEl.style.color = '#38bdf8';
+        outEl.textContent = 'Testing STUN & TURN ICE candidates...';
+    }
+    const cfg = {};
+    if (apiUrl) cfg.apiUrl = apiUrl;
+    if (urls && username && credential) {
+        cfg.urls = urls;
+        cfg.username = username;
+        cfg.credential = credential;
+    }
+    if (typeof localStorage !== 'undefined') {
+        if (Object.keys(cfg).length > 0) localStorage.setItem('hms_turn_config', JSON.stringify(cfg));
+    }
+    const resolved = await resolveTelemedIceConfig();
+    let hasRelay = false;
+    let hasSrflx = false;
+    if (typeof RTCPeerConnection !== 'undefined') {
+        await new Promise((resolve) => {
+            const pc = new RTCPeerConnection({ iceServers: resolved.iceServers });
+            const timer = setTimeout(() => { try { pc.close(); } catch (_) {} resolve(); }, 3500);
+            pc.onicecandidate = (ev) => {
+                if (ev.candidate) {
+                    if (ev.candidate.type === 'relay') hasRelay = true;
+                    if (ev.candidate.type === 'srflx') hasSrflx = true;
+                } else {
+                    clearTimeout(timer);
+                    try { pc.close(); } catch (_) {}
+                    resolve();
+                }
+            };
+            pc.createDataChannel('probe');
+            pc.createOffer().then(o => pc.setLocalDescription(o)).catch(() => resolve());
+        });
+    }
+    if (outEl) {
+        if (hasRelay) {
+            outEl.style.color = '#34d399';
+            outEl.textContent = '✅ Cross-Wi-Fi TURN Relay Ready (relay + srflx candidates active)!';
+        } else if (hasSrflx) {
+            outEl.style.color = '#fbbf24';
+            outEl.textContent = '⚠️ STUN active (same/open NAT OK). Add Metered API URL or credentials for symmetric CGNAT relay.';
+        } else {
+            outEl.style.color = '#f87171';
+            outEl.textContent = '❌ No relay/STUN candidates gathered — verify credentials or network firewall.';
+        }
+    }
+    if (typeof showToast === 'function') {
+        showToast(hasRelay ? 'TURN relay verified & saved for cross-Wi-Fi calls!' : 'ICE check complete (STUN active; paste Metered TURN key for strict networks).', hasRelay ? 'success' : 'info');
+    }
+    return { hasRelay, hasSrflx };
+}
+
+function clearTurnRelayConfig() {
+    if (typeof localStorage !== 'undefined') localStorage.removeItem('hms_turn_config');
+    ['turnApiUrlInput', 'turnManualUrlInput', 'turnUsernameInput', 'turnCredentialInput'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    const outEl = document.getElementById('turnProbeResult');
+    if (outEl) outEl.textContent = 'Cleared custom TURN config (using public STUN defaults).';
 }
 
 function createSyntheticFallbackStream() {
@@ -11898,12 +12107,15 @@ async function hostPeerTelemedRoom() {
 
     try {
         const localStream = await acquireTelemedLocalMedia();
+        const iceCfg = await resolveTelemedIceConfig();
         endPeerTelemedCall(true);
-        telemedPeer = new window.Peer(`medicare-${roomId}`, { config: getTelemedIceConfig() });
+        telemedPeer = new window.Peer(`medicare-${roomId}`, { config: iceCfg, pingInterval: 5000 });
         bindPeerReconnectHandler(telemedPeer, badge, null);
 
         telemedPeer.on('open', () => {
-            const joinUrl = `${window.location.origin}/patient-portal.html?room=${encodeURIComponent(roomId)}`;
+            const savedTurn = getTelemedTurnConfig();
+            const turnSuffix = savedTurn ? `&turn=${encodeURIComponent(btoa(JSON.stringify(savedTurn)))}` : '';
+            const joinUrl = `${getTelemedShareOrigin()}/patient-portal.html?room=${encodeURIComponent(roomId)}${turnSuffix}`;
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(joinUrl).catch(() => {});
             }
@@ -11921,6 +12133,7 @@ async function hostPeerTelemedRoom() {
         telemedPeer.on('call', (call) => {
             telemedActiveCall = call;
             call.answer(localStream);
+            attachIceDiagnostics(call, badge, null);
             startTelemedStatsMonitor(call);
             call.on('stream', (remoteStream) => {
                 attachRemotePeerStream(remoteStream);
@@ -11974,8 +12187,9 @@ async function joinPeerTelemedRoom(customRoomId = '') {
 
     try {
         const localStream = await acquireTelemedLocalMedia();
+        const iceCfg = await resolveTelemedIceConfig();
         endPeerTelemedCall(true);
-        telemedPeer = new window.Peer(undefined, { config: getTelemedIceConfig() });
+        telemedPeer = new window.Peer(undefined, { config: iceCfg, pingInterval: 5000 });
         bindPeerReconnectHandler(telemedPeer, badge, patStatus);
 
         let connected = false;
@@ -11998,6 +12212,7 @@ async function joinPeerTelemedRoom(customRoomId = '') {
             bindPeerDataConnection(dataConn);
             const call = telemedPeer.call(`medicare-${roomId}`, localStream);
             telemedActiveCall = call;
+            attachIceDiagnostics(call, badge, patStatus);
             startTelemedStatsMonitor(call);
             call.on('stream', (remoteStream) => {
                 connected = true;

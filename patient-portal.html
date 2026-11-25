@@ -275,6 +275,9 @@
                         <button type="button" class="btn btn-outline btn-sm" id="patientShareVitalsBtn" onclick="sendPatientLiveVitals()" title="Send Live Vitals to Doctor">
                             <i class="fas fa-heartbeat" style="color:#f87171;"></i> Share Vitals
                         </button>
+                        <button type="button" class="btn btn-outline btn-sm" id="patientTurnConfigBtn" onclick="openTurnConfigModal()" title="Cross-Wi-Fi TURN Relay Settings">
+                            <i class="fas fa-network-wired"></i> TURN
+                        </button>
                     </div>
                     <button type="button" class="btn btn-danger btn-sm" onclick="endPeerTelemedCall(); closeModal('patientVideoCallModal');">
                         <i class="fas fa-phone-slash"></i> End Call
