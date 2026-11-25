@@ -619,7 +619,12 @@ export default function AskAIAssistant() {
     return typeof localStorage !== 'undefined' ? (localStorage.getItem('hms_gemini_api_key') || '') : '';
   });
   const [geminiModel, setGeminiModel] = useState(() => {
-    return typeof localStorage !== 'undefined' ? (localStorage.getItem('hms_gemini_model') || 'gemini-1.5-flash') : 'gemini-1.5-flash';
+    if (typeof localStorage === 'undefined') return 'gemini-2.5-flash';
+    const saved = localStorage.getItem('hms_gemini_model');
+    if (!saved || saved === 'gemini-1.5-flash' || saved === 'gemini-1.5-pro' || saved === 'gemini-2.0-flash-exp') {
+      return 'gemini-2.5-flash';
+    }
+    return saved;
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [tempApiKey, setTempApiKey] = useState('');

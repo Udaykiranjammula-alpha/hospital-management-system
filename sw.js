@@ -1,9 +1,9 @@
 /**
- * MediCare HMS - Resilient Zero-Fault Service Worker v2.2 (upgraded from medicare-hms-core-v2.1)
- * PWA Installability + Safe Edge Passthrough
+ * MediCare HMS - Resilient Zero-Fault Service Worker v2.3 (upgraded from medicare-hms-core-v2.1)
+ * PWA Installability + Safe Edge Passthrough + Network-First Fresh Assets
  */
 
-const CACHE_NAME = 'medicare-hms-core-v2.2'; // Prunes medicare-hms-core-v2.1 on activate
+const CACHE_NAME = 'medicare-hms-core-v2.3'; // Prunes medicare-hms-core-v2.1 & v2.2 on activate
 // Offline fallback references: './dashboard.html', './index.html'
 
 // Error guards to prevent any uncaught exceptions
@@ -34,7 +34,7 @@ self.addEventListener('activate', (event) => {
     );
 });
 
-// Fetch: Pure passthrough for navigations (0 chance of ERR_FAILED), cache-first for static assets only
+// Fetch: Pure passthrough for navigations (0 chance of ERR_FAILED), Network-First for JS/CSS so updates appear immediately
 self.addEventListener('fetch', (event) => {
     const { request } = event;
 
@@ -52,29 +52,17 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // 3. For local static assets (CSS, JS, fonts, images), cache with network fallback
+    // 3. Network-First with cache fallback for local static assets (guarantees fresh JS/CSS on deploy)
     event.respondWith(
-        caches.match(request, { ignoreSearch: true }).then((cachedResponse) => {
-            if (cachedResponse) {
-                // Background update
-                fetch(request).then(async (networkResponse) => {
-                    if (networkResponse && networkResponse.status === 200) {
-                        const cache = await caches.open(CACHE_NAME);
-                        cache.put(request, networkResponse.clone());
-                    }
-                }).catch(() => {});
-                return cachedResponse;
+        fetch(request).then(async (networkResponse) => {
+            if (networkResponse && networkResponse.status === 200) {
+                const cache = await caches.open(CACHE_NAME);
+                cache.put(request, networkResponse.clone());
             }
-
-            return fetch(request).then(async (networkResponse) => {
-                if (networkResponse && networkResponse.status === 200) {
-                    const cache = await caches.open(CACHE_NAME);
-                    cache.put(request, networkResponse.clone());
-                }
-                return networkResponse;
-            }).catch(() => {
-                return new Response('', { status: 408 });
-            });
-        }).catch(() => fetch(request))
+            return networkResponse;
+        }).catch(async () => {
+            const cachedResponse = await caches.match(request, { ignoreSearch: true });
+            return cachedResponse || new Response('', { status: 408 });
+        })
     );
 });
