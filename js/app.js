@@ -10595,7 +10595,7 @@ function startTelemedPatientStream() {
 
         const breathe = Math.sin(frame * 0.045) * 3.5;
         const isBlink = (frame % 180) > 173;
-        const talkPulse = isTelemedMicMuted ? 0 : Math.abs(Math.sin(frame * 0.22)) * 3.5;
+        const talkPulse = (typeof isTelemedAudioMuted !== 'undefined' && isTelemedAudioMuted) ? 0 : Math.abs(Math.sin(frame * 0.22)) * 3.5;
 
         // Shoulders & Patient Attire
         const torsoGrad = ctx.createLinearGradient(centerX - 100, centerY + 55, centerX + 100, centerY + 170);
