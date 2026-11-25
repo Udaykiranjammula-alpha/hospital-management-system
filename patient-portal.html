@@ -98,7 +98,10 @@
                     <button class="btn btn-outline" id="btnTabBills" onclick="switchPortalTab('bills')">
                         <i class="fas fa-file-invoice-dollar"></i> Hospital Bills & Online Pay
                     </button>
-                    <button class="btn btn-danger" style="margin-left: auto;" onclick="triggerSOSAmbulance()">
+                    <button class="btn btn-success" onclick="openPatientVideoCallModal()" style="margin-left: auto;">
+                        <i class="fas fa-video"></i> Join Doctor Video Call
+                    </button>
+                    <button class="btn btn-danger" onclick="triggerSOSAmbulance()">
                         <i class="fas fa-ambulance"></i> Request SOS Ambulance
                     </button>
                 </div>
@@ -191,6 +194,39 @@
 
     <div id="toast-container"></div>
     <script src="js/react-components.bundle.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <script src="js/app.js?v=9.0"></script>
+
+    <!-- MODAL: Live Doctor Video Call (WebRTC PeerJS) -->
+    <div class="modal-overlay" id="patientVideoCallModal" style="display: none;">
+        <div class="modal-content" style="max-width: 780px; width: 95%;">
+            <div class="modal-header">
+                <h3 class="modal-title" style="color: #38bdf8;"><i class="fas fa-video"></i> Live Telemedicine Video Consultation</h3>
+                <button class="modal-close" onclick="endPeerTelemedCall(); closeModal('patientVideoCallModal');">&times;</button>
+            </div>
+            <div style="padding: 18px; display: flex; flex-direction: column; gap: 12px;">
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <input type="text" id="patientPeerRoomInput" class="form-control" placeholder="Enter Room ID from Doctor (e.g. HMS-1234)" style="flex: 1; min-width: 200px;">
+                    <button type="button" class="btn btn-primary" onclick="joinPeerTelemedRoom(document.getElementById('patientPeerRoomInput').value)">
+                        <i class="fas fa-phone"></i> Connect Video Call
+                    </button>
+                    <span id="patientPeerStatus" style="font-size: 0.78rem; color: #94a3b8; font-family: 'JetBrains Mono', monospace;">Ready</span>
+                </div>
+                <div style="position: relative; width: 100%; aspect-ratio: 16/9; background: #020617; border-radius: 14px; overflow: hidden; border: 1px solid rgba(56,189,248,0.3);">
+                    <video id="patientRemoteDoctorVideo" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; display: none;"></video>
+                    <div id="patientRemotePlaceholder" style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#94a3b8; gap:8px;">
+                        <i class="fas fa-user-doctor" style="font-size: 42px; color: #38bdf8;"></i>
+                        <span>Enter the Room ID shared by your Doctor to start live 2-way video</span>
+                    </div>
+                    <video id="patientLocalSelfVideo" autoplay playsinline muted style="position:absolute; bottom:12px; right:12px; width:140px; height:96px; border-radius:10px; object-fit:cover; border:2px solid #38bdf8; background:#0f172a;"></video>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                    <button type="button" class="btn btn-danger btn-sm" onclick="endPeerTelemedCall(); closeModal('patientVideoCallModal');">
+                        <i class="fas fa-phone-slash"></i> End Call
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

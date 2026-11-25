@@ -9001,6 +9001,14 @@ function initPatientPortalPage() {
         populatePortalPatientSelector();
     }
     renderPortalPatientData(portalCurrentPatientId);
+
+    if (typeof window !== 'undefined' && window.location && window.location.search) {
+        const params = new URLSearchParams(window.location.search);
+        const room = params.get('room');
+        if (room && typeof openPatientVideoCallModal === 'function') {
+            setTimeout(() => openPatientVideoCallModal(room), 300);
+        }
+    }
 }
 
 function populatePortalPatientSelector() {
@@ -9176,6 +9184,14 @@ function confirmOnlinePayment(billId) {
     playSound('success');
     showToast(`Payment of ₹${bills[idx]?.total} confirmed! Receipt issued.`, 'success');
     renderPortalPatientData(portalCurrentPatientId);
+
+    if (typeof window !== 'undefined' && window.location && window.location.search) {
+        const params = new URLSearchParams(window.location.search);
+        const room = params.get('room');
+        if (room && typeof openPatientVideoCallModal === 'function') {
+            setTimeout(() => openPatientVideoCallModal(room), 300);
+        }
+    }
 }
 
 function triggerSOSAmbulance() {
@@ -10446,6 +10462,211 @@ let telemedMediaStream = null;
 let isTelemedCameraActive = false;
 let isTelemedAudioMuted = false;
 let isTelemedVideoMuted = false;
+let telemedPeer = null;
+let telemedActiveCall = null;
+
+function getTelemedIceConfig() {
+    return {
+        iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' }
+        ]
+    };
+}
+
+async function acquireTelemedLocalMedia() {
+    if (telemedMediaStream && telemedMediaStream.getTracks().some(t => t.readyState === 'live')) {
+        return telemedMediaStream;
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Browser camera/microphone API requires HTTPS or localhost.');
+    }
+    let stream = null;
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    } catch (_) {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true }).catch(() => navigator.mediaDevices.getUserMedia({ audio: true }));
+    }
+    telemedMediaStream = stream;
+
+    const selfVid = document.getElementById('telemedSelfPreviewVideo');
+    const docFallback = document.getElementById('telemedDoctorFallback');
+    if (selfVid) {
+        selfVid.srcObject = stream;
+        selfVid.style.display = 'block';
+        if (docFallback) docFallback.style.display = 'none';
+    }
+    const patSelfVid = document.getElementById('patientLocalSelfVideo');
+    if (patSelfVid) {
+        patSelfVid.srcObject = stream;
+    }
+    return stream;
+}
+
+function attachRemotePeerStream(remoteStream) {
+    const remoteVid = document.getElementById('telemedRemoteVideo');
+    const canvas = document.getElementById('telemedPatientStreamCanvas');
+    if (remoteVid) {
+        remoteVid.srcObject = remoteStream;
+        remoteVid.style.display = 'block';
+        remoteVid.play().catch(() => {});
+        if (canvas) canvas.style.display = 'none';
+    }
+    const patRemoteVid = document.getElementById('patientRemoteDoctorVideo');
+    const patPlaceholder = document.getElementById('patientRemotePlaceholder');
+    if (patRemoteVid) {
+        patRemoteVid.srcObject = remoteStream;
+        patRemoteVid.style.display = 'block';
+        patRemoteVid.play().catch(() => {});
+        if (patPlaceholder) patPlaceholder.style.display = 'none';
+    }
+    const badge = document.getElementById('peerRoomStatusBadge');
+    if (badge) {
+        badge.style.display = 'inline-block';
+        badge.textContent = '● 2-WAY LIVE CONNECTED';
+        badge.style.color = '#34d399';
+    }
+    const patStatus = document.getElementById('patientPeerStatus');
+    if (patStatus) {
+        patStatus.textContent = '● Live Connected';
+        patStatus.style.color = '#34d399';
+    }
+    if (typeof playSound === 'function') playSound('success');
+    if (typeof showToast === 'function') showToast('🎥 Live 2-Way Video Call Connected!', 'success');
+}
+
+async function hostPeerTelemedRoom() {
+    if (typeof window.Peer === 'undefined') {
+        showToast('WebRTC signaling library is still loading. Please retry in a moment.', 'warning');
+        return;
+    }
+    const input = document.getElementById('peerJoinRoomInput');
+    const rawRoom = (input && input.value.trim()) ? input.value.trim().toUpperCase() : `HMS-${Math.floor(1000 + Math.random() * 9000)}`;
+    const roomId = rawRoom.replace(/[^A-Z0-9-]/g, '');
+    if (input) input.value = roomId;
+
+    const badge = document.getElementById('peerRoomStatusBadge');
+    if (badge) {
+        badge.style.display = 'inline-block';
+        badge.style.color = '#38bdf8';
+        badge.textContent = `Connecting ${roomId}...`;
+    }
+
+    try {
+        const localStream = await acquireTelemedLocalMedia();
+        endPeerTelemedCall(true);
+        telemedPeer = new window.Peer(`medicare-${roomId}`, { config: getTelemedIceConfig() });
+
+        telemedPeer.on('open', () => {
+            const joinUrl = `${window.location.origin}/patient-portal.html?room=${encodeURIComponent(roomId)}`;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(joinUrl).catch(() => {});
+            }
+            if (badge) {
+                badge.style.display = 'inline-block';
+                badge.style.color = '#fde047';
+                badge.textContent = `Room ${roomId} Ready (Link Copied)`;
+            }
+            showToast(`📡 Room ${roomId} live! Share ID "${roomId}" or paste copied link on the other device.`, 'success');
+        });
+
+        telemedPeer.on('call', (call) => {
+            telemedActiveCall = call;
+            call.answer(localStream);
+            call.on('stream', attachRemotePeerStream);
+            call.on('close', () => endPeerTelemedCall(false));
+        });
+
+        telemedPeer.on('error', (err) => {
+            showToast(`Call signaling notice: ${err.message || err.type}`, 'warning');
+        });
+    } catch (err) {
+        showToast(`Camera/Mic required for live call: ${err.message}`, 'error');
+    }
+}
+
+async function joinPeerTelemedRoom(customRoomId = '') {
+    if (typeof window.Peer === 'undefined') {
+        showToast('WebRTC signaling library is still loading. Please retry in a moment.', 'warning');
+        return;
+    }
+    const raw = customRoomId || document.getElementById('peerJoinRoomInput')?.value || document.getElementById('patientPeerRoomInput')?.value || '';
+    const roomId = raw.trim().toUpperCase().replace(/[^A-Z0-9-]/g, '');
+    if (!roomId) {
+        showToast('Please enter the Room ID shared by the host (e.g. HMS-1234).', 'warning');
+        return;
+    }
+
+    const badge = document.getElementById('peerRoomStatusBadge');
+    if (badge) {
+        badge.style.display = 'inline-block';
+        badge.style.color = '#38bdf8';
+        badge.textContent = `Joining ${roomId}...`;
+    }
+    const patStatus = document.getElementById('patientPeerStatus');
+    if (patStatus) {
+        patStatus.textContent = `Joining ${roomId}...`;
+        patStatus.style.color = '#38bdf8';
+    }
+
+    try {
+        const localStream = await acquireTelemedLocalMedia();
+        endPeerTelemedCall(true);
+        telemedPeer = new window.Peer(undefined, { config: getTelemedIceConfig() });
+
+        telemedPeer.on('open', () => {
+            const call = telemedPeer.call(`medicare-${roomId}`, localStream);
+            telemedActiveCall = call;
+            call.on('stream', attachRemotePeerStream);
+            call.on('close', () => endPeerTelemedCall(false));
+        });
+
+        telemedPeer.on('error', (err) => {
+            showToast(`Could not join room ${roomId}: ${err.message || err.type}`, 'error');
+        });
+    } catch (err) {
+        showToast(`Camera/Mic required to join call: ${err.message}`, 'error');
+    }
+}
+
+function endPeerTelemedCall(keepStream = false) {
+    if (telemedActiveCall) {
+        try { telemedActiveCall.close(); } catch (_) {}
+        telemedActiveCall = null;
+    }
+    if (telemedPeer) {
+        try { telemedPeer.destroy(); } catch (_) {}
+        telemedPeer = null;
+    }
+    if (!keepStream && telemedMediaStream) {
+        telemedMediaStream.getTracks().forEach(t => t.stop());
+        telemedMediaStream = null;
+    }
+    const remoteVid = document.getElementById('telemedRemoteVideo');
+    const canvas = document.getElementById('telemedPatientStreamCanvas');
+    if (remoteVid) {
+        remoteVid.srcObject = null;
+        remoteVid.style.display = 'none';
+    }
+    if (canvas) canvas.style.display = 'block';
+
+    const patRemoteVid = document.getElementById('patientRemoteDoctorVideo');
+    const patPlaceholder = document.getElementById('patientRemotePlaceholder');
+    if (patRemoteVid) {
+        patRemoteVid.srcObject = null;
+        patRemoteVid.style.display = 'none';
+    }
+    if (patPlaceholder) patPlaceholder.style.display = 'flex';
+
+    const badge = document.getElementById('peerRoomStatusBadge');
+    if (badge && !keepStream) badge.style.display = 'none';
+}
+
+function openPatientVideoCallModal(prefillRoom = '') {
+    const inp = document.getElementById('patientPeerRoomInput');
+    if (inp && prefillRoom) inp.value = prefillRoom;
+    openModal('patientVideoCallModal');
+}
 
 function initTelemedicinePage() {
     const patients = loadData('hms_patients', defaultPatients);
@@ -10481,6 +10702,13 @@ function initTelemedicinePage() {
     startTelemedPatientStream();
     startTelemedVitalsHUD();
     startTelemedTimer();
+
+    if (typeof window !== 'undefined' && window.location && window.location.search) {
+        const params = new URLSearchParams(window.location.search);
+        const room = params.get('room');
+        const joinInp = document.getElementById('peerJoinRoomInput');
+        if (room && joinInp) joinInp.value = room.toUpperCase();
+    }
 }
 
 function switchTelemedSession(patientId, notify = true) {
@@ -11124,6 +11352,7 @@ function completeTelemedConsultation() {
 
 function endTelemedCallModal() {
     if (confirm('End active telemedicine video consultation and navigate to dashboard?')) {
+        if (typeof endPeerTelemedCall === 'function') endPeerTelemedCall();
         completeTelemedConsultation();
     }
 }

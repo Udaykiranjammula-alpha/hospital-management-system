@@ -584,6 +584,20 @@ async function runAllTests() {
     assert(!adminMarkup.includes('updateTransferSourceInfo'), 'admin.html does not reference undefined updateTransferSourceInfo()');
     assert(!dashboardMarkup.includes('updateTransferSourceInfo'), 'dashboard.html does not reference undefined updateTransferSourceInfo()');
 
+    // ----------------------------------------------------
+    // TEST SUITE 18: 2-Person Live PeerJS WebRTC Telemedicine Checks
+    // ----------------------------------------------------
+    console.log('\n--- TEST SUITE 18: 2-Person Live PeerJS WebRTC Telemedicine Checks ---');
+    const teleMarkup = fs.readFileSync(path.join(rootDir, 'telemedicine.html'), 'utf8');
+    const portalMarkup = fs.readFileSync(path.join(rootDir, 'patient-portal.html'), 'utf8');
+    assert(teleMarkup.includes('id="telemedRemoteVideo"'), 'telemedicine.html has #telemedRemoteVideo for remote peer stream');
+    assert(teleMarkup.includes('hostPeerTelemedRoom()'), 'telemedicine.html has Host Live Call control');
+    assert(teleMarkup.includes('joinPeerTelemedRoom()'), 'telemedicine.html has Join Room control');
+    assert(portalMarkup.includes('id="patientVideoCallModal"'), 'patient-portal.html has #patientVideoCallModal');
+    assert(appJs.includes('function hostPeerTelemedRoom('), 'app.js defines hostPeerTelemedRoom');
+    assert(appJs.includes('function joinPeerTelemedRoom('), 'app.js defines joinPeerTelemedRoom');
+    assert(appJs.includes('function endPeerTelemedCall('), 'app.js defines endPeerTelemedCall');
+
     console.log(`\n====================================================`);
     console.log(`TOTAL TESTS: ${totalTests} | PASSED: ${passedTests} | FAILED: ${failedTests}`);
     console.log(`====================================================\n`);

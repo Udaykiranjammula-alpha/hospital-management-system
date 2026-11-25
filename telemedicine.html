@@ -100,6 +100,16 @@
                     </div>
 
                     <div style="display: flex; gap: 10px; align-items: center;">
+                        <div id="peerRoomControls" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; background:rgba(15,23,42,0.7); border:1px solid rgba(56,189,248,0.28); padding:4px 8px; border-radius:10px;">
+                            <button class="btn btn-sm btn-success" onclick="hostPeerTelemedRoom()" id="hostPeerCallBtn" title="Create a live 2-person WebRTC room and copy join link">
+                                <i class="fas fa-video"></i> Host Live Call
+                            </button>
+                            <input type="text" id="peerJoinRoomInput" class="form-control" placeholder="Room ID (e.g. HMS-101)" style="width:135px; padding:4px 8px; font-size:0.75rem; height:30px;">
+                            <button class="btn btn-sm btn-primary" onclick="joinPeerTelemedRoom()" id="joinPeerCallBtn">
+                                <i class="fas fa-right-to-bracket"></i> Join
+                            </button>
+                            <span id="peerRoomStatusBadge" style="display:none; font-size:0.72rem; font-family:'JetBrains Mono', monospace; color:#34d399; padding:2px 6px;"></span>
+                        </div>
                         <button class="btn btn-sm btn-outline" onclick="simulateIncomingCallModal()">
                             <i class="fas fa-phone-volume"></i> Simulate Incoming Patient Call
                         </button>
@@ -118,6 +128,7 @@
                         <!-- Video Display Container -->
                         <div class="telemed-video-stage" id="telemedVideoStage" style="position: relative; width: 100%; aspect-ratio: 16/10; min-height: 440px; background: #020617; display: flex; align-items: center; justify-content: center; overflow: hidden;">
                             <!-- Real webcam video element (used when webcam enabled) -->
+                            <video id="telemedRemoteVideo" autoplay playsinline style="display: none; width: 100%; height: 100%; object-fit: cover;"></video>
                             <video id="telemedWebcamVideo" autoplay playsinline muted style="display: none; width: 100%; height: 100%; object-fit: cover;"></video>
                             
                             <!-- High-Tech Animated Patient Video Stream Canvas (Fallback/Simulation) -->
@@ -347,6 +358,7 @@
     <div id="toast-container"></div>
     <div id="react-assistant-mount"></div>
     <script src="js/react-components.bundle.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <script src="js/app.js?v=9.0"></script>
 </body>
 </html>
