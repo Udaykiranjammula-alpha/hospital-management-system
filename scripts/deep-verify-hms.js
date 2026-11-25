@@ -706,6 +706,8 @@ async function runAllTests() {
     assert(appJs.includes('function renderPortalHospitalDirectory'), 'app.js defines renderPortalHospitalDirectory');
     assert(appJs.includes('function filterPortalDirectory'), 'app.js defines filterPortalDirectory');
     assert(appJs.includes('function openPublicHospitalDirectoryModal'), 'app.js defines openPublicHospitalDirectoryModal');
+    assert(appJs.includes('function openPatientBookAppointmentModal'), 'app.js defines openPatientBookAppointmentModal');
+    assert(appJs.includes('function savePatientPortalAppointment'), 'app.js defines savePatientPortalAppointment');
     assert(fs.readFileSync(path.join(rootDir, 'index.html'), 'utf8').includes('id="btnPublicHospitalInfo"'), 'index.html has #btnPublicHospitalInfo for new visitors');
 
     console.log(`\n====================================================`);

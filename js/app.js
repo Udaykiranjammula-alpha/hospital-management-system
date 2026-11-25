@@ -9449,9 +9449,9 @@ function renderPortalHospitalDirectory(query = '') {
                                     <div style="font-size:0.82rem; color:#38bdf8; margin-top:3px;">${safe(d.department)} &bull; ${safe(d.specialization)}</div>
                                     <div style="font-size:0.76rem; color:var(--text-muted); margin-top:4px;">${safe(expText)} experience &bull; ${safe(d.phone || '')} &bull; <span style="color:#34d399;">${bookedCount} booked</span></div>
                                 </div>
-                                <a href="appointments.html?doctor=${encodeURIComponent(d.id)}" class="btn btn-sm btn-outline" style="text-align:center;">
+                                <button type="button" class="btn btn-sm btn-outline" style="text-align:center;" onclick="openPatientBookAppointmentModal('${safe(d.id)}')">
                                     <i class="fas fa-calendar-plus"></i> Book Consultation
-                                </a>
+                                </button>
                             </div>`;
                     }).join('')}
                 </div>` : '<p style="color:var(--text-muted); font-size:0.86rem;">No doctors matched your search.</p>'}
@@ -9481,6 +9481,122 @@ function filterPortalDirectory(query = '') {
     if (inp && inp.value !== query) inp.value = query;
     switchPortalTab('directory');
     renderPortalHospitalDirectory(query);
+}
+
+function openPatientBookAppointmentModal(selectedDoctorId = '') {
+    const doctors = loadData('hms_doctors', defaultDoctors);
+    const patients = loadData('hms_patients', defaultPatients);
+    const curUser = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+    const activePatId = (typeof portalCurrentPatientId !== 'undefined' && portalCurrentPatientId)
+        ? portalCurrentPatientId
+        : (curUser && curUser.patientId ? curUser.patientId : (patients[0]?.id || 'P001'));
+    const activePat = patients.find(p => p.id === activePatId) || patients[0];
+
+    let modal = document.getElementById('patientBookApptModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'patientBookApptModal';
+        modal.className = 'modal-overlay';
+        modal.style.display = 'none';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 480px;">
+                <div class="modal-header">
+                    <h3 class="modal-title" style="color: #38bdf8;"><i class="fas fa-calendar-plus"></i> Book Doctor Consultation</h3>
+                    <button class="modal-close" onclick="closeModal('patientBookApptModal')">&times;</button>
+                </div>
+                <div class="modal-body" style="padding: 20px;">
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label class="form-label">Patient Name</label>
+                        <input type="text" id="patBookPatientName" class="form-control" placeholder="Enter your full name">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label class="form-label">Select Doctor</label>
+                        <select id="patBookDoctorSelect" class="form-control"></select>
+                    </div>
+                    <div class="form-row" style="display:flex; gap:10px; margin-bottom: 12px;">
+                        <div class="form-group" style="flex:1;">
+                            <label class="form-label">Preferred Date</label>
+                            <input type="date" id="patBookDate" class="form-control">
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label class="form-label">Time Slot</label>
+                            <select id="patBookTime" class="form-control">
+                                <option value="09:30 AM">09:30 AM</option>
+                                <option value="10:30 AM" selected>10:30 AM</option>
+                                <option value="12:00 PM">12:00 PM</option>
+                                <option value="03:00 PM">03:00 PM</option>
+                                <option value="05:30 PM">05:30 PM</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label class="form-label">Reason / Symptoms</label>
+                        <input type="text" id="patBookReason" class="form-control" placeholder="e.g. Fever, chest checkup, routine follow-up">
+                    </div>
+                    <button type="button" id="btnConfirmPatientBooking" class="btn btn-primary" style="width: 100%;" onclick="savePatientPortalAppointment()">
+                        <i class="fas fa-check-circle"></i> Confirm Appointment
+                    </button>
+                </div>
+            </div>`;
+        document.body.appendChild(modal);
+    }
+
+    const nameInp = document.getElementById('patBookPatientName');
+    if (nameInp) nameInp.value = activePat ? activePat.name : (curUser?.displayName || '');
+    const docSel = document.getElementById('patBookDoctorSelect');
+    if (docSel) {
+        docSel.innerHTML = doctors.map(d => `<option value="${d.id}">${d.name} (${d.department})</option>`).join('');
+        if (selectedDoctorId && doctors.some(d => d.id === selectedDoctorId)) {
+            docSel.value = selectedDoctorId;
+        }
+    }
+    const dateInp = document.getElementById('patBookDate');
+    if (dateInp) dateInp.value = new Date().toISOString().split('T')[0];
+
+    openModal('patientBookApptModal');
+}
+
+function savePatientPortalAppointment() {
+    const doctors = loadData('hms_doctors', defaultDoctors);
+    const patients = loadData('hms_patients', defaultPatients);
+    const curUser = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+    const pId = (typeof portalCurrentPatientId !== 'undefined' && portalCurrentPatientId)
+        ? portalCurrentPatientId
+        : (curUser && curUser.patientId ? curUser.patientId : (patients[0]?.id || 'P001'));
+
+    const patName = document.getElementById('patBookPatientName')?.value.trim() || 'Walk-In Patient';
+    const dId = document.getElementById('patBookDoctorSelect')?.value || doctors[0]?.id;
+    const doctor = doctors.find(d => d.id === dId);
+    const date = document.getElementById('patBookDate')?.value || new Date().toISOString().split('T')[0];
+    const time = document.getElementById('patBookTime')?.value || '10:30 AM';
+    const reason = document.getElementById('patBookReason')?.value.trim() || 'General Consultation';
+
+    const appointments = loadData('hms_appointments', defaultAppointments);
+    const newAppt = {
+        id: typeof generateId === 'function' ? generateId('A') : ('A' + Date.now()),
+        patientId: pId,
+        patientName: patName,
+        doctorId: dId,
+        doctorName: doctor ? doctor.name : 'Dr. Consultant',
+        date,
+        time,
+        reason,
+        status: 'Scheduled'
+    };
+
+    appointments.unshift(newAppt);
+    saveData('hms_appointments', appointments);
+    closeModal('patientBookApptModal');
+    if (typeof playSound === 'function') playSound('success');
+    if (typeof showToast === 'function') {
+        showToast(`✅ Appointment #${newAppt.id} booked with ${newAppt.doctorName} on ${date} at ${time}!`, 'success');
+    }
+    if (typeof renderPortalPatientData === 'function' && document.getElementById('portalDirectoryContainer')) {
+        renderPortalPatientData(pId);
+    }
+    if (document.getElementById('publicHospitalDirectoryModal')?.classList.contains('active') && typeof filterPublicHospitalDirectory === 'function') {
+        filterPublicHospitalDirectory(document.getElementById('publicDirectorySearch')?.value || '');
+    }
 }
 
 function openPublicHospitalDirectoryModal(initialQuery = '') {
