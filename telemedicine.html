@@ -222,6 +222,25 @@
                                 </button>
                             </div>
                         </div>
+                    
+                        <!-- Live Patient DataChannel Chat Strip -->
+                        <div style="background: rgba(15, 23, 42, 0.92); border-top: 1px solid rgba(56, 189, 248, 0.18); padding: 12px 20px;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="font-size: 0.78rem; font-weight: 700; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.04em;">
+                                    <i class="fas fa-comments" style="margin-right: 6px;"></i> Live Patient Chat
+                                </span>
+                                <span style="font-size: 0.72rem; color: #94a3b8;">Encrypted P2P DataChannel</span>
+                            </div>
+                            <div id="doctorCallChatLog" style="height: 82px; overflow-y: auto; background: rgba(2, 6, 23, 0.65); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 10px; font-size: 0.82rem; color: #e2e8f0; margin-bottom: 8px;">
+                                <div style="color: #64748b;">In-call chat ready. Messages sync live with connected patient...</div>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <input type="text" id="doctorCallChatInput" class="form-control" placeholder="Send quick message to patient..." style="flex: 1; font-size: 0.84rem; padding: 8px 12px;" onkeydown="if(event.key==='Enter'){event.preventDefault();sendPeerChatMessage('doctor');}">
+                                <button type="button" class="btn btn-primary btn-sm" onclick="sendPeerChatMessage('doctor')" style="padding: 8px 16px;">
+                                    <i class="fas fa-paper-plane"></i> Send
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Right Column: In-Call Clinical Cockpit & Digital Rx Pad -->

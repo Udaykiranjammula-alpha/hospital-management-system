@@ -5126,20 +5126,35 @@ function importDatabaseBackup(event) {
     reader.readAsText(file);
 }
 
-function resetToDemoData() {
-    playSound('modal');
-    if (confirm('Restore hospital database to sample demo data? All temporary changes will be replaced with fresh clinical records.')) {
-        saveData('hms_patients', defaultPatients);
-        saveData('hms_doctors', defaultDoctors);
-        saveData('hms_appointments', defaultAppointments);
-        saveData('hms_bills', defaultBills);
-        saveData('hms_prescriptions', defaultPrescriptions);
-        saveData('hms_staff', defaultStaff);
-        saveData('hms_resources', defaultResources);
-        playSound('success');
+function resetToDemoData(skipConfirm = false) {
+    if (typeof playSound === 'function') playSound('modal');
+    const confirmed = skipConfirm || (typeof confirm === 'function'
+        ? confirm('Restore hospital database to sample demo data? All temporary changes will be replaced with fresh clinical records (your Gemini API key is preserved).')
+        : true);
+    if (!confirmed) return false;
+
+    if (typeof localStorage !== 'undefined') {
+        Object.keys(localStorage).forEach((key) => {
+            if (key.startsWith('hms_') && key !== 'hms_gemini_api_key' && key !== 'hms_theme') {
+                localStorage.removeItem(key);
+            }
+        });
+    }
+    saveData('hms_patients', defaultPatients);
+    saveData('hms_doctors', defaultDoctors);
+    saveData('hms_appointments', defaultAppointments);
+    saveData('hms_bills', defaultBills);
+    saveData('hms_prescriptions', defaultPrescriptions);
+    saveData('hms_staff', defaultStaff);
+    saveData('hms_resources', defaultResources);
+    if (typeof playSound === 'function') playSound('success');
+    if (typeof showToast === 'function') {
         showToast('System database reset to rich sample records! Reloading...', 'success');
+    }
+    if (!skipConfirm && typeof window !== 'undefined' && window.location && typeof window.location.reload === 'function') {
         setTimeout(() => window.location.reload(), 700);
     }
+    return true;
 }
 
 // ==========================================
@@ -10468,18 +10483,25 @@ let telemedPeer = null;
 let telemedActiveCall = null;
 let telemedDataConn = null;
 
+function appendPeerChatLine(senderLabel, text, isSelf = false) {
+    const safeText = String(text).replace(/</g, '&lt;');
+    const color = isSelf ? '#34d399' : '#38bdf8';
+    ['patientCallChatLog', 'doctorCallChatLog'].forEach((id) => {
+        const log = document.getElementById(id);
+        if (!log) return;
+        if (log.innerText.includes('In-call chat ready')) log.innerHTML = '';
+        log.innerHTML += `<div><strong style="color:${color};">${senderLabel}:</strong> ${safeText}</div>`;
+        log.scrollTop = log.scrollHeight;
+    });
+}
+
 function bindPeerDataConnection(conn) {
     if (!conn) return;
     telemedDataConn = conn;
     conn.on('data', (payload) => {
         if (!payload || !payload.text) return;
         const senderLabel = payload.from === 'patient' ? 'Patient' : 'Doctor';
-        const log = document.getElementById('patientCallChatLog');
-        if (log) {
-            if (log.innerText.includes('In-call chat ready')) log.innerHTML = '';
-            log.innerHTML += `<div><strong style="color:#38bdf8;">${senderLabel}:</strong> ${String(payload.text).replace(/</g, '&lt;')}</div>`;
-            log.scrollTop = log.scrollHeight;
-        }
+        appendPeerChatLine(senderLabel, payload.text, false);
         if (typeof showToast === 'function') {
             showToast(`💬 ${senderLabel}: ${payload.text}`, 'info');
         }
@@ -10487,19 +10509,16 @@ function bindPeerDataConnection(conn) {
 }
 
 function sendPeerChatMessage(roleLabel = 'doctor') {
-    const inp = document.getElementById('patientCallChatInput');
+    const primaryId = roleLabel === 'patient' ? 'patientCallChatInput' : 'doctorCallChatInput';
+    const fallbackId = roleLabel === 'patient' ? 'doctorCallChatInput' : 'patientCallChatInput';
+    const inp = document.getElementById(primaryId) || document.getElementById(fallbackId);
     const text = inp ? inp.value.trim() : '';
     if (!text) return;
     if (inp) inp.value = '';
     if (telemedDataConn && telemedDataConn.open) {
         telemedDataConn.send({ from: roleLabel, text });
     }
-    const log = document.getElementById('patientCallChatLog');
-    if (log) {
-        if (log.innerText.includes('In-call chat ready')) log.innerHTML = '';
-        log.innerHTML += `<div><strong style="color:#34d399;">You:</strong> ${text.replace(/</g, '&lt;')}</div>`;
-        log.scrollTop = log.scrollHeight;
-    }
+    appendPeerChatLine('You', text, true);
 }
 
 function getTelemedIceConfig() {

@@ -1256,6 +1256,7 @@ body[data-theme="frost-light"] .data-table th {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 12px;
     padding: 20px 26px;
     border-bottom: 1px solid var(--glass-border);
 }

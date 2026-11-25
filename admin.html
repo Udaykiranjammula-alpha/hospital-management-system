@@ -280,7 +280,17 @@
                                         <i class="fas fa-upload"></i> Choose JSON File
                                         <input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="importDatabaseBackup(event)">
                                     </label>
+                                
                                 </div>
+
+                                <!-- Reset Demo Data Card -->
+                                <div style="background: var(--glass-bg); border: 1px solid rgba(239, 68, 68, 0.28); padding: 20px; border-radius: var(--border-radius);">
+                                    <div style="font-size: 1.8rem; color: var(--danger); margin-bottom: 12px;"><i class="fas fa-rotate-left"></i></div>
+                                    <h4 style="margin-bottom: 8px;">Reset Demo Data</h4>
+                                    <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 16px;">Restore clean default hospital datasets for back-to-back demos (keeps your Gemini API key).</p>
+                                    <button type="button" id="btnResetDemoData" class="btn btn-danger" onclick="resetToDemoData()" style="width: 100%;">
+                                        <i class="fas fa-rotate-left"></i> Reset Demo Data
+                                    </button></div>
                             </div>
                         </div>
                     </div>
