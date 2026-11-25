@@ -447,8 +447,12 @@ function handleHospitalMeshEvent(data) {
         }
     }
 
+    if (data.type.includes('patient') || data.type.includes('sync')) {
+        if (typeof populateAllPatientSelects === 'function') populateAllPatientSelects();
+    }
+
     if (curPath === 'emergency.html' || document.getElementById('triageTableBody')) {
-        if (data.type.includes('emergency') || data.type.includes('triage') || data.type.includes('biometric') || data.type.includes('ambulance') || data.type.includes('sync')) {
+        if (data.type.includes('emergency') || data.type.includes('triage') || data.type.includes('biometric') || data.type.includes('ambulance') || data.type.includes('icu') || data.type.includes('patient') || data.type.includes('sync')) {
             if (typeof renderTriageTable === 'function') renderTriageTable();
             if (typeof renderAmbulanceFleet === 'function') renderAmbulanceFleet();
             if (typeof renderICUMonitors === 'function') renderICUMonitors();
@@ -550,7 +554,9 @@ function saveData(key, val, skipMesh = false) {
                 'hms_prescriptions': 'Prescription records updated',
                 'hms_bills': 'Billing ledger & invoices updated',
                 'hms_lab_tests': 'Diagnostic lab orders updated',
-                'hms_emergency_triage': 'Emergency triage pipeline updated'
+                'hms_emergency_triage': 'Emergency triage pipeline updated',
+                'hms_icu_monitors': 'ICU telemetry monitors updated',
+                'hms_er_triage': 'ER triage pipeline updated'
             };
             if (labelMap[key]) {
                 broadcastHospitalEvent(key.replace('hms_', ''), { key }, labelMap[key]);
@@ -3207,11 +3213,13 @@ function savePatient() {
 
     let patients = loadData('hms_patients', []);
 
+    let savedRecord = null;
     if (editingPatientId) {
         const idx = patients.findIndex(p => p.id === editingPatientId);
         if (idx > -1) {
             patients[idx] = { ...patients[idx], name, age, gender, bloodGroup, phone, email, address, condition, status };
-            showToast('Patient record updated successfully!', 'success');
+            savedRecord = patients[idx];
+            showToast('Patient record updated & synchronized across modules!', 'success');
         }
     } else {
         const newPatient = {
@@ -3221,13 +3229,96 @@ function savePatient() {
             history: [{ date: new Date().toISOString().split('T')[0], event: 'Registered & Admitted to MediCare HMS' }]
         };
         patients.unshift(newPatient);
-        showToast('New patient registered successfully!', 'success');
+        savedRecord = newPatient;
+        showToast('New patient registered & synchronized everywhere!', 'success');
     }
 
     saveData('hms_patients', patients);
+    if (savedRecord) syncPatientAcrossModules(savedRecord);
+    populateAllPatientSelects();
     renderPatients(patients);
     closeModal('patientModal');
     closeModal('patient-modal');
+}
+
+function syncPatientAcrossModules(patient) {
+    if (!patient || !patient.id) return;
+    const pid = patient.id;
+    const pname = patient.name;
+
+    // 1. Sync ICU Monitors
+    const monitors = loadData('hms_icu_monitors', typeof defaultICUMonitors !== 'undefined' ? defaultICUMonitors : []);
+    let mChanged = false;
+    monitors.forEach(m => {
+        if (m.patientId === pid) {
+            m.patient = `${pname} (${pid})`;
+            mChanged = true;
+        }
+    });
+    if (mChanged) {
+        saveData('hms_icu_monitors', monitors);
+        if (typeof renderICUMonitors === 'function') renderICUMonitors();
+    }
+
+    // 2. Sync ER Triage
+    const triage = loadData('hms_er_triage', typeof defaultTriagePatients !== 'undefined' ? defaultTriagePatients : []);
+    let tChanged = false;
+    triage.forEach(t => {
+        if (t.patientId === pid) {
+            t.name = pname;
+            t.age = `${patient.age} / ${patient.gender ? patient.gender[0] : 'U'}`;
+            tChanged = true;
+        }
+    });
+    if (tChanged) {
+        saveData('hms_er_triage', triage);
+        if (typeof renderTriageTable === 'function') renderTriageTable();
+    }
+
+    // 3. Sync Appointments, Prescriptions, Labs, Bills
+    const syncList = (key, nameField = 'patientName') => {
+        const raw = localStorage.getItem(key);
+        if (!raw) return;
+        try {
+            const arr = JSON.parse(raw);
+            if (!Array.isArray(arr)) return;
+            let changed = false;
+            arr.forEach(item => {
+                if (item.patientId === pid && item[nameField] !== pname) {
+                    item[nameField] = pname;
+                    changed = true;
+                }
+            });
+            if (changed) saveData(key, arr);
+        } catch (_) {}
+    };
+    syncList('hms_appointments', 'patientName');
+    syncList('hms_prescriptions', 'patientName');
+    syncList('hms_lab_tests', 'patientName');
+    syncList('hms_bills', 'patientName');
+
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('medicare_patients_updated', { detail: { patient } }));
+    }
+}
+
+function populateAllPatientSelects() {
+    if (typeof document === 'undefined') return;
+    const patients = loadData('hms_patients', defaultPatients);
+    const selectIds = [
+        'apptPatient', 'rxPatient', 'labPatient', 'billPatient',
+        'telemedPatientSelect', 'portalPatientSelect', 'abhaPatientSelect'
+    ];
+    selectIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const prev = el.value;
+        el.innerHTML = patients.map(p => `<option value="${p.id}">${p.name} (${p.id})</option>`).join('');
+        if (prev && patients.some(p => p.id === prev)) {
+            el.value = prev;
+        }
+    });
+    if (typeof populatePPGTargetBeds === 'function') populatePPGTargetBeds();
 }
 
 function deletePatient(id) {
@@ -8011,10 +8102,17 @@ let ecgAnimationId = null;
 let icuEcgOffset = 0;
 
 const defaultTriagePatients = [
-    { id: 'ER-801', name: 'Rohan Mehra', age: '42 / M', esi: 'ESI-1', complaint: 'Acute STEMI (Inferior Wall) • VFib Arrest', bay: 'Trauma Bay 1 (Red)', vitals: 'HR 134, BP 80/50, SpO2 88%', timeIn: '12m ago', doctor: 'Dr. Priya Sharma' },
-    { id: 'ER-802', name: 'Sunil Chawla', age: '29 / M', esi: 'ESI-2', complaint: 'High-Speed Bike Crash • Blunt Chest Trauma', bay: 'Trauma Bay 2 (Red)', vitals: 'HR 118, BP 100/65, SpO2 93%', timeIn: '24m ago', doctor: 'Dr. Rahul Verma' },
-    { id: 'ER-803', name: 'Ananya Roy', age: '8 / F', esi: 'ESI-2', complaint: 'Status Asthmaticus • Severe Retractions', bay: 'Resuscitation 3', vitals: 'HR 145, BP 95/60, SpO2 89%', timeIn: '35m ago', doctor: 'Dr. Anil Kumar' },
-    { id: 'ER-804', name: 'Vikram Reddy', age: '60 / M', esi: 'ESI-3', complaint: 'COPD Exacerbation with Hypercapnia', bay: 'ICU Bed 105', vitals: 'HR 98, BP 130/85, SpO2 91%', timeIn: '1h 10m ago', doctor: 'Dr. Meera Iyer' }
+    { id: 'ER-801', patientId: '', name: 'Rohan Mehra', age: '42 / M', esi: 'ESI-1', complaint: 'Acute STEMI (Inferior Wall) • VFib Arrest', bay: 'Trauma Bay 1 (Red)', vitals: 'HR 134, BP 80/50, SpO2 88%', timeIn: '12m ago', doctor: 'Dr. Priya Sharma' },
+    { id: 'ER-802', patientId: '', name: 'Sunil Chawla', age: '29 / M', esi: 'ESI-2', complaint: 'High-Speed Bike Crash • Blunt Chest Trauma', bay: 'Trauma Bay 2 (Red)', vitals: 'HR 118, BP 100/65, SpO2 93%', timeIn: '24m ago', doctor: 'Dr. Rahul Verma' },
+    { id: 'ER-803', patientId: '', name: 'Ananya Roy', age: '8 / F', esi: 'ESI-2', complaint: 'Status Asthmaticus • Severe Retractions', bay: 'Resuscitation 3', vitals: 'HR 145, BP 95/60, SpO2 89%', timeIn: '35m ago', doctor: 'Dr. Anil Kumar' },
+    { id: 'ER-804', patientId: 'P005', name: 'Vikram Reddy', age: '60 / M', esi: 'ESI-3', complaint: 'COPD Exacerbation with Hypercapnia', bay: 'ICU Bed 104', vitals: 'HR 98, BP 130/85, SpO2 91%', timeIn: '1h 10m ago', doctor: 'Dr. Meera Iyer' }
+];
+
+const defaultICUMonitors = [
+    { bed: 'ICU BED 101', patientId: 'P001', patient: 'Rajesh Kumar (P001)', condition: 'Post-CABG Recovery', hr: 74, spo2: 99, bp: '122/80', rr: 16, doc: 'Dr. Priya Sharma' },
+    { bed: 'ICU BED 102', patientId: 'ER-801', patient: 'Rohan Mehra (ER-801)', condition: 'Acute STEMI Resuscitation', hr: 128, spo2: 91, bp: '85/55', rr: 26, doc: 'Dr. Priya Sharma' },
+    { bed: 'ICU BED 103', patientId: 'ER-802', patient: 'Sunil Chawla (ER-802)', condition: 'Poly-trauma Chest Tube', hr: 114, spo2: 94, bp: '105/70', rr: 22, doc: 'Dr. Rahul Verma' },
+    { bed: 'ICU BED 104', patientId: 'P005', patient: 'Vikram Reddy (P005)', condition: 'Severe COPD on BiPAP', hr: 88, spo2: 92, bp: '135/88', rr: 20, doc: 'Dr. Meera Iyer' }
 ];
 
 const defaultAmbulanceFleet = [
@@ -8023,8 +8121,35 @@ const defaultAmbulanceFleet = [
     { unit: 'ALS-03 (Neonatal ALS)', status: 'Dispatched • High Priority', eta: '11 Mins ETA', driver: 'Rajesh Negi', paramedic: 'Sneha Reddy', location: 'Sector 14 Ring Road', targetBay: 'NICU Dock' }
 ];
 
+function getResolvedICUMonitorPatient(monitor) {
+    if (!monitor) return 'Unassigned';
+    const patients = loadData('hms_patients', defaultPatients);
+    if (monitor.patientId) {
+        const matched = patients.find(p => p.id === monitor.patientId);
+        if (matched) return `${matched.name} (${matched.id})`;
+    }
+    return monitor.patient || 'Unassigned';
+}
+
+function populatePPGTargetBeds() {
+    const sel = document.getElementById('ppgTargetBedSelect');
+    if (!sel) return;
+    const prev = sel.value;
+    const monitors = loadData('hms_icu_monitors', defaultICUMonitors);
+    sel.innerHTML = monitors.map((m, idx) => {
+        const displayName = getResolvedICUMonitorPatient(m);
+        return `<option value="${idx}">${m.bed} (${displayName})</option>`;
+    }).join('');
+    if (prev && parseInt(prev, 10) < monitors.length) {
+        sel.value = prev;
+    }
+}
+
 function initEmergencyPage() {
+    if (!localStorage.getItem('hms_icu_monitors')) saveData('hms_icu_monitors', defaultICUMonitors);
+    if (!localStorage.getItem('hms_er_triage')) saveData('hms_er_triage', defaultTriagePatients);
     renderICUMonitors();
+    populatePPGTargetBeds();
     renderTriageTable();
     renderAmbulanceFleet();
     startECGWaveformLoop();
@@ -8035,25 +8160,26 @@ function renderICUMonitors() {
     const grid = document.getElementById('icuMonitorsGrid');
     if (!grid) return;
 
-    const monitors = [
-        { bed: 'ICU BED 101', patient: 'Rajesh Kumar (P001)', condition: 'Post-CABG Recovery', hr: 74, spo2: 99, bp: '122/80', rr: 16, doc: 'Dr. Priya Sharma' },
-        { bed: 'ICU BED 102', patient: 'Rohan Mehra (ER-801)', condition: 'Acute STEMI Resuscitation', hr: 128, spo2: 91, bp: '85/55', rr: 26, doc: 'Dr. Priya Sharma' },
-        { bed: 'ICU BED 103', patient: 'Sunil Chawla (ER-802)', condition: 'Poly-trauma Chest Tube', hr: 114, spo2: 94, bp: '105/70', rr: 22, doc: 'Dr. Rahul Verma' },
-        { bed: 'ICU BED 104', patient: 'Vikram Reddy (P005)', condition: 'Severe COPD on BiPAP', hr: 88, spo2: 92, bp: '135/88', rr: 20, doc: 'Dr. Meera Iyer' }
-    ];
+    const monitors = loadData('hms_icu_monitors', defaultICUMonitors);
 
     grid.innerHTML = monitors.map((m, idx) => {
         const synced = window.syncedBedVitals && window.syncedBedVitals[idx];
         const hr = synced ? synced.hr : m.hr;
         const spo2 = synced ? synced.spo2 : m.spo2;
+        const patientDisplay = getResolvedICUMonitorPatient(m);
         return `
         <div class="icu-monitor-card ${hr > 120 || spo2 < 92 ? 'code-blue-active' : ''}">
             <div class="icu-monitor-header">
                 <div>
                     <strong style="font-family:'JetBrains Mono'; color:#38bdf8;">${m.bed}</strong>
-                    <div style="font-size:0.85rem; font-weight:700; color:#ffffff; margin-top:2px;">${m.patient}</div>
+                    <div style="font-size:0.85rem; font-weight:700; color:#ffffff; margin-top:2px;">${patientDisplay}</div>
                 </div>
-                <span class="badge ${hr > 120 ? 'badge-danger' : 'badge-success'}">${m.condition}</span>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <span class="badge ${hr > 120 ? 'badge-danger' : 'badge-success'}">${m.condition}</span>
+                    <button type="button" class="btn-icon" onclick="openEditICUBedModal(${idx})" title="Edit Bed, Assign Patient & Update Vitals" style="width:28px; height:28px; font-size:0.74rem; flex-shrink:0;">
+                        <i class="fas fa-pen-to-square"></i>
+                    </button>
+                </div>
             </div>
             <canvas class="icu-ecg-canvas" id="ecgCanvas_${idx}"></canvas>
             <div class="icu-vitals-row">
@@ -8077,6 +8203,181 @@ function renderICUMonitors() {
         </div>
     `;
     }).join('');
+    populatePPGTargetBeds();
+}
+
+let editingICUBedIdx = -1;
+
+function openEditICUBedModal(idx = -1) {
+    editingICUBedIdx = idx;
+    const monitors = loadData('hms_icu_monitors', defaultICUMonitors);
+    const current = idx >= 0 && monitors[idx] ? monitors[idx] : {
+        bed: `ICU BED ${101 + monitors.length}`,
+        patientId: '',
+        patient: '',
+        condition: 'Critical Care Monitoring',
+        hr: 78,
+        spo2: 98,
+        bp: '120/80',
+        rr: 16,
+        doc: 'Dr. Priya Sharma'
+    };
+
+    let modal = document.getElementById('editICUBedModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'editICUBedModal';
+        modal.className = 'modal-overlay';
+        modal.style.display = 'none';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 520px;">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="editICUBedModalTitle"><i class="fas fa-bed-pulse" style="color:#38bdf8;"></i> Edit ICU Bed &amp; Patient Telemetry</h3>
+                    <button class="modal-close" onclick="closeModal('editICUBedModal')">&times;</button>
+                </div>
+                <form onsubmit="event.preventDefault(); saveICUBedMonitor();" style="padding: 20px; display: flex; flex-direction: column; gap: 12px;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                        <div class="form-group">
+                            <label class="form-label">ICU Bed Label</label>
+                            <input type="text" id="icuEditBedName" class="form-control" required placeholder="ICU BED 101">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Attending Physician</label>
+                            <select id="icuEditDocSelect" class="form-control"></select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Assign Registered Patient (Synced with Patient Roster)</label>
+                        <select id="icuEditPatientSelect" class="form-control" onchange="onICUPatientSelectChange()"></select>
+                    </div>
+                    <div class="form-group" id="icuEditCustomPatientGroup">
+                        <label class="form-label">Patient Display Name &amp; ID (Editable)</label>
+                        <input type="text" id="icuEditPatientText" class="form-control" required placeholder="e.g. Rajesh Kumar (P001)">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Clinical Condition / Diagnosis</label>
+                        <input type="text" id="icuEditCondition" class="form-control" required placeholder="Post-CABG Recovery">
+                    </div>
+                    <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px;">
+                        <div class="form-group">
+                            <label class="form-label">HR (BPM)</label>
+                            <input type="number" id="icuEditHR" class="form-control" min="20" max="240" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">SpO2 (%)</label>
+                            <input type="number" id="icuEditSpO2" class="form-control" min="50" max="100" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">NIBP</label>
+                            <input type="text" id="icuEditBP" class="form-control" required placeholder="120/80">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">RESP</label>
+                            <input type="number" id="icuEditRR" class="form-control" min="4" max="60" required>
+                        </div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; gap:10px;">
+                        <button type="button" id="icuDeleteBedBtn" class="btn btn-danger btn-sm" onclick="deleteICUBedMonitor()">
+                            <i class="fas fa-trash"></i> Remove Bed
+                        </button>
+                        <div style="display:flex; gap:8px; margin-left:auto;">
+                            <button type="button" class="btn btn-outline" onclick="closeModal('editICUBedModal')">Cancel</button>
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save &amp; Sync</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    const patients = loadData('hms_patients', defaultPatients);
+    const pSelect = document.getElementById('icuEditPatientSelect');
+    pSelect.innerHTML = `<option value="">-- Custom / ER Walk-in Patient --</option>` +
+        patients.map(p => `<option value="${p.id}">${p.name} (${p.id}) — ${p.condition || p.status}</option>`).join('');
+    pSelect.value = current.patientId && patients.some(p => p.id === current.patientId) ? current.patientId : '';
+
+    const doctors = loadData('hms_doctors', defaultDoctors);
+    const dSelect = document.getElementById('icuEditDocSelect');
+    dSelect.innerHTML = doctors.map(d => `<option value="${d.name}">${d.name} (${d.specialty})</option>`).join('');
+    if (current.doc && doctors.some(d => d.name === current.doc)) {
+        dSelect.value = current.doc;
+    }
+
+    document.getElementById('icuEditBedName').value = current.bed || '';
+    document.getElementById('icuEditPatientText').value = getResolvedICUMonitorPatient(current) === 'Unassigned' ? (current.patient || '') : getResolvedICUMonitorPatient(current);
+    document.getElementById('icuEditCondition').value = current.condition || '';
+    document.getElementById('icuEditHR').value = current.hr || 75;
+    document.getElementById('icuEditSpO2').value = current.spo2 || 98;
+    document.getElementById('icuEditBP').value = current.bp || '120/80';
+    document.getElementById('icuEditRR').value = current.rr || 16;
+
+    const titleEl = document.getElementById('editICUBedModalTitle');
+    if (titleEl) titleEl.innerHTML = idx >= 0 ? `<i class="fas fa-bed-pulse" style="color:#38bdf8;"></i> Edit ${current.bed}` : `<i class="fas fa-plus-circle" style="color:#38bdf8;"></i> Add New ICU Telemetry Bed`;
+    const delBtn = document.getElementById('icuDeleteBedBtn');
+    if (delBtn) delBtn.style.display = (idx >= 0 && monitors.length > 1) ? 'inline-flex' : 'none';
+
+    openModal('editICUBedModal');
+}
+
+function onICUPatientSelectChange() {
+    const pSelect = document.getElementById('icuEditPatientSelect');
+    const pText = document.getElementById('icuEditPatientText');
+    const condInput = document.getElementById('icuEditCondition');
+    if (!pSelect || !pText) return;
+    const pid = pSelect.value;
+    if (!pid) return;
+    const patients = loadData('hms_patients', defaultPatients);
+    const p = patients.find(x => x.id === pid);
+    if (p) {
+        pText.value = `${p.name} (${p.id})`;
+        if (condInput && p.condition) condInput.value = p.condition;
+    }
+}
+
+function saveICUBedMonitor() {
+    const monitors = loadData('hms_icu_monitors', defaultICUMonitors);
+    const bed = document.getElementById('icuEditBedName').value.trim() || 'ICU BED';
+    const patientId = document.getElementById('icuEditPatientSelect').value || '';
+    const patient = document.getElementById('icuEditPatientText').value.trim() || 'Unassigned';
+    const condition = document.getElementById('icuEditCondition').value.trim() || 'Monitoring';
+    const hr = parseInt(document.getElementById('icuEditHR').value, 10) || 75;
+    const spo2 = parseInt(document.getElementById('icuEditSpO2').value, 10) || 98;
+    const bp = document.getElementById('icuEditBP').value.trim() || '120/80';
+    const rr = parseInt(document.getElementById('icuEditRR').value, 10) || 16;
+    const doc = document.getElementById('icuEditDocSelect').value || 'Dr. Priya Sharma';
+
+    const record = { bed, patientId, patient, condition, hr, spo2, bp, rr, doc };
+
+    if (editingICUBedIdx >= 0 && editingICUBedIdx < monitors.length) {
+        monitors[editingICUBedIdx] = record;
+        if (window.syncedBedVitals && window.syncedBedVitals[editingICUBedIdx]) {
+            window.syncedBedVitals[editingICUBedIdx] = { hr, spo2 };
+        }
+    } else {
+        monitors.push(record);
+    }
+
+    saveData('hms_icu_monitors', monitors);
+    renderICUMonitors();
+    startECGWaveformLoop();
+    closeModal('editICUBedModal');
+    if (typeof showToast === 'function') showToast(`✅ ${bed} updated & synchronized!`, 'success');
+}
+
+function deleteICUBedMonitor() {
+    if (editingICUBedIdx < 0) return;
+    const monitors = loadData('hms_icu_monitors', defaultICUMonitors);
+    if (monitors.length <= 1) {
+        showToast('At least one ICU monitor must remain active.', 'warning');
+        return;
+    }
+    monitors.splice(editingICUBedIdx, 1);
+    saveData('hms_icu_monitors', monitors);
+    renderICUMonitors();
+    startECGWaveformLoop();
+    closeModal('editICUBedModal');
+    showToast('ICU Bed monitor removed.', 'info');
 }
 
 function startECGWaveformLoop() {
@@ -8084,8 +8385,9 @@ function startECGWaveformLoop() {
 
     function drawWaves() {
         icuEcgOffset = (icuEcgOffset + 2.5) % 300;
+        const monitors = loadData('hms_icu_monitors', defaultICUMonitors);
 
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < monitors.length; i++) {
             const canvas = document.getElementById(`ecgCanvas_${i}`);
             if (!canvas) continue;
             const ctx = canvas.getContext('2d');
@@ -8105,7 +8407,9 @@ function startECGWaveformLoop() {
             }
 
             // Waveform path
-            const strokeColor = i === 1 ? '#ef4444' : (i === 2 ? '#f59e0b' : '#10b981');
+            const m = monitors[i];
+            const hr = (window.syncedBedVitals && window.syncedBedVitals[i]) ? window.syncedBedVitals[i].hr : m.hr;
+            const strokeColor = hr > 120 ? '#ef4444' : (hr > 100 ? '#f59e0b' : '#10b981');
             ctx.strokeStyle = strokeColor;
             ctx.lineWidth = 2;
             ctx.shadowColor = strokeColor;
@@ -8144,17 +8448,28 @@ function renderTriageTable() {
     const tbody = document.getElementById('triageTableBody');
     if (!tbody) return;
 
-    tbody.innerHTML = defaultTriagePatients.map(p => {
+    const triageList = loadData('hms_er_triage', defaultTriagePatients);
+    const patients = loadData('hms_patients', defaultPatients);
+    const badgeCount = document.getElementById('triageCount');
+    if (badgeCount) badgeCount.textContent = `${triageList.length} Critical Patients`;
+    const kpiCount = document.getElementById('erActiveTriageCount');
+    if (kpiCount) kpiCount.textContent = triageList.length;
+
+    tbody.innerHTML = triageList.map(p => {
         let esiClass = 'esi-1';
         if (p.esi === 'ESI-2') esiClass = 'esi-2';
         else if (p.esi === 'ESI-3') esiClass = 'esi-3';
+
+        const linkedPatient = p.patientId ? patients.find(pt => pt.id === p.patientId) : null;
+        const displayName = linkedPatient ? linkedPatient.name : p.name;
+        const displayAge = linkedPatient ? `${linkedPatient.age} / ${linkedPatient.gender ? linkedPatient.gender[0] : 'U'}` : p.age;
 
         return `
             <tr>
                 <td><strong style="font-family:'JetBrains Mono'; color:#ef4444;">${p.id}</strong></td>
                 <td>
-                    <strong>${p.name}</strong>
-                    <div style="font-size:0.75rem; color:var(--text-muted);">${p.age}</div>
+                    <strong>${displayName}</strong>
+                    <div style="font-size:0.75rem; color:var(--text-muted);">${displayAge}</div>
                 </td>
                 <td><span class="esi-badge ${esiClass}"><i class="fas fa-triangle-exclamation"></i> ${p.esi}</span></td>
                 <td><strong>${p.complaint}</strong></td>
@@ -8163,11 +8478,175 @@ function renderTriageTable() {
                 <td><span style="font-size:0.78rem; color:var(--text-muted);">${p.timeIn}</span></td>
                 <td><span style="font-size:0.82rem;"><i class="fas fa-user-md" style="color:var(--primary); margin-right:4px;"></i> ${p.doctor}</span></td>
                 <td>
-                    <button class="btn btn-sm btn-outline" onclick="showToast('Trauma Protocol active for ${p.name}', 'info')"><i class="fas fa-stethoscope"></i> Manage</button>
+                    <button class="btn btn-sm btn-outline" onclick="openEditTriageModal('${p.id}')"><i class="fas fa-pen-to-square"></i> Manage</button>
                 </td>
             </tr>
         `;
     }).join('');
+}
+
+let editingTriageId = null;
+
+function openEditTriageModal(caseId = null) {
+    editingTriageId = caseId;
+    const triageList = loadData('hms_er_triage', defaultTriagePatients);
+    const current = caseId ? triageList.find(t => t.id === caseId) : null;
+
+    let modal = document.getElementById('editTriageModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'editTriageModal';
+        modal.className = 'modal-overlay';
+        modal.style.display = 'none';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 540px;">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="editTriageModalTitle"><i class="fas fa-kit-medical" style="color:#ef4444;"></i> Manage Emergency Triage Case</h3>
+                    <button class="modal-close" onclick="closeModal('editTriageModal')">&times;</button>
+                </div>
+                <form onsubmit="event.preventDefault(); saveTriageCase();" style="padding: 20px; display: flex; flex-direction: column; gap: 12px;">
+                    <div class="form-group">
+                        <label class="form-label">Select Registered Patient (or leave custom below)</label>
+                        <select id="triagePatientSelect" class="form-control" onchange="onTriagePatientSelectChange()"></select>
+                    </div>
+                    <div style="display:grid; grid-template-columns:2fr 1fr; gap:12px;">
+                        <div class="form-group">
+                            <label class="form-label">Patient Name</label>
+                            <input type="text" id="triageNameInput" class="form-control" required placeholder="Patient Full Name">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Age / Gender</label>
+                            <input type="text" id="triageAgeInput" class="form-control" required placeholder="e.g. 42 / M">
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                        <div class="form-group">
+                            <label class="form-label">ESI Triage Priority</label>
+                            <select id="triageEsiSelect" class="form-control">
+                                <option value="ESI-1">ESI-1 (Resuscitation - Red)</option>
+                                <option value="ESI-2">ESI-2 (Emergent - Orange)</option>
+                                <option value="ESI-3">ESI-3 (Urgent - Yellow)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Assigned Bay / Bed</label>
+                            <input type="text" id="triageBayInput" class="form-control" required placeholder="Trauma Bay 1">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Presenting Complaint</label>
+                        <input type="text" id="triageComplaintInput" class="form-control" required placeholder="Acute Chest Pain / Trauma">
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                        <div class="form-group">
+                            <label class="form-label">Vitals Baseline</label>
+                            <input type="text" id="triageVitalsInput" class="form-control" required placeholder="HR 110, BP 120/80, SpO2 96%">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Attending Physician</label>
+                            <select id="triageDoctorSelect" class="form-control"></select>
+                        </div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+                        <button type="button" id="triageDeleteBtn" class="btn btn-danger btn-sm" onclick="deleteTriageCase()">
+                            <i class="fas fa-user-check"></i> Discharge Case
+                        </button>
+                        <div style="display:flex; gap:8px; margin-left:auto;">
+                            <button type="button" class="btn btn-outline" onclick="closeModal('editTriageModal')">Cancel</button>
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Triage Case</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    const patients = loadData('hms_patients', defaultPatients);
+    const pSel = document.getElementById('triagePatientSelect');
+    pSel.innerHTML = `<option value="">-- Custom / New ER Arrival --</option>` +
+        patients.map(p => `<option value="${p.id}">${p.name} (${p.id})</option>`).join('');
+    pSel.value = current && current.patientId ? current.patientId : '';
+
+    const doctors = loadData('hms_doctors', defaultDoctors);
+    const dSel = document.getElementById('triageDoctorSelect');
+    dSel.innerHTML = doctors.map(d => `<option value="${d.name}">${d.name}</option>`).join('');
+    if (current && current.doctor) dSel.value = current.doctor;
+
+    document.getElementById('triageNameInput').value = current ? current.name : '';
+    document.getElementById('triageAgeInput').value = current ? current.age : '35 / M';
+    document.getElementById('triageEsiSelect').value = current ? current.esi : 'ESI-2';
+    document.getElementById('triageBayInput').value = current ? current.bay : 'Trauma Bay 1 (Red)';
+    document.getElementById('triageComplaintInput').value = current ? current.complaint : '';
+    document.getElementById('triageVitalsInput').value = current ? current.vitals : 'HR 98, BP 120/80, SpO2 97%';
+
+    const titleEl = document.getElementById('editTriageModalTitle');
+    if (titleEl) titleEl.innerHTML = current ? `<i class="fas fa-kit-medical" style="color:#ef4444;"></i> Manage ${current.id}` : `<i class="fas fa-user-plus" style="color:#ef4444;"></i> Admit New ER Triage Patient`;
+    const delBtn = document.getElementById('triageDeleteBtn');
+    if (delBtn) delBtn.style.display = current ? 'inline-flex' : 'none';
+
+    openModal('editTriageModal');
+}
+
+function onTriagePatientSelectChange() {
+    const pSel = document.getElementById('triagePatientSelect');
+    if (!pSel || !pSel.value) return;
+    const patients = loadData('hms_patients', defaultPatients);
+    const p = patients.find(x => x.id === pSel.value);
+    if (p) {
+        document.getElementById('triageNameInput').value = p.name;
+        document.getElementById('triageAgeInput').value = `${p.age} / ${p.gender ? p.gender[0] : 'M'}`;
+        if (p.condition) document.getElementById('triageComplaintInput').value = p.condition;
+    }
+}
+
+function saveTriageCase() {
+    const triageList = loadData('hms_er_triage', defaultTriagePatients);
+    const patientId = document.getElementById('triagePatientSelect').value || '';
+    const name = document.getElementById('triageNameInput').value.trim();
+    const age = document.getElementById('triageAgeInput').value.trim() || '35 / M';
+    const esi = document.getElementById('triageEsiSelect').value || 'ESI-2';
+    const bay = document.getElementById('triageBayInput').value.trim() || 'Trauma Bay 1';
+    const complaint = document.getElementById('triageComplaintInput').value.trim() || 'Emergency Evaluation';
+    const vitals = document.getElementById('triageVitalsInput').value.trim() || 'HR 90, BP 120/80, SpO2 98%';
+    const doctor = document.getElementById('triageDoctorSelect').value || 'Dr. Priya Sharma';
+
+    if (!name) return;
+
+    if (editingTriageId) {
+        const idx = triageList.findIndex(t => t.id === editingTriageId);
+        if (idx > -1) {
+            triageList[idx] = { ...triageList[idx], patientId, name, age, esi, bay, complaint, vitals, doctor };
+        }
+    } else {
+        triageList.unshift({
+            id: `ER-${800 + triageList.length + 1}`,
+            patientId,
+            name,
+            age,
+            esi,
+            complaint,
+            bay,
+            vitals,
+            timeIn: 'Just now',
+            doctor
+        });
+    }
+
+    saveData('hms_er_triage', triageList);
+    renderTriageTable();
+    closeModal('editTriageModal');
+    showToast(`✅ ER Triage updated for ${name}!`, 'success');
+}
+
+function deleteTriageCase() {
+    if (!editingTriageId) return;
+    let triageList = loadData('hms_er_triage', defaultTriagePatients);
+    triageList = triageList.filter(t => t.id !== editingTriageId);
+    saveData('hms_er_triage', triageList);
+    renderTriageTable();
+    closeModal('editTriageModal');
+    showToast('ER Case discharged & cleared.', 'info');
 }
 
 function renderAmbulanceFleet() {
@@ -8821,9 +9300,17 @@ function applyBiometricToICUBed() {
     const bpm = ppgCurrentBpm || 74;
     const estSpo2 = (98.2 + (bpm % 3) * 0.4).toFixed(1);
 
-    // Persist in memory so view re-renders preserve it
+    // Persist in memory and localStorage so view re-renders and reloads preserve it
     window.syncedBedVitals = window.syncedBedVitals || {};
     window.syncedBedVitals[bedIdx] = { hr: bpm, spo2: estSpo2 };
+
+    const monitors = loadData('hms_icu_monitors', defaultICUMonitors);
+    if (monitors[bedIdx]) {
+        monitors[bedIdx].hr = bpm;
+        monitors[bedIdx].spo2 = Math.round(parseFloat(estSpo2));
+        saveData('hms_icu_monitors', monitors);
+        renderICUMonitors();
+    }
 
     const canvasEl = document.getElementById(`ecgCanvas_${bedIdx}`);
     if (canvasEl) {

@@ -11,15 +11,74 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
  * - Multi-bed patient telemetry switching and waveform freeze/inspection
  */
 export default function LiveTelemetryMonitor({ patientId = 'BED-04' }) {
+  const loadLiveRosterOptions = useCallback(() => {
+    try {
+      const patients = JSON.parse(localStorage.getItem('hms_patients') || '[]');
+      const monitors = JSON.parse(localStorage.getItem('hms_icu_monitors') || '[]');
+      const options = [];
+      if (Array.isArray(monitors) && monitors.length > 0) {
+        monitors.forEach((m, idx) => {
+          const matched = m.patientId ? patients.find(p => p.id === m.patientId) : null;
+          const displayName = matched ? matched.name : (m.patient || 'Unassigned');
+          options.push({
+            key: `ICU-${idx}`,
+            bed: m.bed || `ICU BED ${101 + idx}`,
+            name: displayName.replace(/\s*\([^)]*\)\s*$/, ''),
+            mrn: m.patientId || `BED-${101 + idx}`,
+            diagnosis: m.condition || 'Critical Monitoring',
+            hr: m.hr || 74,
+            spo2: m.spo2 || 98,
+            bp: m.bp || '120/80',
+            rr: m.rr || 16,
+            lead: 'LEAD II'
+          });
+        });
+      }
+      if (Array.isArray(patients) && patients.length > 0) {
+        patients.forEach(p => {
+          if (!options.some(o => o.mrn === p.id)) {
+            options.push({
+              key: `PAT-${p.id}`,
+              bed: p.status === 'Admitted' ? 'Ward / Telemetry' : 'OPD Telemetry',
+              name: p.name,
+              mrn: p.id,
+              diagnosis: p.condition || p.status || 'Active Patient',
+              hr: 76,
+              spo2: 98.5,
+              bp: '120/80',
+              rr: 16,
+              lead: 'LEAD II'
+            });
+          }
+        });
+      }
+      if (options.length > 0) return options;
+    } catch (_) {}
+    return [
+      { key: 'BED-04', bed: 'ICU Bed 04', name: 'Rajesh Kumar', mrn: 'P001', diagnosis: 'Post-CABG Recovery', hr: 74, spo2: 99, bp: '122/80', rr: 16, lead: 'LEAD II' },
+      { key: 'BED-07', bed: 'ICU Bed 07', name: 'Rohan Mehra', mrn: 'ER-801', diagnosis: 'Acute STEMI Resuscitation', hr: 128, spo2: 91, bp: '85/55', rr: 26, lead: 'LEAD V5' }
+    ];
+  }, []);
+
+  const [rosterOptions, setRosterOptions] = useState(() => loadLiveRosterOptions());
+  const [selectedKey, setSelectedKey] = useState(() => {
+    const initial = loadLiveRosterOptions();
+    return initial[0]?.key || 'BED-04';
+  });
+
   // Hook 1: useState for vitals, UI controls, and telemetry states
-  const [currentPatient, setCurrentPatient] = useState({
-    bed: 'ICU Bed 04',
-    name: 'Eleanor Vance',
-    mrn: 'MRN-89241',
-    age: '54Y',
-    gender: 'Female',
-    diagnosis: 'Post-Coronary Angioplasty (Day 1)',
-    lead: 'LEAD II'
+  const [currentPatient, setCurrentPatient] = useState(() => {
+    const initial = loadLiveRosterOptions();
+    const first = initial[0] || { bed: 'ICU Bed 101', name: 'Rajesh Kumar', mrn: 'P001', diagnosis: 'Post-CABG Recovery', lead: 'LEAD II' };
+    return {
+      bed: first.bed,
+      name: first.name,
+      mrn: first.mrn,
+      age: '45Y',
+      gender: 'Adult',
+      diagnosis: first.diagnosis,
+      lead: first.lead || 'LEAD II'
+    };
   });
 
   const [rhythmMode, setRhythmMode] = useState('NSR'); // NSR, TACHY, BRADY, VTACH, VFIB
@@ -151,44 +210,61 @@ export default function LiveTelemetryMonitor({ patientId = 'BED-04' }) {
     return () => clearInterval(vitalsInterval);
   }, [rhythmMode]);
 
-  // Patient selector presets
+  // Sync with live patient & ICU roster updates across tabs/components
+  useEffect(() => {
+    const refreshRoster = () => {
+      const updated = loadLiveRosterOptions();
+      setRosterOptions(updated);
+      const match = updated.find(o => o.key === selectedKey) || updated[0];
+      if (match) {
+        setCurrentPatient(prev => ({
+          ...prev,
+          bed: match.bed,
+          name: match.name,
+          mrn: match.mrn,
+          diagnosis: match.diagnosis
+        }));
+      }
+    };
+    window.addEventListener('medicare_patients_updated', refreshRoster);
+    window.addEventListener('storage', refreshRoster);
+    return () => {
+      window.removeEventListener('medicare_patients_updated', refreshRoster);
+      window.removeEventListener('storage', refreshRoster);
+    };
+  }, [loadLiveRosterOptions, selectedKey]);
+
+  // Dynamic patient/bed selector
   const handlePatientSelect = useCallback((e) => {
     const val = e.target.value;
-    if (val === 'BED-04') {
+    setSelectedKey(val);
+    const selected = rosterOptions.find(o => o.key === val);
+    if (selected) {
       setCurrentPatient({
-        bed: 'ICU Bed 04',
-        name: 'Eleanor Vance',
-        mrn: 'MRN-89241',
-        age: '54Y',
-        gender: 'Female',
-        diagnosis: 'Post-Coronary Angioplasty (Day 1)',
-        lead: 'LEAD II'
+        bed: selected.bed,
+        name: selected.name,
+        mrn: selected.mrn,
+        age: 'Adult',
+        gender: 'Patient',
+        diagnosis: selected.diagnosis,
+        lead: selected.lead || 'LEAD II'
       });
-      handleRhythmChange('NSR');
-    } else if (val === 'BED-07') {
-      setCurrentPatient({
-        bed: 'ICU Bed 07',
-        name: 'Marcus Holloway',
-        mrn: 'MRN-77312',
-        age: '62Y',
-        gender: 'Male',
-        diagnosis: 'Acute Coronary Syndrome (ACS)',
-        lead: 'LEAD V5'
-      });
-      handleRhythmChange('TACHY');
-    } else if (val === 'BED-12') {
-      setCurrentPatient({
-        bed: 'ICU Bed 12',
-        name: 'Devi Saravanan',
-        mrn: 'MRN-64209',
-        age: '48Y',
-        gender: 'Female',
-        diagnosis: 'Septic Shock / Vasopressor Wean',
-        lead: 'LEAD I'
-      });
-      handleRhythmChange('NSR');
+      setHeartRate(selected.hr || 74);
+      setSpo2(selected.spo2 || 98.5);
+      const bpParts = String(selected.bp || '120/80').split('/');
+      const sys = parseInt(bpParts[0], 10) || 120;
+      const dia = parseInt(bpParts[1], 10) || 80;
+      setBloodPressure({ sys, dia, map: Math.round((sys + 2 * dia) / 3) });
+      setRespiration(selected.rr || 16);
+      if ((selected.hr || 74) > 120) {
+        setRhythmMode('TACHY');
+        setAlarmStatus('WARNING');
+      } else {
+        setRhythmMode('NSR');
+        setAlarmStatus('NORMAL');
+      }
     }
-  }, [handleRhythmChange]);
+  }, [rosterOptions]);
 
   // Hook 6: 60Hz ECG Canvas Drawing Loop (P-QRS-T waveform synthesis)
   useEffect(() => {
@@ -459,10 +535,10 @@ export default function LiveTelemetryMonitor({ patientId = 'BED-04' }) {
 
         {/* Right Bed Controls & Audio/Alarm Status */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-          {/* Patient Bed Dropdown */}
+          {/* Patient Bed Dropdown (Live Synced) */}
           <select
             onChange={handlePatientSelect}
-            defaultValue="BED-04"
+            value={selectedKey}
             style={{
               background: 'rgba(28, 28, 30, 0.8)',
               border: '1px solid rgba(255, 255, 255, 0.15)',
@@ -474,9 +550,11 @@ export default function LiveTelemetryMonitor({ patientId = 'BED-04' }) {
               cursor: 'pointer'
             }}
           >
-            <option value="BED-04">ICU Bed 04 (Vance, E.)</option>
-            <option value="BED-07">ICU Bed 07 (Holloway, M.)</option>
-            <option value="BED-12">ICU Bed 12 (Saravanan, D.)</option>
+            {rosterOptions.map(opt => (
+              <option key={opt.key} value={opt.key}>
+                {opt.bed} — {opt.name} ({opt.mrn})
+              </option>
+            ))}
           </select>
 
           {/* Optical PPG Sensor Button */}

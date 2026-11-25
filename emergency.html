@@ -97,7 +97,10 @@
                             <p style="color: #cbd5e1; font-size: 0.85rem; margin: 0;">24/7 Dedicated Emergency Physicians, Cardiothoracic OT & Cath Lab on 5-Minute Standby.</p>
                         </div>
                     </div>
-                    <div style="display: flex; gap: 10px; align-items: center;">
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <button class="btn btn-sm btn-outline" onclick="openEditICUBedModal(-1)" title="Add or assign an ICU Telemetry Bed">
+                                <i class="fas fa-plus"></i> Add ICU Bed
+                            </button>
                         <button class="btn-code-blue" onclick="triggerCodeBlueAlarm()">
                             <i class="fas fa-triangle-exclamation"></i> TRIGGER CODE BLUE
                         </button>
@@ -161,7 +164,12 @@
                 <div class="card" style="margin-bottom: 28px;">
                     <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                         <h3 class="card-title"><i class="fas fa-ranking-star" style="color:var(--primary);"></i> Emergency Severity Index (ESI) Triage Pipeline</h3>
-                        <span class="badge badge-warning" id="triageCount">4 Critical Patients</span>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <button class="btn btn-sm btn-primary" onclick="openEditTriageModal(null)">
+                                <i class="fas fa-user-plus"></i> Admit ER Patient
+                            </button>
+                            <span class="badge badge-warning" id="triageCount">4 Critical Patients</span>
+                        </div>
                     </div>
                     <div class="table-responsive">
                         <table class="table" id="triageTable">
