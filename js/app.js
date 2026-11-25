@@ -9418,22 +9418,25 @@ function renderPortalHospitalDirectory(query = '') {
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
                 <h4 style="margin:0; color:#fb7185;"><i class="fas fa-droplet"></i> Blood Bank Availability (${filteredBlood.length} of ${bloodEntries.length} Groups)</h4>
                 <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                    ${['', 'O+', 'O-', 'A+', 'B+', 'AB+', 'AB-'].map(bg => `
+                    ${['', 'O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'].map(bg => `
                         <button type="button" class="btn btn-sm ${q === bg.toLowerCase() ? 'btn-primary' : 'btn-outline'}" style="padding:3px 9px; font-size:0.74rem;" onclick="filterPortalDirectory('${bg}')">${bg || 'All'}</button>
                     `).join('')}
                 </div>
             </div>
             ${filteredBlood.length ? `
-                <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(135px, 1fr)); gap:10px;">
+                <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(145px, 1fr)); gap:10px;">
                     ${filteredBlood.map(([group, units]) => {
                         const u = Number(units || 0);
                         const statusColor = u === 0 ? '#ef4444' : (u < 5 ? '#f59e0b' : '#10b981');
                         const statusText = u === 0 ? 'Out of Stock' : (u < 5 ? 'Low Stock' : 'Available');
                         return `
-                            <div style="background:rgba(255,255,255,0.03); border:1px solid ${statusColor}44; border-radius:10px; padding:12px; text-align:center;">
+                            <div style="background:rgba(255,255,255,0.03); border:1px solid ${statusColor}44; border-radius:10px; padding:12px; text-align:center; display:flex; flex-direction:column; gap:6px;">
                                 <div style="font-size:1.35rem; font-weight:800; color:#f43f5e;">${safe(group)}</div>
-                                <div style="font-size:1.05rem; font-weight:700; color:#fff; margin:2px 0;">${u} units</div>
+                                <div style="font-size:1.05rem; font-weight:700; color:#fff;">${u} units</div>
                                 <span style="font-size:0.72rem; color:${statusColor}; font-weight:600;">${statusText}</span>
+                                <button type="button" class="btn btn-sm btn-outline" style="margin-top:4px; font-size:0.72rem; padding:4px 8px; border-color:rgba(244,63,94,0.45); color:#fb7185;" onclick="openPatientBloodRequestModal('${safe(group)}')">
+                                    <i class="fas fa-hand-holding-droplet"></i> Request Blood
+                                </button>
                             </div>`;
                     }).join('')}
                 </div>` : '<p style="color:var(--text-muted); font-size:0.86rem;">No blood group matched your search.</p>'}
@@ -9608,6 +9611,95 @@ function savePatientPortalAppointment() {
     }
 }
 
+function openPatientBloodRequestModal(group = 'O+') {
+    const patients = loadData('hms_patients', defaultPatients);
+    const curUser = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+    const activePatId = (typeof portalCurrentPatientId !== 'undefined' && portalCurrentPatientId)
+        ? portalCurrentPatientId
+        : (curUser && curUser.patientId ? curUser.patientId : (patients[0]?.id || 'P001'));
+    const activePat = patients.find(p => p.id === activePatId) || patients[0];
+
+    let modal = document.getElementById('patientBloodRequestModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'patientBloodRequestModal';
+        modal.className = 'modal-overlay';
+        modal.style.display = 'none';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 440px;">
+                <div class="modal-header">
+                    <h3 class="modal-title" style="color: #fb7185;"><i class="fas fa-droplet"></i> Request Blood Reservation</h3>
+                    <button class="modal-close" onclick="closeModal('patientBloodRequestModal')">&times;</button>
+                </div>
+                <div class="modal-body" style="padding: 20px;">
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label class="form-label">Patient / Requester Name</label>
+                        <input type="text" id="patBloodReqName" class="form-control" placeholder="Enter patient name">
+                    </div>
+                    <div class="form-row" style="display:flex; gap:10px; margin-bottom: 12px;">
+                        <div class="form-group" style="flex:1;">
+                            <label class="form-label">Blood Group</label>
+                            <select id="patBloodReqGroup" class="form-control">
+                                ${['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(g => `<option value="${g}">${g}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label class="form-label">Units Needed</label>
+                            <input type="number" id="patBloodReqUnits" class="form-control" min="1" max="10" value="1">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label class="form-label">Urgency</label>
+                        <select id="patBloodReqUrgency" class="form-control">
+                            <option value="Routine">Routine / Scheduled</option>
+                            <option value="Urgent">Urgent</option>
+                            <option value="STAT Emergency">STAT Emergency</option>
+                        </select>
+                    </div>
+                    <button type="button" id="btnConfirmPatientBloodReq" class="btn btn-danger" style="width: 100%;" onclick="savePatientBloodRequest()">
+                        <i class="fas fa-check-circle"></i> Submit Blood Request
+                    </button>
+                </div>
+            </div>`;
+        document.body.appendChild(modal);
+    }
+
+    const nameInp = document.getElementById('patBloodReqName');
+    if (nameInp) nameInp.value = activePat ? activePat.name : (curUser?.displayName || '');
+    const grpSel = document.getElementById('patBloodReqGroup');
+    if (grpSel) grpSel.value = group || 'O+';
+    openModal('patientBloodRequestModal');
+}
+
+function savePatientBloodRequest() {
+    const patientName = document.getElementById('patBloodReqName')?.value.trim() || 'Walk-In Patient';
+    const bloodGroup = document.getElementById('patBloodReqGroup')?.value || 'O+';
+    const units = Math.max(1, parseInt(document.getElementById('patBloodReqUnits')?.value || '1', 10));
+    const urgency = document.getElementById('patBloodReqUrgency')?.value || 'Routine';
+
+    const requests = loadData('hms_blood_requests', defaultBloodRequests);
+    const reqId = typeof generateId === 'function' ? generateId('BREQ-') : ('BREQ-' + Date.now());
+    requests.unshift({
+        id: reqId,
+        department: 'Patient Portal Request',
+        patient: patientName,
+        bloodGroup,
+        units,
+        urgency,
+        status: 'Pending',
+        time: 'Just now'
+    });
+    saveData('hms_blood_requests', requests);
+    if (typeof broadcastHospitalEvent === 'function') {
+        broadcastHospitalEvent('blood_request', { reqId, group: bloodGroup, units }, `🩸 Blood Request #${reqId}: ${units}u ${bloodGroup} for ${patientName}`);
+    }
+    closeModal('patientBloodRequestModal');
+    if (typeof playSound === 'function') playSound('success');
+    if (typeof showToast === 'function') {
+        showToast(`🩸 Blood request #${reqId} (${units} unit ${bloodGroup}) sent to Blood Bank!`, 'success');
+    }
+}
+
 function openPublicHospitalDirectoryModal(initialQuery = '') {
     let modal = document.getElementById('publicHospitalDirectoryModal');
     if (!modal) {
@@ -9619,7 +9711,12 @@ function openPublicHospitalDirectoryModal(initialQuery = '') {
             <div class="modal-content" style="max-width: 920px; width: 95%;">
                 <div class="modal-header">
                     <h3 class="modal-title" style="color: #38bdf8;"><i class="fas fa-hospital"></i> Live Hospital Directory — Doctors, Blood Bank & Services</h3>
-                    <button class="modal-close" onclick="closeModal('publicHospitalDirectoryModal')">&times;</button>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <button type="button" id="btnPubBookDoctor" class="btn btn-primary btn-sm" onclick="openPatientBookAppointmentModal()">
+                            <i class="fas fa-calendar-plus"></i> Book Doctor
+                        </button>
+                        <button class="modal-close" onclick="closeModal('publicHospitalDirectoryModal')">&times;</button>
+                    </div>
                 </div>
                 <div class="modal-body" style="padding: 20px;">
                     <div style="position: relative; margin-bottom: 16px;">
