@@ -8011,7 +8011,7 @@ function updatePharmacyKPIs(drugs) {
 }
 
 function renderPharmacyDrugs(data) {
-    const tbody = document.getElementById('drugsTableBody');
+    const tbody = document.getElementById('pharmacyDrugsTableBody') || document.getElementById('drugsTableBody');
     const countBadge = document.getElementById('pharmacyListCount');
     const emptyState = document.getElementById('pharmacyEmptyState');
 
@@ -8196,6 +8196,8 @@ function showAddDrugModal() {
     if (title) title.innerText = 'Add Formulary Medication';
     const form = document.getElementById('drugForm');
     if (form) form.reset();
+    const idEl = document.getElementById('drugId');
+    if (idEl) idEl.value = '';
     openModal('drugModal');
 }
 
@@ -8208,7 +8210,9 @@ function editDrug(id) {
     const title = document.getElementById('drugModalTitle');
     if (title) title.innerText = `Edit Medication: ${drug.name}`;
 
-    const setVal = (elId, val) => { const el = document.getElementById(elId); if (el) el.value = val || ''; };
+    const setVal = (elId, val) => { const el = document.getElementById(elId); if (el) el.value = val ?? ''; };
+    setVal('drugId', drug.id);
+    setVal('drugCode', drug.id);
     setVal('drugName', drug.name);
     setVal('drugDosage', drug.dosage);
     setVal('drugCategory', drug.category);
@@ -8224,13 +8228,17 @@ function editDrug(id) {
 }
 
 function saveDrugItem() {
+    const code = document.getElementById('drugCode')?.value.trim();
     const name = document.getElementById('drugName')?.value.trim();
     const dosage = document.getElementById('drugDosage')?.value.trim();
     const category = document.getElementById('drugCategory')?.value;
-    const form = document.getElementById('drugFormType')?.value;
-    const stock = parseInt(document.getElementById('drugStock')?.value) || 0;
-    const minStock = parseInt(document.getElementById('drugMinStock')?.value) || 50;
-    const unitPrice = parseFloat(document.getElementById('drugUnitPrice')?.value) || 10.0;
+    const form = document.getElementById('drugFormType')?.value || 'Tablet';
+    const parsedStock = parseInt(document.getElementById('drugStock')?.value, 10);
+    const stock = Number.isNaN(parsedStock) ? 0 : parsedStock;
+    const parsedMinStock = parseInt(document.getElementById('drugMinStock')?.value, 10);
+    const minStock = Number.isNaN(parsedMinStock) ? 30 : parsedMinStock;
+    const parsedPrice = parseFloat(document.getElementById('drugUnitPrice')?.value);
+    const unitPrice = Number.isNaN(parsedPrice) ? 10.0 : parsedPrice;
     const batchNo = document.getElementById('drugBatchNo')?.value.trim() || 'BATCH-26';
     const expiry = document.getElementById('drugExpiry')?.value;
     const supplier = document.getElementById('drugSupplier')?.value.trim() || 'Sun Pharma';
@@ -8245,11 +8253,11 @@ function saveDrugItem() {
     if (editingDrugId) {
         const idx = drugs.findIndex(d => d.id === editingDrugId);
         if (idx > -1) {
-            drugs[idx] = { ...drugs[idx], name, dosage, category, form, stock, minStock, unitPrice, batchNo, expiry, supplier };
+            drugs[idx] = { ...drugs[idx], id: code || drugs[idx].id, name, dosage, category, form, stock, minStock, unitPrice, batchNo, expiry, supplier };
             showToast(`Medication ${drugs[idx].id} updated!`, 'success');
         }
     } else {
-        const newId = 'DRUG-0' + (drugs.length + 1);
+        const newId = code || ('DRUG-' + String(drugs.length + 1).padStart(3, '0'));
         drugs.push({ id: newId, name, dosage, category, form, stock, minStock, unitPrice, batchNo, expiry, supplier });
         showToast(`New medication ${newId} added to formulary!`, 'success');
     }

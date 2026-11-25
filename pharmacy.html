@@ -276,7 +276,7 @@
                 <button class="modal-close" onclick="closeModal('drugModal')">&times;</button>
             </div>
             <div class="modal-body">
-                <form id="drugForm" onsubmit="event.preventDefault(); saveDrug();">
+                <form id="drugForm" onsubmit="event.preventDefault(); saveDrugItem();">
                     <input type="hidden" id="drugId">
                     <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
                         <div class="form-group">
@@ -300,7 +300,26 @@
 
                     <div class="form-group" style="margin-top: 10px;">
                         <label class="form-label" for="drugName">Drug Generic & Brand Name *</label>
-                        <input type="text" class="form-control" id="drugName" placeholder="e.g. Amoxicillin + Clavulanic Acid 625mg" required>
+                        <input type="text" class="form-control" id="drugName" placeholder="e.g. Amoxicillin + Clavulanic Acid" required>
+                    </div>
+
+                    <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 10px;">
+                        <div class="form-group">
+                            <label class="form-label" for="drugDosage">Dosage / Strength *</label>
+                            <input type="text" class="form-control" id="drugDosage" placeholder="e.g. 625mg" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="drugFormType">Dosage Form *</label>
+                            <select class="form-control" id="drugFormType" required>
+                                <option value="Tablet">Tablet</option>
+                                <option value="Capsule">Capsule</option>
+                                <option value="IV Infusion">IV Infusion</option>
+                                <option value="Injection / Vial">Injection / Vial</option>
+                                <option value="Syrup">Syrup</option>
+                                <option value="Inhaler">Inhaler</option>
+                                <option value="Ointment">Ointment</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-top: 10px;">
@@ -313,8 +332,8 @@
                             <input type="number" class="form-control" id="drugMinStock" min="0" value="30" required>
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="drugPrice">Unit Price (₹) *</label>
-                            <input type="number" class="form-control" id="drugPrice" min="1" step="0.5" value="120" required>
+                            <label class="form-label" for="drugUnitPrice">Unit Price (₹) *</label>
+                            <input type="number" class="form-control" id="drugUnitPrice" min="1" step="0.5" value="120" required>
                         </div>
                     </div>
 
