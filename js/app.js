@@ -471,9 +471,19 @@ function handleHospitalMeshEvent(data) {
         if (typeof initDashboardPage === 'function') initDashboardPage();
     }
 
-    if (curPath === 'patient-portal.html') {
+    if (curPath === 'patient-portal.html' || document.getElementById('patientDigitalIdCard')) {
+        const curUser = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+        if (!curUser || curUser.role !== 'Patient') {
+            if (typeof populatePortalPatientSelector === 'function') populatePortalPatientSelector();
+        }
         if (typeof portalCurrentPatientId !== 'undefined' && typeof renderPortalPatientData === 'function') {
             renderPortalPatientData(portalCurrentPatientId);
+        }
+    }
+
+    if (curPath === 'doctors.html' || document.getElementById('doctorsGrid')) {
+        if (data.type.includes('doctor') || data.type.includes('sync')) {
+            if (typeof renderDoctors === 'function') renderDoctors(loadData('hms_doctors', defaultDoctors));
         }
     }
 
@@ -550,6 +560,7 @@ function saveData(key, val, skipMesh = false) {
         if (!skipMesh && !window.suppressMeshBroadcast) {
             const labelMap = {
                 'hms_patients': 'Patient roster updated',
+                'hms_doctors': 'Medical staff roster updated',
                 'hms_appointments': 'Appointment schedule updated',
                 'hms_prescriptions': 'Prescription records updated',
                 'hms_bills': 'Billing ledger & invoices updated',
@@ -3342,8 +3353,8 @@ function populateAllPatientSelects() {
     if (typeof document === 'undefined') return;
     const patients = loadData('hms_patients', defaultPatients);
     const selectIds = [
-        'apptPatient', 'rxPatient', 'labPatient', 'billPatient',
-        'telemedPatientSelect', 'portalPatientSelect', 'abhaPatientSelect'
+        'apptPatient', 'appt-patient', 'rxPatient', 'labPatientSelect',
+        'invoicePatient', 'telemedPatientSelect', 'portalPatientSelector', 'abhaPatientSelect'
     ];
     selectIds.forEach(id => {
         const el = document.getElementById(id);
@@ -3363,8 +3374,12 @@ function deletePatient(id) {
         let patients = loadData('hms_patients', []);
         patients = patients.filter(p => p.id !== id);
         saveData('hms_patients', patients);
+        populateAllPatientSelects();
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('medicare_patients_updated', { detail: { deletedId: id } }));
+        }
         renderPatients(patients);
-        showToast('Patient removed.', 'success');
+        showToast('Patient removed & rosters synced.', 'success');
     }
 }
 
@@ -8563,6 +8578,9 @@ function saveICUBedMonitor() {
     }
 
     saveData('hms_icu_monitors', monitors);
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('medicare_patients_updated', { detail: { monitors } }));
+    }
     renderICUMonitors();
     startECGWaveformLoop();
     closeModal('editICUBedModal');
@@ -8578,6 +8596,9 @@ function deleteICUBedMonitor() {
     }
     monitors.splice(editingICUBedIdx, 1);
     saveData('hms_icu_monitors', monitors);
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('medicare_patients_updated', { detail: { monitors } }));
+    }
     renderICUMonitors();
     startECGWaveformLoop();
     closeModal('editICUBedModal');
