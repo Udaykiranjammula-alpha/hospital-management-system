@@ -10558,7 +10558,74 @@ async function acquireTelemedLocalMedia() {
     return stream;
 }
 
+async function showPeerRoomInviteModal(roomId, joinUrl) {
+    let modal = document.getElementById('peerInviteModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'peerInviteModal';
+        modal.className = 'modal-overlay';
+        modal.style.display = 'none';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 440px; text-align: center;">
+                <div class="modal-header">
+                    <h3 class="modal-title" style="color: #38bdf8;"><i class="fas fa-qrcode"></i> Share Live Video Call</h3>
+                    <button class="modal-close" onclick="closeModal('peerInviteModal')">&times;</button>
+                </div>
+                <div style="padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 14px;">
+                    <div style="font-size: 0.85rem; color: #cbd5e1;">Scan with phone camera or share Room ID with the other person:</div>
+                    <div id="peerInviteRoomCode" style="font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 800; color: #34d399; background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.4); padding: 8px 20px; border-radius: 12px; letter-spacing: 1px;"></div>
+                    <div id="peerInviteQrBox" style="background: #ffffff; padding: 12px; border-radius: 14px; width: 176px; height: 176px; display: flex; align-items: center; justify-content: center;"></div>
+                    <div style="display: flex; gap: 8px; width: 100%; flex-wrap: wrap;">
+                        <button type="button" class="btn btn-primary btn-sm" style="flex: 1;" id="peerInviteCopyBtn">
+                            <i class="fas fa-copy"></i> Copy Join Link
+                        </button>
+                        <button type="button" class="btn btn-outline btn-sm" style="flex: 1;" id="peerInviteOpenTabBtn">
+                            <i class="fas fa-external-link-alt"></i> Open Patient Tab
+                        </button>
+                    </div>
+                    <div style="font-size: 0.74rem; color: #94a3b8;">This popup closes automatically once the other person joins.</div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    const codeEl = document.getElementById('peerInviteRoomCode');
+    if (codeEl) codeEl.textContent = roomId;
+
+    const qrBox = document.getElementById('peerInviteQrBox');
+    if (qrBox) {
+        if (window.QRCode && typeof window.QRCode.toString === 'function') {
+            try {
+                const svg = await window.QRCode.toString(joinUrl, { type: 'svg', width: 152, margin: 1 });
+                qrBox.innerHTML = svg;
+            } catch (_) {
+                qrBox.innerHTML = `<span style="color:#0f172a;font-size:12px;">Room: ${roomId}</span>`;
+            }
+        } else {
+            qrBox.innerHTML = `<span style="color:#0f172a;font-size:12px;">Room: ${roomId}</span>`;
+        }
+    }
+
+    const copyBtn = document.getElementById('peerInviteCopyBtn');
+    if (copyBtn) {
+        copyBtn.onclick = () => {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(joinUrl).then(() => showToast('Join link copied!', 'success')).catch(() => {});
+            }
+        };
+    }
+
+    const openTabBtn = document.getElementById('peerInviteOpenTabBtn');
+    if (openTabBtn) {
+        openTabBtn.onclick = () => window.open(joinUrl, '_blank');
+    }
+
+    openModal('peerInviteModal');
+}
+
 function attachRemotePeerStream(remoteStream) {
+    closeModal('peerInviteModal');
     const remoteVid = document.getElementById('telemedRemoteVideo');
     const canvas = document.getElementById('telemedPatientStreamCanvas');
     if (remoteVid) {
@@ -10622,7 +10689,8 @@ async function hostPeerTelemedRoom() {
                 badge.style.color = '#fde047';
                 badge.textContent = `Room ${roomId} Ready (Link Copied)`;
             }
-            showToast(`📡 Room ${roomId} live! Share ID "${roomId}" or paste copied link on the other device.`, 'success');
+            showPeerRoomInviteModal(roomId, joinUrl);
+            showToast(`📡 Room ${roomId} live! Share ID "${roomId}" or scan QR on the other device.`, 'success');
         });
 
         telemedPeer.on('call', (call) => {

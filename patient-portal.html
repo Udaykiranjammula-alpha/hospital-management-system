@@ -220,7 +220,15 @@
                     </div>
                     <video id="patientLocalSelfVideo" autoplay playsinline muted style="position:absolute; bottom:12px; right:12px; width:140px; height:96px; border-radius:10px; object-fit:cover; border:2px solid #38bdf8; background:#0f172a;"></video>
                 </div>
-                <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                    <div style="display: flex; gap: 8px;">
+                        <button type="button" class="btn btn-outline btn-sm" id="patientMuteMicBtn" onclick="toggleTelemedMic()">
+                            <i class="fas fa-microphone"></i> Mute Mic
+                        </button>
+                        <button type="button" class="btn btn-outline btn-sm" id="patientMuteCamBtn" onclick="toggleTelemedVideo()">
+                            <i class="fas fa-video"></i> Camera Off
+                        </button>
+                    </div>
                     <button type="button" class="btn btn-danger btn-sm" onclick="endPeerTelemedCall(); closeModal('patientVideoCallModal');">
                         <i class="fas fa-phone-slash"></i> End Call
                     </button>
