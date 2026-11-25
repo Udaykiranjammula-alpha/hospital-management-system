@@ -780,6 +780,30 @@ const ROLES = {
             canDispenseMedicine: false,
             canViewAllData: false
         }
+    },
+    PATIENT: {
+        id: 'Patient',
+        category: 'PATIENT',
+        title: 'Patient Self-Service Portal',
+        allowedPages: ['patient-portal.html'],
+        navItems: [
+            { href: 'patient-portal.html', icon: 'fa-id-badge', label: 'My Health Passport', color: '#38bdf8' }
+        ],
+        permissions: {
+            canManageDoctors: false,
+            canAddDoctor: false,
+            canEditDoctor: false,
+            canDeleteDoctor: false,
+            canManageStaff: false,
+            canManagePharmacy: false,
+            canManageLab: false,
+            canEnterLabResults: false,
+            canAccessAdminSettings: false,
+            canAccessFinancialReports: false,
+            canPrescribe: false,
+            canDispenseMedicine: false,
+            canViewAllData: false
+        }
     }
 };
 
@@ -787,6 +811,7 @@ window.ROLES = ROLES;
 
 function getRoleConfig(role) {
     const raw = String(role || 'Admin').toUpperCase().replace(/[^A-Z]/g, '');
+    if (raw.includes('PATIENT')) return ROLES.PATIENT;
     if (raw.includes('DOCTOR')) return ROLES.DOCTOR;
     if (raw.includes('RECEPTION')) return ROLES.RECEPTIONIST;
     if (raw.includes('PHARMAC')) return ROLES.PHARMACIST;
@@ -796,12 +821,13 @@ function getRoleConfig(role) {
 
 function getCurrentUser() {
     const role = localStorage.getItem('hms_user_role') || 'Admin';
-    const loginCategory = localStorage.getItem('hms_login_category') || (role === 'Doctor' ? 'DOCTOR' : (role === 'Admin' ? 'ADMIN' : 'STAFF'));
+    const loginCategory = localStorage.getItem('hms_login_category') || (role === 'Doctor' ? 'DOCTOR' : (role === 'Patient' ? 'PATIENT' : (role === 'Admin' ? 'ADMIN' : 'STAFF')));
     const username = localStorage.getItem('hms_username') || 'Administrator';
     const doctorId = localStorage.getItem('hms_doctor_id') || (role === 'Doctor' ? 'D001' : '');
-    const department = localStorage.getItem('hms_department') || (role === 'Doctor' ? 'Cardiology' : 'Hospital Operations');
+    const patientId = localStorage.getItem('hms_patient_id') || (role === 'Patient' ? 'P001' : '');
+    const department = localStorage.getItem('hms_department') || (role === 'Doctor' ? 'Cardiology' : (role === 'Patient' ? 'ABHA Health Portal' : 'Hospital Operations'));
     const avatar = localStorage.getItem('hms_user_avatar') || `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=0284c7&color=fff`;
-    return { loginCategory, role, username, displayName: username, doctorId, department, avatar };
+    return { loginCategory, role, username, displayName: username, doctorId, patientId, department, avatar };
 }
 
 function checkActionPermission(permName, actionDesc) {
@@ -972,7 +998,7 @@ function applyPageGuard() {
                             </div>
                         </div>
                         <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
-                            <a href="dashboard.html" class="btn btn-primary" style="padding:12px 24px;"><i class="fas fa-arrow-left"></i> Return to My Dashboard</a>
+                            <a href="${user.role === 'Patient' ? 'patient-portal.html' : 'dashboard.html'}" class="btn btn-primary" style="padding:12px 24px;"><i class="fas fa-arrow-left"></i> Return to My ${user.role === 'Patient' ? 'Health Portal' : 'Dashboard'}</a>
                             <button class="btn btn-outline" onclick="switchUserRole('admin')" style="padding:12px 20px;"><i class="fas fa-shield-alt"></i> Switch to Admin</button>
                         </div>
                     </div>
@@ -2280,7 +2306,15 @@ const VALID_CREDENTIALS = [
     { username: 'pathologist', password: 'password123', category: 'STAFF', role: 'LabTechnician', displayName: 'Ravi Kumar (Lab Technologist)', department: 'Pathology Diagnostics', avatar: 'https://ui-avatars.com/api/?name=Pathologist&background=06b6d4&color=fff' },
     { username: 'lab', password: 'password123', category: 'STAFF', role: 'LabTechnician', displayName: 'Ravi Kumar (Lab Technologist)', department: 'Pathology Diagnostics', avatar: 'https://ui-avatars.com/api/?name=Pathologist&background=06b6d4&color=fff' },
     { username: 'labtech', password: 'password123', category: 'STAFF', role: 'LabTechnician', displayName: 'Ravi Kumar (Lab Technologist)', department: 'Pathology Diagnostics', avatar: 'https://ui-avatars.com/api/?name=Pathologist&background=06b6d4&color=fff' },
-    { username: 'pathologist', password: 'pathologist', category: 'STAFF', role: 'LabTechnician', displayName: 'Ravi Kumar (Lab Technologist)', department: 'Pathology Diagnostics', avatar: 'https://ui-avatars.com/api/?name=Pathologist&background=06b6d4&color=fff' }
+    { username: 'pathologist', password: 'pathologist', category: 'STAFF', role: 'LabTechnician', displayName: 'Ravi Kumar (Lab Technologist)', department: 'Pathology Diagnostics', avatar: 'https://ui-avatars.com/api/?name=Pathologist&background=06b6d4&color=fff' },
+
+    // 4. PATIENT PORTAL CATEGORY (Self-Service Health Passport — Patient Data Only)
+    { username: 'patient', password: 'password123', category: 'PATIENT', role: 'Patient', patientId: 'P001', displayName: 'Rajesh Kumar', department: 'ABHA Health Portal', avatar: 'https://ui-avatars.com/api/?name=Rajesh+Kumar&background=a855f7&color=fff' },
+    { username: 'patient', password: 'patient123', category: 'PATIENT', role: 'Patient', patientId: 'P001', displayName: 'Rajesh Kumar', department: 'ABHA Health Portal', avatar: 'https://ui-avatars.com/api/?name=Rajesh+Kumar&background=a855f7&color=fff' },
+    { username: 'patient', password: 'patient', category: 'PATIENT', role: 'Patient', patientId: 'P001', displayName: 'Rajesh Kumar', department: 'ABHA Health Portal', avatar: 'https://ui-avatars.com/api/?name=Rajesh+Kumar&background=a855f7&color=fff' },
+    { username: 'rajesh', password: 'password123', category: 'PATIENT', role: 'Patient', patientId: 'P001', displayName: 'Rajesh Kumar', department: 'ABHA Health Portal', avatar: 'https://ui-avatars.com/api/?name=Rajesh+Kumar&background=a855f7&color=fff' },
+    { username: 'priya.patel', password: 'password123', category: 'PATIENT', role: 'Patient', patientId: 'P002', displayName: 'Priya Patel', department: 'ABHA Health Portal', avatar: 'https://ui-avatars.com/api/?name=Priya+Patel&background=a855f7&color=fff' },
+    { username: 'vikram', password: 'password123', category: 'PATIENT', role: 'Patient', patientId: 'P005', displayName: 'Vikram Reddy', department: 'ABHA Health Portal', avatar: 'https://ui-avatars.com/api/?name=Vikram+Reddy&background=a855f7&color=fff' }
 ];
 
 window.VALID_CREDENTIALS = VALID_CREDENTIALS;
@@ -2464,6 +2498,7 @@ function handleLogin(e) {
     localStorage.setItem('hms_login_category', matchedAccount.category || 'STAFF');
     localStorage.setItem('hms_user_avatar', matchedAccount.avatar);
     localStorage.setItem('hms_doctor_id', matchedAccount.doctorId || '');
+    localStorage.setItem('hms_patient_id', matchedAccount.patientId || '');
     localStorage.setItem('hms_department', matchedAccount.department || '');
     localStorage.setItem('hms_authenticated', 'true');
 
@@ -2510,10 +2545,11 @@ function handleLogin(e) {
     }, 60);
 
     let navigated = false;
+    const targetDestination = matchedAccount.role === 'Patient' ? 'patient-portal.html' : 'dashboard.html';
     const performRedirect = () => {
         if (!navigated) {
             navigated = true;
-            window.location.href = 'dashboard.html';
+            window.location.href = targetDestination;
         }
     };
 
@@ -8906,7 +8942,19 @@ function saveEmergencyPatient() {
 let portalCurrentPatientId = 'P001';
 
 function initPatientPortalPage() {
-    populatePortalPatientSelector();
+    const user = getCurrentUser();
+    if (user && user.role === 'Patient') {
+        portalCurrentPatientId = user.patientId || 'P001';
+        const sel = document.getElementById('portalPatientSelector');
+        if (sel && sel.parentElement) {
+            sel.parentElement.style.display = 'none';
+        }
+        // Hide global staff search bar if present so patient only sees their own portal
+        const globalSearch = document.querySelector('.global-search-wrapper, .header-search');
+        if (globalSearch) globalSearch.style.display = 'none';
+    } else {
+        populatePortalPatientSelector();
+    }
     renderPortalPatientData(portalCurrentPatientId);
 }
 

@@ -3767,7 +3767,7 @@ body[data-theme="frost-light"] .icu-monitor-card {
 /* 26. THREE LOGIN CATEGORIES & OPERATIONAL STAFF SELECTOR */
 .login-category-selector {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 8px;
     margin-bottom: 12px;
 }
@@ -3909,7 +3909,7 @@ body[data-theme="frost-light"] .cmd-palette-card {
 /* 2. Apple Segmented Controls (Login Category Selector) */
 .login-category-selector {
     display: grid !important;
-    grid-template-columns: repeat(3, 1fr) !important;
+    grid-template-columns: repeat(4, 1fr) !important;
     gap: 4px !important;
     background: rgba(120, 120, 128, 0.16) !important;
     padding: 4px !important;
@@ -3918,6 +3918,12 @@ body[data-theme="frost-light"] .cmd-palette-card {
     backdrop-filter: blur(16px) !important;
     -webkit-backdrop-filter: blur(16px) !important;
     margin-bottom: 14px !important;
+}
+
+@media (max-width: 480px) {
+    .login-category-selector {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
 }
 
 .login-cat-btn {

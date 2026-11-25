@@ -43,7 +43,7 @@
             <div class="form-group">
                 <label class="form-label" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <span>Select Login Category</span>
-                    <span style="font-size: 0.74rem; color: var(--primary); font-weight: 600;"><i class="fas fa-shield-halved"></i> 3 Core Login Types</span>
+                    <span style="font-size: 0.74rem; color: var(--primary); font-weight: 600;"><i class="fas fa-shield-halved"></i> 4 Core Login Types</span>
                 </label>
                 <!-- 3 Main Login Categories -->
                 <div class="login-category-selector">
@@ -61,6 +61,11 @@
                         <i class="fas fa-users-gear" style="color: #f59e0b;"></i>
                         <strong>3. STAFF</strong>
                         <span>Operations Desk</span>
+                    </button>
+                    <button type="button" class="login-cat-btn" data-cat="patient" onclick="selectLoginCategory('patient', this)">
+                        <i class="fas fa-id-badge" style="color: #a855f7;"></i>
+                        <strong>4. PATIENT</strong>
+                        <span>Health Passport</span>
                     </button>
                 </div>
 
@@ -114,6 +119,7 @@
                 <button type="button" class="btn btn-sm btn-outline" onclick="autofill('reception', 'receptionist')"><i class="fas fa-concierge-bell" style="color:#a855f7;"></i> 3a. Receptionist</button>
                 <button type="button" class="btn btn-sm btn-outline" onclick="autofill('pharmacist', 'pharmacist')"><i class="fas fa-pills" style="color:#ec4899;"></i> 3b. Pharmacist</button>
                 <button type="button" class="btn btn-sm btn-outline" onclick="autofill('pathologist', 'lab_tech')"><i class="fas fa-microscope" style="color:#06b6d4;"></i> 3c. Lab Tech</button>
+                <button type="button" class="btn btn-sm btn-outline" onclick="autofill('patient', 'patient')"><i class="fas fa-id-badge" style="color:#a855f7;"></i> 4. Patient (Rajesh)</button>
             </div>
         </div>
 
@@ -174,6 +180,10 @@
             } else if (cat === 'staff') {
                 if (sub) sub.style.display = 'block';
                 selectStaffSubRole('receptionist');
+            } else if (cat === 'patient') {
+                if (sub) sub.style.display = 'none';
+                if (u) u.value = 'patient';
+                if (p) p.value = 'password123';
             }
             if (typeof playSound === 'function') playSound('click');
         }
@@ -216,6 +226,10 @@
             } else if (role === 'doctor') {
                 const b = document.querySelector('.login-cat-btn[data-cat="doctor"]');
                 if (b) selectLoginCategory('doctor', b);
+                if (u) u.value = user;
+            } else if (role === 'patient') {
+                const b = document.querySelector('.login-cat-btn[data-cat="patient"]');
+                if (b) selectLoginCategory('patient', b);
                 if (u) u.value = user;
             } else {
                 const b = document.querySelector('.login-cat-btn[data-cat="staff"]');
