@@ -705,6 +705,8 @@ async function runAllTests() {
     assert(patPortalSrc.includes('id="portalTabDirectory"'), 'patient-portal.html has #portalTabDirectory');
     assert(appJs.includes('function renderPortalHospitalDirectory'), 'app.js defines renderPortalHospitalDirectory');
     assert(appJs.includes('function filterPortalDirectory'), 'app.js defines filterPortalDirectory');
+    assert(appJs.includes('function openPublicHospitalDirectoryModal'), 'app.js defines openPublicHospitalDirectoryModal');
+    assert(fs.readFileSync(path.join(rootDir, 'index.html'), 'utf8').includes('id="btnPublicHospitalInfo"'), 'index.html has #btnPublicHospitalInfo for new visitors');
 
     console.log(`\n====================================================`);
     console.log(`TOTAL TESTS: ${totalTests} | PASSED: ${passedTests} | FAILED: ${failedTests}`);

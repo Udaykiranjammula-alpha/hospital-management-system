@@ -478,6 +478,9 @@ function handleHospitalMeshEvent(data) {
         }
         if (typeof portalCurrentPatientId !== 'undefined' && typeof renderPortalPatientData === 'function') {
             renderPortalPatientData(portalCurrentPatientId);
+    if (document.getElementById('portalTabDirectory')) {
+        switchPortalTab('directory');
+    }
         }
     }
 
@@ -9299,6 +9302,9 @@ function initPatientPortalPage() {
         populatePortalPatientSelector();
     }
     renderPortalPatientData(portalCurrentPatientId);
+    if (document.getElementById('portalTabDirectory')) {
+        switchPortalTab('directory');
+    }
 
     if (typeof window !== 'undefined' && window.location && window.location.search) {
         const params = new URLSearchParams(window.location.search);
@@ -9466,6 +9472,57 @@ function filterPortalDirectory(query = '') {
     renderPortalHospitalDirectory(query);
 }
 
+function openPublicHospitalDirectoryModal(initialQuery = '') {
+    let modal = document.getElementById('publicHospitalDirectoryModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'publicHospitalDirectoryModal';
+        modal.className = 'modal-overlay';
+        modal.style.display = 'none';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 920px; width: 95%;">
+                <div class="modal-header">
+                    <h3 class="modal-title" style="color: #38bdf8;"><i class="fas fa-hospital"></i> Live Hospital Directory — Doctors, Blood Bank & Services</h3>
+                    <button class="modal-close" onclick="closeModal('publicHospitalDirectoryModal')">&times;</button>
+                </div>
+                <div class="modal-body" style="padding: 20px;">
+                    <div style="position: relative; margin-bottom: 16px;">
+                        <i class="fas fa-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #38bdf8;"></i>
+                        <input type="text" id="publicDirectorySearch" class="form-control" placeholder="Search blood group (e.g. O+, AB-), doctor, or department..." style="padding-left: 38px;" oninput="filterPublicHospitalDirectory(this.value)">
+                    </div>
+                    <div id="publicDirectoryContainer"></div>
+                </div>
+            </div>`;
+        document.body.appendChild(modal);
+    }
+    const inp = document.getElementById('publicDirectorySearch');
+    if (inp) inp.value = initialQuery;
+    filterPublicHospitalDirectory(initialQuery);
+    openModal('publicHospitalDirectoryModal');
+}
+
+function filterPublicHospitalDirectory(query = '') {
+    const inp = document.getElementById('publicDirectorySearch');
+    if (inp && inp.value !== query) inp.value = query;
+    const prevContainer = document.getElementById('portalDirectoryContainer');
+    const pubContainer = document.getElementById('publicDirectoryContainer');
+    if (!pubContainer) return;
+    // Reuse renderPortalHospitalDirectory by temporarily binding public container if needed
+    if (prevContainer) {
+        renderPortalHospitalDirectory(query);
+        pubContainer.innerHTML = prevContainer.innerHTML;
+    } else {
+        const tempId = 'portalDirectoryContainer';
+        pubContainer.id = tempId;
+        renderPortalHospitalDirectory(query);
+        pubContainer.id = 'publicDirectoryContainer';
+        pubContainer.querySelectorAll('button[onclick^="filterPortalDirectory("]').forEach(btn => {
+            const arg = btn.getAttribute('onclick').replace('filterPortalDirectory', 'filterPublicHospitalDirectory');
+            btn.setAttribute('onclick', arg);
+        });
+    }
+}
+
 function renderPortalPatientData(id) {
     const patients = loadData('hms_patients', defaultPatients);
     const patient = patients.find(p => p.id === id) || patients[0];
@@ -9624,6 +9681,9 @@ function confirmOnlinePayment(billId) {
     playSound('success');
     showToast(`Payment of ₹${bills[idx]?.total} confirmed! Receipt issued.`, 'success');
     renderPortalPatientData(portalCurrentPatientId);
+    if (document.getElementById('portalTabDirectory')) {
+        switchPortalTab('directory');
+    }
 
     if (typeof window !== 'undefined' && window.location && window.location.search) {
         const params = new URLSearchParams(window.location.search);
