@@ -40,7 +40,7 @@ body.dark-mode {
     --glass-card: rgba(28, 28, 30, 0.72);
     --glass-sidebar: rgba(18, 18, 20, 0.82);
     --glass-header: rgba(18, 18, 20, 0.80);
-    --glass-modal: rgba(28, 28, 30, 0.94);
+    --glass-modal: #0f172a;
     --glass-dropdown: rgba(28, 28, 30, 0.96);
     --glass-input: rgba(44, 44, 46, 0.60);
 
@@ -99,7 +99,7 @@ body[data-theme="aurora-glass"] {
     --glass-card: rgba(6, 32, 28, 0.74);
     --glass-sidebar: rgba(4, 24, 21, 0.88);
     --glass-header: rgba(4, 24, 21, 0.80);
-    --glass-modal: rgba(6, 32, 28, 0.94);
+    --glass-modal: #06201c;
     --glass-input: rgba(3, 20, 18, 0.65);
 
     --glass-border: rgba(48, 209, 88, 0.15);
@@ -133,7 +133,7 @@ body[data-theme="frost-light"] {
     --glass-card: rgba(255, 255, 255, 0.78);
     --glass-sidebar: rgba(246, 246, 248, 0.84);
     --glass-header: rgba(246, 246, 248, 0.82);
-    --glass-modal: rgba(255, 255, 255, 0.96);
+    --glass-modal: #ffffff;
     --glass-input: rgba(242, 242, 247, 0.85);
 
     --glass-border: rgba(0, 0, 0, 0.08);
@@ -612,7 +612,11 @@ body[data-theme="frost-light"] .nav-item.active {
 .header,
 .page-header,
 .top-header {
-    height: var(--header-height);
+    min-height: var(--header-height);
+    height: auto;
+    width: auto;
+    max-width: 100%;
+    box-sizing: border-box;
     background: var(--glass-header);
     backdrop-filter: var(--blur-glass);
     -webkit-backdrop-filter: var(--blur-glass);
@@ -621,7 +625,8 @@ body[data-theme="frost-light"] .nav-item.active {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 32px;
+    gap: 12px;
+    padding: 8px 24px;
     position: sticky;
     top: 0;
     z-index: 90;
@@ -630,21 +635,83 @@ body[data-theme="frost-light"] .nav-item.active {
 .header-left {
     display: flex;
     align-items: center;
-    gap: 18px;
+    gap: 12px;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.header-left > div {
+    min-width: 0;
 }
 
 .header-left h1 {
-    font-size: 1.45rem;
+    font-size: clamp(1.05rem, 1.35vw, 1.35rem);
     font-weight: 700;
     letter-spacing: -0.02em;
     color: var(--text-primary);
+    margin: 0;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.header-left h1 + span {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .header-right {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     flex-shrink: 0;
+    min-width: 0;
+}
+
+@media (max-width: 1460px) {
+    .header,
+    .page-header,
+    .top-header {
+        padding: 8px 16px;
+        gap: 10px;
+    }
+    .header .live-emergency-ticker,
+    .header #react-badge-mount,
+    .header .live-clock-widget .clock-date,
+    .header .live-clock-widget span[style*="opacity"],
+    .header .header-search-pill kbd,
+    .header .header-demo-pill span {
+        display: none !important;
+    }
+    .header .header-search-pill,
+    .header .header-demo-pill {
+        padding: 6px 10px !important;
+    }
+    .header .live-clock-widget {
+        padding: 5px 10px !important;
+        font-size: 0.78rem !important;
+        gap: 6px !important;
+    }
+    .header .btn-icon {
+        width: 34px !important;
+        height: 34px !important;
+    }
+    .header .user-info {
+        padding: 4px 10px !important;
+        gap: 8px !important;
+    }
+    .header .user-info strong,
+    .header .user-info span {
+        white-space: nowrap;
+    }
+    #portalPatientSelector {
+        max-width: 155px;
+        font-size: 0.78rem;
+        padding: 4px 8px;
+    }
 }
 
 /* Live Clock & Ticker Widget */
@@ -1226,7 +1293,7 @@ body[data-theme="frost-light"] .data-table th {
     bottom: 0 !important;
     width: 100vw !important;
     height: 100vh !important;
-    background: rgba(0, 0, 0, 0.78) !important;
+    background: rgba(2, 6, 23, 0.86) !important;
     backdrop-filter: blur(16px) !important;
     -webkit-backdrop-filter: blur(16px) !important;
     display: none;
@@ -1252,8 +1319,9 @@ body[data-theme="frost-light"] .data-table th {
     display: flex !important;
     flex-direction: column !important;
     background: var(--glass-modal) !important;
-    backdrop-filter: var(--blur-heavy) !important;
-    -webkit-backdrop-filter: var(--blur-heavy) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    opacity: 1 !important;
     border: 1px solid var(--glass-border-light) !important;
     border-radius: var(--border-radius-lg) !important;
     box-shadow: var(--shadow-glass-lg) !important;
@@ -4201,13 +4269,16 @@ html {
 
 .modal-content {
     border-radius: 24px !important;
-    will-change: transform, opacity;
+    background: var(--glass-modal) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
     transform: scale(0.95) translateY(12px) !important;
     transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.32s !important;
 }
 
 .modal-overlay.active .modal-content {
     transform: scale(1) translateY(0) !important;
+    opacity: 1 !important;
 }
 
 .modal-close {
@@ -5485,4 +5556,79 @@ body[data-theme="frost-light"] .progress-track {
     display: none;
     align-items: center;
     gap: 8px;
+}
+
+/* Laptop / 1280px Header Fit Overrides (takes precedence over floating header rules above) */
+@media (max-width: 1460px) {
+    .header,
+    .page-header,
+    .top-header {
+        width: auto !important;
+        max-width: 100% !important;
+        margin: 12px 16px 0 16px !important;
+        padding: 8px 14px !important;
+        gap: 10px !important;
+    }
+    .header-left {
+        min-width: 150px !important;
+        flex: 1 1 150px !important;
+    }
+    .header-right {
+        gap: 5px !important;
+        min-width: 0 !important;
+    }
+    .header .btn-icon {
+        width: 32px !important;
+        height: 32px !important;
+        min-width: 32px !important;
+    }
+    .header .live-clock-widget {
+        padding: 5px 9px !important;
+        font-size: 0.74rem !important;
+        gap: 5px !important;
+    }
+    .header .telemed-call-indicator {
+        padding: 5px 10px !important;
+        gap: 6px !important;
+        font-size: 0.74rem !important;
+    }
+    .header .telemed-call-indicator span:nth-of-type(3),
+    .header .telemed-call-indicator span:nth-of-type(4) {
+        display: none !important;
+    }
+    .header .role-switch-trigger {
+        padding: 5px 8px !important;
+        gap: 5px !important;
+        font-size: 0.74rem !important;
+        max-width: 155px !important;
+    }
+    .header .role-switch-trigger > span:first-of-type {
+        display: inline-block;
+        max-width: 72px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .header .user-info {
+        padding: 4px 8px !important;
+        gap: 6px !important;
+        max-width: 132px !important;
+    }
+    .header .user-info strong,
+    .header .user-info span {
+        max-width: 76px !important;
+    }
+}
+
+@media (max-width: 1360px) {
+    .header .header-search-pill span {
+        display: none !important;
+    }
+}
+
+@media (max-width: 1080px) {
+    .header .wallpaper-toggle,
+    .header .live-clock-widget {
+        display: none !important;
+    }
 }

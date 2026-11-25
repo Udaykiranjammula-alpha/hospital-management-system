@@ -1239,7 +1239,7 @@ function playSound(type = 'click') {
         osc.connect(gain);
         gain.connect(ctx.destination);
 
-        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        if (typeof navigator !== 'undefined' && navigator.vibrate && navigator.userActivation && navigator.userActivation.hasBeenActive) {
             try {
                 if (type === 'click') navigator.vibrate(8);
                 else if (type === 'success') navigator.vibrate([12, 30, 15]);
