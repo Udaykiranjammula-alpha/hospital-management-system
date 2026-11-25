@@ -10078,7 +10078,7 @@ function exportRadiologyReport() {
                 </div>
             </div>
         `;
-        openModal('printLabReportModal');
+        openModal(document.getElementById('printLabReportModal') ? 'printLabReportModal' : 'viewLabReportModal');
     }
     if (typeof playSound === 'function') playSound('success');
     showToast(`📄 Verified Radiology AI Report generated for ${data.dicomId}`, 'success');
