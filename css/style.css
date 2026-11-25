@@ -430,6 +430,8 @@ body[data-theme="frost-light"] .ambient-grid {
 .app-container {
     display: flex;
     min-height: 100vh;
+    max-width: 100vw;
+    overflow-x: clip;
     position: relative;
     z-index: 1;
 }
@@ -582,11 +584,23 @@ body[data-theme="frost-light"] .nav-item.active {
 .main-content,
 .main-wrapper {
     flex: 1;
+    min-width: 0;
+    max-width: 100%;
     margin-left: var(--sidebar-width);
     display: flex;
     flex-direction: column;
     min-height: 100vh;
     transition: margin-left var(--transition);
+}
+
+.telemed-grid > * {
+    min-width: 0;
+}
+
+@media (max-width: 1180px) {
+    .telemed-grid {
+        grid-template-columns: 1fr !important;
+    }
 }
 
 .main-content.expanded,
