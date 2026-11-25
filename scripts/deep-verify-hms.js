@@ -683,6 +683,19 @@ async function runAllTests() {
     await qualitySandbox.toggleTelemedQualityBoost();
     assert(qualitySandbox.localStorage.getItem('hms_telemed_quality') === 'auto', 'toggleTelemedQualityBoost switches back from fhd to auto');
 
+    // ------------------------------------------
+    // TEST SUITE 20: P2P Vitals Sync, Call Timer & Mobile Polish
+    // ------------------------------------------
+    console.log('\n--- TEST SUITE 20: P2P Vitals Sync, Call Timer & Mobile Polish ---');
+    const patPortalSrc = fs.readFileSync(path.join(rootDir, 'patient-portal.html'), 'utf8');
+    assert(telemedHtml.includes('id="telemedCallTimer"'), 'telemedicine.html has #telemedCallTimer');
+    assert(patPortalSrc.includes('id="patientShareVitalsBtn"'), 'patient-portal.html has #patientShareVitalsBtn');
+    assert(appJs.includes('function sendPatientLiveVitals'), 'app.js defines sendPatientLiveVitals');
+    assert(appJs.includes('function applyReceivedPeerVitals'), 'app.js defines applyReceivedPeerVitals');
+    assert(appJs.includes('function formatTelemedDuration'), 'app.js defines formatTelemedDuration');
+    assert(appJs.includes("payload.type === 'vitals'"), 'bindPeerDataConnection handles P2P vitals payload');
+    assert(styleCss.includes('#patientLocalSelfVideo'), 'css/style.css includes mobile PiP rule for #patientLocalSelfVideo');
+
     console.log(`\n====================================================`);
     console.log(`TOTAL TESTS: ${totalTests} | PASSED: ${passedTests} | FAILED: ${failedTests}`);
     console.log(`====================================================\n`);

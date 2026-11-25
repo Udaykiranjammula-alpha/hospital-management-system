@@ -10858,11 +10858,55 @@ function appendPeerChatLine(senderLabel, text, isSelf = false) {
     });
 }
 
+function applyReceivedPeerVitals(vitals) {
+    if (!vitals) return;
+    const hrEl = document.getElementById('hudVitalHr');
+    const spo2El = document.getElementById('hudVitalSpo2');
+    const bpEl = document.getElementById('hudVitalBp');
+    const tempEl = document.getElementById('hudVitalTemp');
+    if (hrEl && vitals.hr !== undefined) hrEl.innerHTML = `${String(vitals.hr).replace(/</g, '&lt;')} <span style="font-size: 9px; font-weight: 500; color: #94a3b8;">BPM</span>`;
+    if (spo2El && vitals.spo2 !== undefined) spo2El.innerHTML = `${String(vitals.spo2).replace(/</g, '&lt;')} <span style="font-size: 9px; font-weight: 500; color: #94a3b8;">%</span>`;
+    if (bpEl && vitals.bp !== undefined) bpEl.innerHTML = `${String(vitals.bp).replace(/</g, '&lt;')} <span style="font-size: 9px; font-weight: 500; color: #94a3b8;">mmHg</span>`;
+    if (tempEl && vitals.temp !== undefined) tempEl.innerHTML = `${String(vitals.temp).replace(/</g, '&lt;')} <span style="font-size: 9px; font-weight: 500; color: #94a3b8;">°F</span>`;
+}
+
+function sendPatientLiveVitals() {
+    const vitals = {
+        type: 'vitals',
+        hr: 72 + Math.floor(Math.random() * 14),
+        spo2: 97 + Math.floor(Math.random() * 3),
+        bp: `${116 + Math.floor(Math.random() * 12)}/${76 + Math.floor(Math.random() * 8)}`,
+        temp: (98.2 + Math.random() * 0.8).toFixed(1)
+    };
+    if (telemedDataConn && telemedDataConn.open) {
+        telemedDataConn.send(vitals);
+        if (typeof showToast === 'function') {
+            showToast(`💓 Live vitals shared with Doctor (${vitals.hr} BPM • ${vitals.spo2}% SpO2)`, 'success');
+        }
+    } else if (typeof showToast === 'function') {
+        showToast('Connect to the video call first to share live vitals.', 'warning');
+    }
+    return vitals;
+}
+
 function bindPeerDataConnection(conn) {
     if (!conn) return;
     telemedDataConn = conn;
     conn.on('data', (payload) => {
-        if (!payload || !payload.text) return;
+        if (!payload) return;
+        if (payload.type === 'vitals') {
+            applyReceivedPeerVitals(payload);
+            if (typeof playSound === 'function') playSound('mesh');
+            if (typeof showToast === 'function') {
+                showToast(`💓 Live Patient Vitals Received: ${payload.hr} BPM • ${payload.spo2}% SpO2`, 'success');
+            }
+            return;
+        }
+        if (payload.type === 'request_vitals') {
+            sendPatientLiveVitals();
+            return;
+        }
+        if (!payload.text) return;
         const senderLabel = payload.from === 'patient' ? 'Patient' : 'Doctor';
         appendPeerChatLine(senderLabel, payload.text, false);
         if (typeof showToast === 'function') {
@@ -11092,11 +11136,33 @@ function toggleTelemedQualityBoost() {
     return setTelemedVideoQuality(nextPreset, false);
 }
 
+var telemedCallStartedAt = null;
+var telemedCallTimerInterval = null;
+
+function formatTelemedDuration(ms) {
+    const totalSec = Math.max(0, Math.floor((ms || 0) / 1000));
+    const mins = String(Math.floor(totalSec / 60)).padStart(2, '0');
+    const secs = String(totalSec % 60).padStart(2, '0');
+    return `${mins}:${secs}`;
+}
+
+function getTelemedCallDurationText() {
+    if (!telemedCallStartedAt) return '00:00';
+    return formatTelemedDuration(Date.now() - telemedCallStartedAt);
+}
+
 function stopTelemedStatsMonitor() {
     if (telemedStatsInterval) {
         clearInterval(telemedStatsInterval);
         telemedStatsInterval = null;
     }
+    if (telemedCallTimerInterval) {
+        clearInterval(telemedCallTimerInterval);
+        telemedCallTimerInterval = null;
+    }
+    telemedCallStartedAt = null;
+    const timerEl = document.getElementById('telemedCallTimer');
+    if (timerEl) timerEl.textContent = '00:00';
     telemedLastStatsSnapshot = null;
     telemedGoodNetworkStreak = 0;
     syncTelemedQualityUI();
@@ -11104,6 +11170,13 @@ function stopTelemedStatsMonitor() {
 
 function startTelemedStatsMonitor(call) {
     stopTelemedStatsMonitor();
+    telemedCallStartedAt = Date.now();
+    const updateTimer = () => {
+        const timerEl = document.getElementById('telemedCallTimer');
+        if (timerEl) timerEl.textContent = getTelemedCallDurationText();
+    };
+    updateTimer();
+    telemedCallTimerInterval = setInterval(updateTimer, 1000);
     if (!call || !call.peerConnection || typeof call.peerConnection.getStats !== 'function') return;
 
     const pc = call.peerConnection;
@@ -11327,10 +11400,10 @@ function exportTelemedSummaryReport() {
     const patLabel = (patSelect && patSelect.options && patSelect.selectedIndex >= 0)
         ? patSelect.options[patSelect.selectedIndex].text
         : 'Telemedicine Patient';
-    const hr = document.getElementById('telemedHrVal')?.textContent || '76';
-    const spo2 = document.getElementById('telemedSpo2Val')?.textContent || '98';
-    const bp = document.getElementById('telemedBpVal')?.textContent || '122/80';
-    const temp = document.getElementById('telemedTempVal')?.textContent || '98.6';
+    const hr = (document.getElementById('hudVitalHr')?.textContent || '76').replace(/[^\d.]/g, '') || '76';
+    const spo2 = (document.getElementById('hudVitalSpo2')?.textContent || '98').replace(/[^\d.]/g, '') || '98';
+    const bp = (document.getElementById('hudVitalBp')?.textContent || '122/80').replace(/[^\d/]/g, '') || '122/80';
+    const temp = (document.getElementById('hudVitalTemp')?.textContent || '98.6').replace(/[^\d.]/g, '') || '98.6';
     const diag = document.getElementById('telemedDiagnosis')?.value || 'Clinical Tele-Evaluation';
     const soap = document.getElementById('telemedSoapNotes')?.value || 'No additional SOAP notes recorded.';
     const med = document.getElementById('telemedMedName')?.value || 'N/A';
@@ -11364,7 +11437,7 @@ function exportTelemedSummaryReport() {
         body.innerHTML = `
             <div style="border-bottom: 1px solid rgba(56,189,248,0.25); padding-bottom: 12px; margin-bottom: 16px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;">
                 <div><strong>Patient:</strong> ${safe(patLabel)}</div>
-                <div style="color: var(--text-muted);"><strong>Date:</strong> ${new Date().toLocaleString()}</div>
+                <div style="color: var(--text-muted);"><strong>Duration:</strong> ${safe(getTelemedCallDurationText())} &bull; <strong>Date:</strong> ${new Date().toLocaleString()}</div>
             </div>
             <div style="display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px;">
                 <div style="background: rgba(15,23,42,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:10px;">
@@ -12117,6 +12190,11 @@ function captureClinicalSnapshot() {
 
 function triggerTelemedVitalsSync() {
     if (typeof playSound === 'function') playSound('mesh');
+    if (telemedDataConn && telemedDataConn.open) {
+        telemedDataConn.send({ type: 'request_vitals' });
+        showToast('🔄 Requested live patient telemetry over P2P DataChannel', 'info');
+        return;
+    }
     startTelemedVitalsHUD();
     showToast('🔄 Synchronized real-time patient telemetry from BLE health hub', 'success');
 }

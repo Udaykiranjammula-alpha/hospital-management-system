@@ -1823,6 +1823,24 @@ textarea {
     .live-clock-widget {
         display: none;
     }
+    .header-demo-pill span,
+    .header-search-pill kbd {
+        display: none;
+    }
+    .header-demo-pill,
+    .header-search-pill {
+        padding: 6px 10px;
+    }
+    #patientLocalSelfVideo {
+        width: 96px !important;
+        height: 68px !important;
+        bottom: 8px !important;
+        right: 8px !important;
+    }
+    .telemed-session-bar,
+    .telemed-control-dock {
+        padding: 12px !important;
+    }
 }
 
 /* Custom Glass Scrollbar */
