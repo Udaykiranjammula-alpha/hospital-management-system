@@ -78,6 +78,14 @@
                     <select id="loginDoctorSelect" class="form-control" style="font-size:0.84rem; padding:8px 12px;" onchange="onLoginDoctorSelected(this.value)"></select>
                 </div>
 
+                <div id="patientSubSelector" class="staff-sub-selector" style="display: none; margin-top: 10px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+                        <span style="font-size:0.75rem; font-weight:700; color:#c084fc;"><i class="fas fa-id-badge"></i> Select Patient Account</span>
+                        <span style="font-size:0.7rem; color:var(--text-muted);">Password: <code>password123</code></span>
+                    </div>
+                    <select id="loginPatientSelect" class="form-control" style="font-size:0.84rem; padding:8px 12px;" onchange="onLoginPatientSelected(this.value)"></select>
+                </div>
+
                 <div id="staffSubRoleSelector" class="staff-sub-selector" style="display: none;">
                     <span class="sub-label"><i class="fas fa-arrow-turn-down"></i> Select Operational Staff Role:</span>
                     <div class="sub-btn-group">
@@ -184,26 +192,44 @@
             const p = document.getElementById('password');
 
             if (cat === 'admin') {
+                const patSub = document.getElementById('patientSubSelector'); if (patSub) patSub.style.display = 'none';
                 const docSub = document.getElementById('doctorSubSelector'); if (docSub) docSub.style.display = 'none';
                 if (sub) sub.style.display = 'none';
                 if (u) u.value = 'admin';
                 if (p) p.value = 'password123';
             } else if (cat === 'doctor') {
+                const patSub = document.getElementById('patientSubSelector'); if (patSub) patSub.style.display = 'none';
                 if (sub) sub.style.display = 'none';
                 const docSub = document.getElementById('doctorSubSelector');
                 if (docSub) docSub.style.display = 'block';
                 populateLoginDoctorSelect();
             } else if (cat === 'staff') {
+                const patSub = document.getElementById('patientSubSelector'); if (patSub) patSub.style.display = 'none';
                 const docSub = document.getElementById('doctorSubSelector'); if (docSub) docSub.style.display = 'none';
                 if (sub) sub.style.display = 'block';
                 selectStaffSubRole('receptionist');
             } else if (cat === 'patient') {
                 const docSub = document.getElementById('doctorSubSelector'); if (docSub) docSub.style.display = 'none';
                 if (sub) sub.style.display = 'none';
-                if (u) u.value = 'patient';
-                if (p) p.value = 'password123';
+                const patSub = document.getElementById('patientSubSelector'); if (patSub) patSub.style.display = 'block';
+                populateLoginPatientSelect();
             }
             if (typeof playSound === 'function') playSound('click');
+        }
+
+        function populateLoginPatientSelect() {
+            const sel = document.getElementById('loginPatientSelect');
+            if (!sel) return;
+            const pats = (typeof loadData === 'function' && typeof defaultPatients !== 'undefined') ? loadData('hms_patients', defaultPatients) : [];
+            sel.innerHTML = pats.map(pt => `<option value="${pt.id}">${pt.name} (${pt.bloodGroup || 'O+'} &bull; ${pt.id})</option>`).join('');
+            if (pats.length > 0) onLoginPatientSelected(pats[0].id);
+        }
+
+        function onLoginPatientSelected(patId) {
+            const u = document.getElementById('username');
+            const p = document.getElementById('password');
+            if (u) u.value = patId || 'P001';
+            if (p) p.value = 'password123';
         }
 
         function populateLoginDoctorSelect() {

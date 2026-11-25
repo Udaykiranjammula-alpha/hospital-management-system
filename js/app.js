@@ -2628,6 +2628,23 @@ function handleLogin(e) {
                 department: doc.department,
                 title: doc.specialization || 'Consultant Physician'
             };
+        } else {
+            const pats = loadData('hms_patients', defaultPatients);
+            const pat = pats.find(p =>
+                (p.id && p.id.toLowerCase() === qUser) ||
+                (p.email && p.email.split('@')[0].toLowerCase() === qUser) ||
+                (p.name && p.name.toLowerCase() === qUser)
+            );
+            if (pat) {
+                matchedAccount = {
+                    username: pat.id.toLowerCase(),
+                    password: 'password123',
+                    role: 'Patient',
+                    displayName: pat.name,
+                    patientId: pat.id,
+                    title: 'Patient Self-Service Portal'
+                };
+            }
         }
     }
 
@@ -9887,7 +9904,8 @@ function switchPortalTab(tab) {
     const tabs = ['rxs', 'labs', 'appts', 'bills', 'directory'];
     tabs.forEach(t => {
         const el = document.getElementById(`portalTab${t.charAt(0).toUpperCase() + t.slice(1)}`);
-        const btn = document.getElementById(`btnTab${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        const btnId = t === 'rxs' ? 'btnTabRx' : `btnTab${t.charAt(0).toUpperCase() + t.slice(1)}`;
+        const btn = document.getElementById(btnId);
         if (el) el.style.display = (t === tab) ? 'block' : 'none';
         if (btn) btn.className = (t === tab) ? 'btn btn-primary' : 'btn btn-outline';
     });
