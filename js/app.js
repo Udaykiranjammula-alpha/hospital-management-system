@@ -878,75 +878,7 @@ function checkActionPermission(permName, actionDesc) {
     return true;
 }
 
-function openShiftHandoverModal() {
-    const patients = loadData('hms_patients', defaultPatients);
-    const staff = loadData('hms_staff', defaultStaff);
-    const resources = loadData('hms_resources', defaultResources);
-    const bloodStock = loadData('hms_blood_stock', { 'A+': 18, 'A-': 6, 'B+': 22, 'B-': 4, 'AB+': 9, 'AB-': 3, 'O+': 28, 'O-': 5 });
-    const totalBloodUnits = Object.values(bloodStock).reduce((sum, u) => sum + Number(u || 0), 0);
-    const lowGroups = Object.entries(bloodStock).filter(([, u]) => Number(u) < 5).map(([g, u]) => `${g}: ${u}u`);
-    const safe = (v) => String(v).replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-    let modal = document.getElementById('shiftHandoverModal');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'shiftHandoverModal';
-        modal.className = 'modal-overlay';
-        modal.style.display = 'none';
-        modal.innerHTML = `
-            <div class="modal-content" style="max-width: 720px;">
-                <div class="modal-header">
-                    <h3 class="modal-title" style="color: #38bdf8;"><i class="fas fa-clipboard-list"></i> Hospital Shift Handover Report</h3>
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <button type="button" class="btn btn-primary btn-sm" onclick="window.print()"><i class="fas fa-print"></i> Print Handover</button>
-                        <button class="modal-close" onclick="closeModal('shiftHandoverModal')">&times;</button>
-                    </div>
-                </div>
-                <div id="shiftHandoverBody" class="modal-body" style="line-height:1.6;"></div>
-            </div>`;
-        document.body.appendChild(modal);
-    }
-
-    const body = document.getElementById('shiftHandoverBody');
-    if (body) {
-        body.innerHTML = `
-            <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; border-bottom:1px solid rgba(56,189,248,0.25); padding-bottom:12px; margin-bottom:16px;">
-                <div><strong>Facility:</strong> MediCare Super Specialty Hospital</div>
-                <div style="color:var(--text-muted);"><strong>Generated:</strong> ${new Date().toLocaleString()}</div>
-            </div>
-            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:16px;">
-                <div style="background:rgba(15,23,42,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px;">
-                    <div style="font-size:0.72rem; color:#94a3b8;">TOTAL PATIENTS</div>
-                    <div style="font-size:1.25rem; font-weight:700; color:#38bdf8;">${patients.length}</div>
-                </div>
-                <div style="background:rgba(15,23,42,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px;">
-                    <div style="font-size:0.72rem; color:#94a3b8;">ACTIVE STAFF</div>
-                    <div style="font-size:1.25rem; font-weight:700; color:#34d399;">${staff.length}</div>
-                </div>
-                <div style="background:rgba(15,23,42,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px;">
-                    <div style="font-size:0.72rem; color:#94a3b8;">RESOURCE UNITS</div>
-                    <div style="font-size:1.25rem; font-weight:700; color:#fbbf24;">${resources.length}</div>
-                </div>
-                <div style="background:rgba(15,23,42,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px;">
-                    <div style="font-size:0.72rem; color:#94a3b8;">BLOOD INVENTORY</div>
-                    <div style="font-size:1.25rem; font-weight:700; color:#f87171;">${totalBloodUnits} units</div>
-                </div>
-            </div>
-            <div style="margin-bottom:14px;">
-                <div style="font-size:0.78rem; color:#94a3b8; text-transform:uppercase; margin-bottom:4px;">Blood Bank Low-Stock Alerts</div>
-                <div style="background:rgba(15,23,42,0.45); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:10px;">
-                    ${lowGroups.length ? safe(lowGroups.join(' | ')) : 'All blood groups above critical threshold (>= 5 units).'}
-                </div>
-            </div>
-            <div>
-                <div style="font-size:0.78rem; color:#94a3b8; text-transform:uppercase; margin-bottom:4px;">On-Duty Staff Summary</div>
-                <div style="background:rgba(15,23,42,0.45); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:10px; font-size:0.86rem;">
-                    ${staff.slice(0, 6).map(s => `&bull; <strong>${safe(s.name)}</strong> (${safe(s.role)} - ${safe(s.department)}, ${safe(s.shift)})`).join('<br>')}
-                </div>
-            </div>`;
-    }
-    openModal('shiftHandoverModal');
-}
 
 function showAccessDeniedModal(title, msg) {
     let overlay = document.getElementById('accessDeniedModal');
@@ -1117,75 +1049,7 @@ function applyPageGuard() {
     return true;
 }
 
-function openShiftHandoverModal() {
-    const patients = loadData('hms_patients', defaultPatients);
-    const staff = loadData('hms_staff', defaultStaff);
-    const resources = loadData('hms_resources', defaultResources);
-    const bloodStock = loadData('hms_blood_stock', { 'A+': 18, 'A-': 6, 'B+': 22, 'B-': 4, 'AB+': 9, 'AB-': 3, 'O+': 28, 'O-': 5 });
-    const totalBloodUnits = Object.values(bloodStock).reduce((sum, u) => sum + Number(u || 0), 0);
-    const lowGroups = Object.entries(bloodStock).filter(([, u]) => Number(u) < 5).map(([g, u]) => `${g}: ${u}u`);
-    const safe = (v) => String(v).replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-    let modal = document.getElementById('shiftHandoverModal');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'shiftHandoverModal';
-        modal.className = 'modal-overlay';
-        modal.style.display = 'none';
-        modal.innerHTML = `
-            <div class="modal-content" style="max-width: 720px;">
-                <div class="modal-header">
-                    <h3 class="modal-title" style="color: #38bdf8;"><i class="fas fa-clipboard-list"></i> Hospital Shift Handover Report</h3>
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <button type="button" class="btn btn-primary btn-sm" onclick="window.print()"><i class="fas fa-print"></i> Print Handover</button>
-                        <button class="modal-close" onclick="closeModal('shiftHandoverModal')">&times;</button>
-                    </div>
-                </div>
-                <div id="shiftHandoverBody" class="modal-body" style="line-height:1.6;"></div>
-            </div>`;
-        document.body.appendChild(modal);
-    }
-
-    const body = document.getElementById('shiftHandoverBody');
-    if (body) {
-        body.innerHTML = `
-            <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; border-bottom:1px solid rgba(56,189,248,0.25); padding-bottom:12px; margin-bottom:16px;">
-                <div><strong>Facility:</strong> MediCare Super Specialty Hospital</div>
-                <div style="color:var(--text-muted);"><strong>Generated:</strong> ${new Date().toLocaleString()}</div>
-            </div>
-            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:16px;">
-                <div style="background:rgba(15,23,42,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px;">
-                    <div style="font-size:0.72rem; color:#94a3b8;">TOTAL PATIENTS</div>
-                    <div style="font-size:1.25rem; font-weight:700; color:#38bdf8;">${patients.length}</div>
-                </div>
-                <div style="background:rgba(15,23,42,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px;">
-                    <div style="font-size:0.72rem; color:#94a3b8;">ACTIVE STAFF</div>
-                    <div style="font-size:1.25rem; font-weight:700; color:#34d399;">${staff.length}</div>
-                </div>
-                <div style="background:rgba(15,23,42,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px;">
-                    <div style="font-size:0.72rem; color:#94a3b8;">RESOURCE UNITS</div>
-                    <div style="font-size:1.25rem; font-weight:700; color:#fbbf24;">${resources.length}</div>
-                </div>
-                <div style="background:rgba(15,23,42,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px;">
-                    <div style="font-size:0.72rem; color:#94a3b8;">BLOOD INVENTORY</div>
-                    <div style="font-size:1.25rem; font-weight:700; color:#f87171;">${totalBloodUnits} units</div>
-                </div>
-            </div>
-            <div style="margin-bottom:14px;">
-                <div style="font-size:0.78rem; color:#94a3b8; text-transform:uppercase; margin-bottom:4px;">Blood Bank Low-Stock Alerts</div>
-                <div style="background:rgba(15,23,42,0.45); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:10px;">
-                    ${lowGroups.length ? safe(lowGroups.join(' | ')) : 'All blood groups above critical threshold (>= 5 units).'}
-                </div>
-            </div>
-            <div>
-                <div style="font-size:0.78rem; color:#94a3b8; text-transform:uppercase; margin-bottom:4px;">On-Duty Staff Summary</div>
-                <div style="background:rgba(15,23,42,0.45); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:10px; font-size:0.86rem;">
-                    ${staff.slice(0, 6).map(s => `&bull; <strong>${safe(s.name)}</strong> (${safe(s.role)} - ${safe(s.department)}, ${safe(s.shift)})`).join('<br>')}
-                </div>
-            </div>`;
-    }
-    openModal('shiftHandoverModal');
-}
 
 function switchUserRole(username) {
     const account = VALID_CREDENTIALS.find(c => c.username.toLowerCase() === username.toLowerCase()) || VALID_CREDENTIALS[0];
@@ -2271,15 +2135,17 @@ document.addEventListener('DOMContentLoaded', () => {
             closeModal(e.target.id);
         }
     });
-    // 4b. Escape Key Modal Dismiss
+    // 4b. Escape Key Modal Dismiss (closes topmost open modal first)
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            document.querySelectorAll('.modal-overlay.active').forEach(m => {
-                if (m.id === 'patientVideoCallModal' && typeof endPeerTelemedCall === 'function') {
+            const activeModals = Array.from(document.querySelectorAll('.modal-overlay.active'));
+            const topModal = activeModals[activeModals.length - 1];
+            if (topModal) {
+                if (topModal.id === 'patientVideoCallModal' && typeof endPeerTelemedCall === 'function') {
                     endPeerTelemedCall(false);
                 }
-                closeModal(m.id);
-            });
+                closeModal(topModal.id);
+            }
         }
     });
     // 5. Active Nav Highlighting
@@ -9390,6 +9256,44 @@ function switchPortalPatient(id) {
     showToast(`Switched view to patient ${id}`, 'info');
 }
 
+function handlePortalProgramClick(actionType, actionArg = '') {
+    const curUser = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+    const isStaffOrAdmin = curUser && curUser.role && curUser.role !== 'Patient';
+    if (actionType === 'book') {
+        openPatientBookAppointmentModal(actionArg);
+    } else if (actionType === 'blood') {
+        if (isStaffOrAdmin && !document.getElementById('publicHospitalDirectoryModal')?.classList.contains('active')) {
+            window.location.href = 'blood-bank.html';
+        } else {
+            openPatientBloodRequestModal('O+');
+        }
+    } else if (actionType === 'telemed') {
+        if (typeof openPatientVideoCallModal === 'function' && document.getElementById('patientVideoCallModal')) {
+            openPatientVideoCallModal();
+        } else if (isStaffOrAdmin && !document.getElementById('publicHospitalDirectoryModal')?.classList.contains('active')) {
+            window.location.href = 'telemedicine.html';
+        } else {
+            openPatientBookAppointmentModal('D001');
+        }
+    } else if (actionType === 'labs') {
+        if (document.getElementById('portalTabLabs')) {
+            switchPortalTab('labs');
+        } else if (isStaffOrAdmin && !document.getElementById('publicHospitalDirectoryModal')?.classList.contains('active')) {
+            window.location.href = 'laboratory.html';
+        } else {
+            openPatientBookAppointmentModal('D005');
+        }
+    } else if (actionType === 'emergency') {
+        if (typeof triggerSOSAmbulance === 'function' && document.getElementById('patientDigitalIdCard')) {
+            triggerSOSAmbulance();
+        } else if (isStaffOrAdmin && !document.getElementById('publicHospitalDirectoryModal')?.classList.contains('active')) {
+            window.location.href = 'emergency.html';
+        } else {
+            openPatientBookAppointmentModal('D001');
+        }
+    }
+}
+
 function renderPortalHospitalDirectory(query = '') {
     const q = String(query || '').toLowerCase().trim();
     const doctors = loadData('hms_doctors', defaultDoctors);
@@ -9397,14 +9301,14 @@ function renderPortalHospitalDirectory(query = '') {
     const bloodStock = loadData('hms_blood_stock', { 'A+': 18, 'A-': 6, 'B+': 22, 'B-': 4, 'AB+': 9, 'AB-': 3, 'O+': 28, 'O-': 5 });
 
     const hospitalPrograms = [
-        { name: '24/7 Emergency & Trauma Care', desc: 'Biometric PPG triage, ICU stabilization & GPS ambulance dispatch', icon: 'fa-truck-medical', color: '#ef4444', link: 'emergency.html' },
-        { name: 'Cardiology & Heart Care Unit', desc: 'ECG telemetry, hypertension clinic & cardiac specialist consults', icon: 'fa-heart-pulse', color: '#f43f5e', link: 'appointments.html?doctor=D001' },
-        { name: 'AI Radiology & Diagnostic Lab', desc: 'Chest X-Ray AI screening, blood biochemistry & pathology reports', icon: 'fa-flask', color: '#38bdf8', link: 'laboratory.html' },
-        { name: 'Telemedicine Video Consults', desc: 'HD 2-way video doctor consultations, live chat & e-prescriptions', icon: 'fa-video', color: '#10b981', link: 'telemedicine.html' },
-        { name: 'Orthopedics & Joint Recovery', desc: 'Fracture care, sports medicine & post-operative follow-up', icon: 'fa-bone', color: '#f59e0b', link: 'appointments.html?doctor=D002' },
-        { name: 'Neurology & Stroke Response', desc: 'Rapid neuro-evaluation, migraine clinic & stroke monitoring', icon: 'fa-brain', color: '#a855f7', link: 'appointments.html?doctor=D003' },
-        { name: 'Pediatrics & Child Wellness', desc: 'Immunizations, pediatric fever clinic & growth tracking', icon: 'fa-baby', color: '#ec4899', link: 'appointments.html?doctor=D004' },
-        { name: '24/7 Blood Bank & Pharmacy', desc: '8 blood group reserves, verified e-Rx & fast medication dispensing', icon: 'fa-droplet', color: '#fb7185', link: 'blood-bank.html' }
+        { name: '24/7 Emergency & Trauma Care', desc: 'Biometric PPG triage, ICU stabilization & GPS ambulance dispatch', icon: 'fa-truck-medical', color: '#ef4444', actionType: 'emergency', actionArg: '' },
+        { name: 'Cardiology & Heart Care Unit', desc: 'ECG telemetry, hypertension clinic & cardiac specialist consults', icon: 'fa-heart-pulse', color: '#f43f5e', actionType: 'book', actionArg: 'D001' },
+        { name: 'AI Radiology & Diagnostic Lab', desc: 'Chest X-Ray AI screening, blood biochemistry & pathology reports', icon: 'fa-flask', color: '#38bdf8', actionType: 'labs', actionArg: '' },
+        { name: 'Telemedicine Video Consults', desc: 'HD 2-way video doctor consultations, live chat & e-prescriptions', icon: 'fa-video', color: '#10b981', actionType: 'telemed', actionArg: '' },
+        { name: 'Orthopedics & Joint Recovery', desc: 'Fracture care, sports medicine & post-operative follow-up', icon: 'fa-bone', color: '#f59e0b', actionType: 'book', actionArg: 'D002' },
+        { name: 'Neurology & Stroke Response', desc: 'Rapid neuro-evaluation, migraine clinic & stroke monitoring', icon: 'fa-brain', color: '#a855f7', actionType: 'book', actionArg: 'D003' },
+        { name: 'Pediatrics & Child Wellness', desc: 'Immunizations, pediatric fever clinic & growth tracking', icon: 'fa-baby', color: '#ec4899', actionType: 'book', actionArg: 'D004' },
+        { name: '24/7 Blood Bank & Pharmacy', desc: '8 blood group reserves, verified e-Rx & fast medication dispensing', icon: 'fa-droplet', color: '#fb7185', actionType: 'blood', actionArg: '' }
     ];
 
     const availableDoctors = doctors.filter(d => (d.availability || '').toLowerCase().includes('available'));
@@ -9515,7 +9419,7 @@ function renderPortalHospitalDirectory(query = '') {
             ${filteredPrograms.length ? `
                 <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:12px;">
                     ${filteredPrograms.map(p => `
-                        <a href="${p.link}" style="text-decoration:none; color:inherit; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.09); border-radius:12px; padding:14px; display:flex; gap:12px; align-items:flex-start;">
+                        <div role="button" tabindex="0" onclick="handlePortalProgramClick('${p.actionType}', '${p.actionArg || ''}')" onkeydown="if(event.key==='Enter')handlePortalProgramClick('${p.actionType}', '${p.actionArg || ''}')" style="cursor:pointer; color:inherit; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.09); border-radius:12px; padding:14px; display:flex; gap:12px; align-items:flex-start;">
                             <div style="width:36px; height:36px; border-radius:10px; background:${p.color}22; color:${p.color}; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
                                 <i class="fas ${p.icon}"></i>
                             </div>
@@ -9523,7 +9427,7 @@ function renderPortalHospitalDirectory(query = '') {
                                 <div style="font-weight:700; font-size:0.9rem; margin-bottom:3px;">${safe(p.name)}</div>
                                 <div style="font-size:0.76rem; color:var(--text-muted); line-height:1.4;">${safe(p.desc)}</div>
                             </div>
-                        </a>
+                        </div>
                     `).join('')}
                 </div>` : '<p style="color:var(--text-muted); font-size:0.86rem;">No hospital departments or programs matched your search.</p>'}
         </div>`;
@@ -9551,6 +9455,7 @@ function openPatientBookAppointmentModal(selectedDoctorId = '') {
         modal.id = 'patientBookApptModal';
         modal.className = 'modal-overlay';
         modal.style.display = 'none';
+        modal.style.zIndex = '100005';
         modal.innerHTML = `
             <div class="modal-content" style="max-width: 480px;">
                 <div class="modal-header">
@@ -9666,6 +9571,7 @@ function openPatientBloodRequestModal(group = 'O+') {
         modal.id = 'patientBloodRequestModal';
         modal.className = 'modal-overlay';
         modal.style.display = 'none';
+        modal.style.zIndex = '100005';
         modal.innerHTML = `
             <div class="modal-content" style="max-width: 440px;">
                 <div class="modal-header">
