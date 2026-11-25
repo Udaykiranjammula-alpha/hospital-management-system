@@ -350,6 +350,13 @@ if (typeof window !== 'undefined') {
                 const data = JSON.parse(e.newValue);
                 handleHospitalMeshEvent(data);
             } catch (_) {}
+        } else if (e.key && e.key.startsWith('hms_')) {
+            if (document.getElementById('portalDirectoryContainer') && typeof renderPortalPatientData === 'function') {
+                renderPortalPatientData(portalCurrentPatientId);
+            }
+            if (document.getElementById('publicHospitalDirectoryModal')?.classList.contains('active') && typeof filterPublicHospitalDirectory === 'function') {
+                filterPublicHospitalDirectory(document.getElementById('publicDirectorySearch')?.value || '');
+            }
         }
     });
 }
@@ -478,10 +485,11 @@ function handleHospitalMeshEvent(data) {
         }
         if (typeof portalCurrentPatientId !== 'undefined' && typeof renderPortalPatientData === 'function') {
             renderPortalPatientData(portalCurrentPatientId);
-    if (document.getElementById('portalTabDirectory')) {
-        switchPortalTab('directory');
-    }
         }
+    }
+
+    if (document.getElementById('publicHospitalDirectoryModal')?.classList.contains('active') && typeof filterPublicHospitalDirectory === 'function') {
+        filterPublicHospitalDirectory(document.getElementById('publicDirectorySearch')?.value || '');
     }
 
     if (curPath === 'doctors.html' || document.getElementById('doctorsGrid')) {
@@ -9428,6 +9436,9 @@ function renderPortalHospitalDirectory(query = '') {
                 <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:12px;">
                     ${filteredDoctors.map(d => {
                         const isAvail = (d.availability || '').toLowerCase().includes('available');
+                        const expRaw = String(d.experience || 8).trim();
+                        const expText = (expRaw.toLowerCase().includes('year') || expRaw.toLowerCase().includes('yr')) ? expRaw : `${expRaw} yrs`;
+                        const bookedCount = loadData('hms_appointments', defaultAppointments).filter(a => a.doctorId === d.id && a.status !== 'Cancelled').length;
                         return `
                             <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.09); border-radius:12px; padding:14px; display:flex; flex-direction:column; justify-content:space-between; gap:10px;">
                                 <div>
@@ -9436,7 +9447,7 @@ function renderPortalHospitalDirectory(query = '') {
                                         <span class="badge ${isAvail ? 'badge-success' : 'badge-warning'}" style="font-size:0.7rem;">${safe(d.availability || 'On Call')}</span>
                                     </div>
                                     <div style="font-size:0.82rem; color:#38bdf8; margin-top:3px;">${safe(d.department)} &bull; ${safe(d.specialization)}</div>
-                                    <div style="font-size:0.76rem; color:var(--text-muted); margin-top:4px;">${safe(d.experience || 8)} yrs experience &bull; ${safe(d.phone || '')}</div>
+                                    <div style="font-size:0.76rem; color:var(--text-muted); margin-top:4px;">${safe(expText)} experience &bull; ${safe(d.phone || '')} &bull; <span style="color:#34d399;">${bookedCount} booked</span></div>
                                 </div>
                                 <a href="appointments.html?doctor=${encodeURIComponent(d.id)}" class="btn btn-sm btn-outline" style="text-align:center;">
                                     <i class="fas fa-calendar-plus"></i> Book Consultation
