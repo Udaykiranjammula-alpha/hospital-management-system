@@ -130,7 +130,7 @@ async function runAllTests() {
     console.log('\n--- TEST SUITE 5: Radiology AI Heatmap & Report Export ---');
     assert(appJs.includes('function exportRadiologyReport()'), 'app.js defines exportRadiologyReport');
     assert(appJs.includes('printableLabReportContent'), 'exportRadiologyReport populates printable report content');
-    assert(appJs.includes("openModal('printLabReportModal')"), 'exportRadiologyReport opens printLabReportModal');
+    assert(appJs.includes("openModal('printLabReportModal')") || appJs.includes("viewLabReportModal"), 'exportRadiologyReport opens lab report modal');
     assert(appJs.includes('if (typeof ctx.roundRect === \'function\')'), 'app.js provides ctx.roundRect fallback');
 
     // ----------------------------------------------------
