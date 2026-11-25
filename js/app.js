@@ -577,6 +577,18 @@ function loadData(key, fallback) {
     }
 }
 
+function getUnifiedBloodStockMap() {
+    const inv = loadData('hms_blood_inventory', typeof defaultBloodInventory !== 'undefined' ? defaultBloodInventory : []);
+    if (Array.isArray(inv) && inv.length > 0) {
+        const map = {};
+        inv.forEach(item => {
+            if (item && item.group) map[item.group] = Number(item.units || 0);
+        });
+        return map;
+    }
+    return { 'A+': 18, 'A-': 6, 'B+': 22, 'B-': 4, 'AB+': 9, 'AB-': 3, 'O+': 28, 'O-': 5 };
+}
+
 function saveData(key, val, skipMesh = false) {
     try {
         localStorage.setItem(key, JSON.stringify(val));
@@ -2676,7 +2688,7 @@ function renderDashboardLivePulse() {
     if (!el) return;
     const patients = loadData('hms_patients', defaultPatients);
     const rxs = loadData('hms_prescriptions', defaultPrescriptions);
-    const bloodStock = loadData('hms_blood_stock', { 'A+': 18, 'A-': 6, 'B+': 22, 'B-': 4, 'AB+': 9, 'AB-': 3, 'O+': 28, 'O-': 5 });
+    const bloodStock = getUnifiedBloodStockMap();
     const lowGroups = Object.entries(bloodStock).filter(([, units]) => Number(units) < 5).map(([g, u]) => `${g} (${u}u)`);
     const admittedCount = patients.filter(p => (p.status || '').toLowerCase().includes('admit') || (p.status || '').toLowerCase().includes('icu')).length;
 
@@ -5240,8 +5252,13 @@ function resetToDemoData(skipConfirm = false) {
     if (!confirmed) return false;
 
     if (typeof localStorage !== 'undefined') {
+        const preserveKeys = new Set([
+            'hms_gemini_api_key', 'hms_theme', 'hms_authenticated', 'hms_user',
+            'hms_user_role', 'hms_login_category', 'hms_username', 'hms_display_name',
+            'hms_doctor_id', 'hms_patient_id', 'hms_department'
+        ]);
         Object.keys(localStorage).forEach((key) => {
-            if (key.startsWith('hms_') && key !== 'hms_gemini_api_key' && key !== 'hms_theme') {
+            if (key.startsWith('hms_') && !preserveKeys.has(key)) {
                 localStorage.removeItem(key);
             }
         });
@@ -5253,6 +5270,10 @@ function resetToDemoData(skipConfirm = false) {
     saveData('hms_prescriptions', defaultPrescriptions);
     saveData('hms_staff', defaultStaff);
     saveData('hms_resources', defaultResources);
+    if (typeof defaultLabTests !== 'undefined') saveData('hms_lab_tests', defaultLabTests);
+    if (typeof defaultBloodDonors !== 'undefined') saveData('hms_blood_donors', defaultBloodDonors);
+    if (typeof defaultBloodInventory !== 'undefined') saveData('hms_blood_inventory', defaultBloodInventory);
+    if (typeof defaultBloodRequests !== 'undefined') saveData('hms_blood_requests', defaultBloodRequests);
     if (typeof playSound === 'function') playSound('success');
     if (typeof showToast === 'function') {
         showToast('System database reset to rich sample records! Reloading...', 'success');
@@ -5267,7 +5288,7 @@ function openShiftHandoverModal() {
     const patients = loadData('hms_patients', defaultPatients);
     const staff = loadData('hms_staff', defaultStaff);
     const resources = loadData('hms_resources', defaultResources);
-    const bloodStock = loadData('hms_blood_stock', { 'A+': 18, 'A-': 6, 'B+': 22, 'B-': 4, 'AB+': 9, 'AB-': 3, 'O+': 28, 'O-': 5 });
+    const bloodStock = getUnifiedBloodStockMap();
     const totalBloodUnits = Object.values(bloodStock).reduce((sum, u) => sum + Number(u || 0), 0);
     const lowGroups = Object.entries(bloodStock).filter(([, u]) => Number(u) < 5).map(([g, u]) => `${g}: ${u}u`);
     const safe = (v) => String(v).replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -9298,7 +9319,7 @@ function renderPortalHospitalDirectory(query = '') {
     const q = String(query || '').toLowerCase().trim();
     const doctors = loadData('hms_doctors', defaultDoctors);
     const resources = loadData('hms_resources', defaultResources);
-    const bloodStock = loadData('hms_blood_stock', { 'A+': 18, 'A-': 6, 'B+': 22, 'B-': 4, 'AB+': 9, 'AB-': 3, 'O+': 28, 'O-': 5 });
+    const bloodStock = getUnifiedBloodStockMap();
 
     const hospitalPrograms = [
         { name: '24/7 Emergency & Trauma Care', desc: 'Biometric PPG triage, ICU stabilization & GPS ambulance dispatch', icon: 'fa-truck-medical', color: '#ef4444', actionType: 'emergency', actionArg: '' },
