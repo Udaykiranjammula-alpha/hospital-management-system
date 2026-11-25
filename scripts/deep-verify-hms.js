@@ -155,7 +155,7 @@ async function runAllTests() {
     assert(askAiJs.includes('Dr. Priya Sharma') && askAiJs.includes('Dr. Rahul Verma') && askAiJs.includes('Dr. Sneha Desai'), 'AskAIAssistant system prompt routes to MediCare specialist doctors');
     assert(askAiJs.includes('appointments.html?doctor=D001') && askAiJs.includes('appointments.html?doctor=D002'), 'AskAIAssistant includes 1-click booking appointment links for specialists');
     assert(askAiJs.includes('hms_gemini_api_key'), 'AskAIAssistant persists Gemini API key in localStorage (hms_gemini_api_key)');
-    assert(askAiJs.includes('Gemini 1.5 Flash Connected') && askAiJs.includes('Clinical Offline Copilot'), 'AskAIAssistant shows live Gemini connection status vs offline copilot');
+    assert(askAiJs.includes('modelDisplayName') && askAiJs.includes('Connected') && askAiJs.includes('Clinical Offline Copilot'), 'AskAIAssistant shows live Gemini connection status vs offline copilot');
     assert(askAiJs.includes('isSettingsOpen') && askAiJs.includes('fa-cog'), 'AskAIAssistant includes settings gear and modal for Gemini API configuration');
     assert(askAiJs.includes('demo-gemini-flash') || askAiJs.includes('handleUseDemoKey'), 'AskAIAssistant supports one-click pre-configured demo key test');
     assert(askAiJs.includes('SpeechSynthesisUtterance') && askAiJs.includes('speakMessage'), 'AskAIAssistant supports TTS voice readout with toggle');
@@ -462,6 +462,113 @@ async function runAllTests() {
     assert(sandbox.formatGeminiModelNameFromApp('gemini-3.8-flash') === 'Gemini 3.8 Flash', 'formatGeminiModelNameFromApp formats dynamic model names cleanly');
     assert(!askAiJs.includes('<option value="gemini-1.5-pro">'), 'AskAIAssistant dropdown no longer lists retired gemini-1.5-pro');
     assert(askAiJs.includes('extractSuggestedGeminiModels'), 'AskAIAssistant extracts suggested replacement models from Google deprecation errors');
+    assert(sandbox.normalizeGeminiModelFromApp('gemini-2.0-flash') === 'gemini-2.5-flash', 'normalizeGeminiModelFromApp auto-upgrades retired gemini-2.0-flash');
+    assert(sandbox.normalizeGeminiModelFromApp('gemini-1.5-pro') === 'gemini-2.5-flash', 'normalizeGeminiModelFromApp auto-upgrades retired gemini-1.5-pro');
+
+    // Mocked fetch end-to-end execution for callGeminiAPIFromApp
+    const originalFetch = sandbox.fetch;
+    let fetchCalls = [];
+    let dispatchedEvents = [];
+    sandbox.window.dispatchEvent = (evt) => dispatchedEvents.push(evt);
+    sandbox.CustomEvent = function(type, init) { return { type, detail: init?.detail }; };
+
+    // Case 1: Deprecation notice 410 -> auto-switch to gemini-3.8-flash + thinking parts extraction + event sync
+    sandbox.fetch = async (url) => {
+        fetchCalls.push(url);
+        if (url.includes('/models/gemini-2.5-flash:generateContent')) {
+            return {
+                ok: false,
+                status: 410,
+                text: async () => JSON.stringify({
+                    error: { message: 'This model models/gemini-2.0-flash is no longer available. Please update your code to use models/gemini-3.8-flash for the latest features.' }
+                })
+            };
+        }
+        if (url.includes('/v1beta/models?key=')) {
+            return {
+                ok: true,
+                status: 200,
+                json: async () => ({
+                    models: [
+                        { name: 'models/gemini-3.8-flash', supportedGenerationMethods: ['generateContent'] }
+                    ]
+                })
+            };
+        }
+        if (url.includes('/models/gemini-3.8-flash:generateContent')) {
+            return {
+                ok: true,
+                status: 200,
+                json: async () => ({
+                    candidates: [{
+                        content: {
+                            parts: [
+                                { thought: true, text: 'internal reasoning' },
+                                { text: '🟢 [TRIAGE: GREEN] Clinical response from Gemini 3.8 Flash.' }
+                            ]
+                        }
+                    }]
+                })
+            };
+        }
+        return { ok: false, status: 404, text: async () => 'Not found' };
+    };
+
+    const deprecationRecoveryReply = await sandbox.callGeminiAPIFromApp(
+        'Mild headache',
+        [],
+        'en-IN',
+        'AIzaSyMockValidKeyForTesting12345678901234',
+        'gemini-2.5-flash'
+    );
+    assert(
+        deprecationRecoveryReply === '🟢 [TRIAGE: GREEN] Clinical response from Gemini 3.8 Flash.',
+        'callGeminiAPIFromApp recovers from 410 deprecation notice, switches to gemini-3.8-flash, and filters thought parts'
+    );
+    assert(
+        sandbox.localStorage.getItem('hms_gemini_model') === 'gemini-3.8-flash' &&
+        dispatchedEvents.some(e => e.type === 'medicare_gemini_key_updated' && e.detail?.model === 'gemini-3.8-flash'),
+        'callGeminiAPIFromApp persists and broadcasts newly discovered model via medicare_gemini_key_updated'
+    );
+
+    // Case 2: Invalid API key (400 API_KEY_INVALID) fails fast in 1 request without probing 7 models
+    fetchCalls = [];
+    sandbox.fetch = async (url) => {
+        fetchCalls.push(url);
+        return {
+            ok: false,
+            status: 400,
+            text: async () => JSON.stringify({ error: { status: 'INVALID_ARGUMENT', message: 'API key not valid. Please pass a valid API key.' } })
+        };
+    };
+    let invalidKeyThrew = false;
+    try {
+        await sandbox.callGeminiAPIFromApp('Test', [], 'en-IN', 'AIzaSyMockInvalidKeyForTesting123456789012', 'gemini-2.5-flash');
+    } catch (err) {
+        invalidKeyThrew = err.message.includes('API key not valid');
+    }
+    assert(invalidKeyThrew && fetchCalls.length === 1, 'callGeminiAPIFromApp fast-fails in 1 HTTP call on API_KEY_INVALID');
+
+    // Case 3: 429 quota on gemini-2.5-pro fails over to gemini-2.5-flash
+    fetchCalls = [];
+    sandbox.fetch = async (url) => {
+        fetchCalls.push(url);
+        if (url.includes('/models/gemini-2.5-pro:generateContent')) {
+            return { ok: false, status: 429, text: async () => 'Quota exceeded for model gemini-2.5-pro' };
+        }
+        if (url.includes('/models/gemini-2.5-flash:generateContent')) {
+            return {
+                ok: true,
+                status: 200,
+                json: async () => ({ candidates: [{ content: { parts: [{ text: 'Fallback flash response' }] } }] })
+            };
+        }
+        return { ok: false, status: 404, text: async () => 'Not found' };
+    };
+    const quotaFailoverReply = await sandbox.callGeminiAPIFromApp('Fever', [], 'en-IN', 'AIzaSyMockValidKeyForTesting12345678901234', 'gemini-2.5-pro');
+    assert(quotaFailoverReply === 'Fallback flash response', 'callGeminiAPIFromApp fails over from 429 quota-limited model to gemini-2.5-flash');
+
+    sandbox.fetch = originalFetch;
 
 
     console.log(`\n====================================================`);

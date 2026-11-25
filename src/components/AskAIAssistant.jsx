@@ -90,7 +90,7 @@ const MULTILINGUAL_KNOWLEDGE_BASE = {
     }
   },
   'hi-IN': {
-    welcome: "नमस्ते डॉक्टर! मैं आपका मेडीकेयर क्लिनिकल एआई सहायक हूँ (गूगल जेमिनी 1.5 समर्थित)। क्या मैं ईआर ट्राइएज, सीने में दर्द (STEMI), सेप्सिस या आईसीयू प्रोटोकॉल में आपकी सहायता करूँ?",
+    welcome: "नमस्ते डॉक्टर! मैं आपका मेडीकेयर क्लिनिकल एआई सहायक हूँ (गूगल जेमिनी लाइव समर्थित)। क्या मैं ईआर ट्राइएज, सीने में दर्द (STEMI), सेप्सिस या आईसीयू प्रोटोकॉल में आपकी सहायता करूँ?",
     placeholder: "क्लिनिकल प्रश्न पूछें या माइक दबाकर बोलें...",
     listening: "हिन्दी में सुन रहे हैं (hi-IN)... अब बोलें",
     chips: [
@@ -124,7 +124,7 @@ const MULTILINGUAL_KNOWLEDGE_BASE = {
     }
   },
   'te-IN': {
-    welcome: "నమస్కారం డాక్టర్! నేను మీ మెడికేర్ క్లినికల్ ఏఐ అసిస్టెంట్‌ని (గూగుల్ జెమిని 1.5 ఆధారితం). ఈ రోజు ఎమర్జెన్సీ ట్రయాజ్, ఛాతీ నొప్పి (STEMI), సెప్సిస్ లేదా ఐసీయూ బెడ్స్ వివరాల కోసం మీకు ఎలా సహాయపడగలను?",
+    welcome: "నమస్కారం డాక్టర్! నేను మీ మెడికేర్ క్లినికల్ ఏఐ అసిస్టెంట్‌ని (గూగుల్ జెమిని లైవ్ ఆధారితం). ఈ రోజు ఎమర్జెన్సీ ట్రయాజ్, ఛాతీ నొప్పి (STEMI), సెప్సిస్ లేదా ఐసీయూ బెడ్స్ వివరాల కోసం మీకు ఎలా సహాయపడగలను?",
     placeholder: "క్లినికల్ ప్రశ్న అడగండి లేదా మాట్లాడండి...",
     listening: "తెలుగులో వింటున్నాము (te-IN)... మాట్లాడండి",
     chips: [
@@ -271,6 +271,49 @@ export function sanitizeGeminiKey(rawKey) {
   return k.trim();
 }
 
+export const RETIRED_GEMINI_MODELS = new Set([
+  'gemini-1.0-pro',
+  'gemini-1.5-flash',
+  'gemini-1.5-flash-latest',
+  'gemini-1.5-pro',
+  'gemini-1.5-pro-latest',
+  'gemini-2.0-flash-exp',
+  'gemini-2.0-flash'
+]);
+
+export function normalizeGeminiModel(model) {
+  const clean = String(model || '').replace(/^models\//, '').trim();
+  if (!clean || RETIRED_GEMINI_MODELS.has(clean)) {
+    return 'gemini-2.5-flash';
+  }
+  return clean;
+}
+
+export function extractGeminiCandidateText(data) {
+  const parts = data?.candidates?.[0]?.content?.parts;
+  if (!Array.isArray(parts) || parts.length === 0) return '';
+  const nonThought = parts
+    .filter((p) => p && !p.thought && typeof p.text === 'string' && p.text.trim())
+    .map((p) => p.text.trim());
+  if (nonThought.length > 0) return nonThought.join('\n');
+  const anyText = parts
+    .filter((p) => p && typeof p.text === 'string' && p.text.trim())
+    .map((p) => p.text.trim());
+  return anyText.join('\n');
+}
+
+export function isNonModelGeminiError(errorText) {
+  const msg = String(errorText || '').toLowerCase();
+  return (
+    msg.includes('api_key_invalid') ||
+    msg.includes('api key not valid') ||
+    msg.includes('generative language api has not been used') ||
+    msg.includes('referer') ||
+    msg.includes('referrer') ||
+    msg.includes('permission_denied')
+  );
+}
+
 export function formatGeminiModelName(model) {
   const m = String(model || 'gemini-2.5-flash').replace(/^models\//, '');
   if (!m) return 'Gemini Live';
@@ -362,15 +405,14 @@ export async function callGeminiAPI(query, history = [], lang = 'en-IN', apiKey 
     }
   };
 
-  const requestedModel = (model || 'gemini-2.5-flash').replace(/^models\//, '');
+  const requestedModel = normalizeGeminiModel(model);
   const staticCandidates = [
     requestedModel,
     'gemini-2.5-flash',
     'gemini-3.8-flash',
     'gemini-3.0-flash',
     'gemini-2.5-flash-lite',
-    'gemini-2.5-pro',
-    'gemini-2.0-flash'
+    'gemini-2.5-pro'
   ];
   let uniqueModels = Array.from(new Set(staticCandidates));
   let lastError = null;
@@ -390,17 +432,24 @@ export async function callGeminiAPI(query, history = [], lang = 'en-IN', apiKey 
 
       if (response.ok) {
         const data = await response.json();
-        const candidateText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (candidateText && candidateText.trim()) {
+        const candidateText = extractGeminiCandidateText(data);
+        if (candidateText) {
           if (typeof localStorage !== 'undefined' && m !== requestedModel) {
             localStorage.setItem('hms_gemini_model', m);
+            if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function' && typeof CustomEvent === 'function') {
+              window.dispatchEvent(new CustomEvent('medicare_gemini_key_updated', { detail: { key: cleanKey, model: m } }));
+            }
           }
-          return candidateText.trim();
+          return candidateText;
         }
+        lastError = new Error(`Gemini API returned an empty response for ${m}`);
       } else {
         const errorText = await response.text();
         lastError = new Error(`Gemini API HTTP ${response.status}: ${errorText.slice(0, 150)}`);
-        if (response.status === 404 || response.status === 400 || response.status === 410) {
+        if (isNonModelGeminiError(errorText)) {
+          break;
+        }
+        if (response.status === 404 || response.status === 400 || response.status === 410 || response.status === 429) {
           const suggested = extractSuggestedGeminiModels(errorText, m);
           for (const sm of suggested) {
             if (!uniqueModels.includes(sm)) {
@@ -653,11 +702,7 @@ export default function AskAIAssistant() {
   });
   const [geminiModel, setGeminiModel] = useState(() => {
     if (typeof localStorage === 'undefined') return 'gemini-2.5-flash';
-    const saved = localStorage.getItem('hms_gemini_model');
-    if (!saved || saved === 'gemini-1.5-flash' || saved === 'gemini-1.5-pro' || saved === 'gemini-2.0-flash-exp') {
-      return 'gemini-2.5-flash';
-    }
-    return saved;
+    return normalizeGeminiModel(localStorage.getItem('hms_gemini_model'));
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [tempApiKey, setTempApiKey] = useState('');
@@ -683,11 +728,10 @@ export default function AskAIAssistant() {
     const handleKeySync = (e) => {
       if (e?.detail) {
         if (e.detail.key !== undefined) setGeminiApiKey(e.detail.key);
-        if (e.detail.model !== undefined) setGeminiModel(e.detail.model);
+        if (e.detail.model !== undefined) setGeminiModel(normalizeGeminiModel(e.detail.model));
       } else if (typeof localStorage !== 'undefined') {
         setGeminiApiKey(localStorage.getItem('hms_gemini_api_key') || '');
-        const syncedModel = localStorage.getItem('hms_gemini_model');
-        setGeminiModel(!syncedModel || syncedModel === 'gemini-1.5-flash' || syncedModel === 'gemini-1.5-pro' || syncedModel === 'gemini-2.0-flash-exp' ? 'gemini-2.5-flash' : syncedModel);
+        setGeminiModel(normalizeGeminiModel(localStorage.getItem('hms_gemini_model')));
       }
     };
     window.addEventListener('medicare_gemini_key_updated', handleKeySync);
@@ -1087,13 +1131,12 @@ export default function AskAIAssistant() {
     setApiTestMessage('Verifying connection with Google Gemini API...');
 
     const candidateModels = [
-      geminiModel,
+      normalizeGeminiModel(geminiModel),
       'gemini-2.5-flash',
       'gemini-3.8-flash',
       'gemini-3.0-flash',
       'gemini-2.5-flash-lite',
-      'gemini-2.5-pro',
-      'gemini-2.0-flash'
+      'gemini-2.5-pro'
     ];
     let uniqueModels = Array.from(new Set(candidateModels));
     let verifiedModel = null;
@@ -1125,7 +1168,10 @@ export default function AskAIAssistant() {
             if (parsed.error?.message) reason = parsed.error.message;
           } catch (_) {}
           lastErrorMsg = reason;
-          if (pingRes.status === 404 || pingRes.status === 400 || pingRes.status === 410) {
+          if (isNonModelGeminiError(reason)) {
+            break;
+          }
+          if (pingRes.status === 404 || pingRes.status === 400 || pingRes.status === 410 || pingRes.status === 429) {
             const suggested = extractSuggestedGeminiModels(reason, modelToTry);
             for (const sm of suggested) {
               if (!uniqueModels.includes(sm)) {
@@ -1152,6 +1198,7 @@ export default function AskAIAssistant() {
     if (verifiedModel) {
       setGeminiModel(verifiedModel);
       localStorage.setItem('hms_gemini_model', verifiedModel);
+      window.dispatchEvent(new CustomEvent('medicare_gemini_key_updated', { detail: { key: keyToTest, model: verifiedModel } }));
       setApiTestStatus('success');
       setApiTestMessage(`✅ Google ${verifiedModel} Verified! Live clinical intelligence active.`);
       playChime('pop');
@@ -1376,7 +1423,7 @@ export default function AskAIAssistant() {
                         boxShadow: isGeminiConnected ? '0 0 6px #10b981' : 'none'
                       }}
                     />
-                    {isGeminiConnected ? (modelDisplayName === 'Gemini 1.5 Flash' ? '● Gemini 1.5 Flash Connected' : `● ${modelDisplayName} Connected`) : '● Clinical Offline Copilot'}
+                    {isGeminiConnected ? `● ${modelDisplayName} Connected` : '● Clinical Offline Copilot'}
                   </span>
                   <span style={{ width: '3px', height: '3px', borderRadius: '50%', background: '#64748b' }}></span>
                   <span style={{ fontSize: '0.64rem', color: '#38bdf8', fontFamily: "'JetBrains Mono'" }}>React 18</span>
@@ -1513,7 +1560,7 @@ export default function AskAIAssistant() {
               </div>
 
               <p style={{ margin: 0, fontSize: '0.74rem', color: '#94a3b8', lineHeight: '1.45' }}>
-                Connect Google Gemini 1.5 Flash for live emergency clinical triage (Green / Yellow / Red), specialist physician routing, drug interaction safety, and multilingual reasoning in Hindi &amp; Telugu.
+                Connect Google Gemini Live API for real-time emergency clinical triage (Green / Yellow / Red), specialist physician routing, drug interaction safety, and multilingual reasoning in Hindi &amp; Telugu.
               </p>
 
               {/* Status Indicator Bar */}
@@ -1535,7 +1582,7 @@ export default function AskAIAssistant() {
                   boxShadow: isGeminiConnected ? '0 0 8px #10b981' : 'none'
                 }}></span>
                 <span style={{ color: isGeminiConnected ? '#34d399' : '#cbd5e1', fontWeight: 600 }}>
-                  {isGeminiConnected ? (modelDisplayName === 'Gemini 1.5 Flash' ? '● Gemini 1.5 Flash Connected' : `● ${modelDisplayName} Connected`) : '● Clinical Offline Copilot'}
+                  {isGeminiConnected ? `● ${modelDisplayName} Connected` : '● Clinical Offline Copilot'}
                 </span>
               </div>
 

@@ -6289,9 +6289,9 @@ function openGeminiSettingsModal() {
 
     if (input) input.value = localStorage.getItem('hms_gemini_api_key') || '';
     if (select) {
-        let savedModel = localStorage.getItem('hms_gemini_model');
-        if (!savedModel || savedModel === 'gemini-1.5-flash' || savedModel === 'gemini-1.5-pro' || savedModel === 'gemini-2.0-flash-exp') {
-            savedModel = 'gemini-2.5-flash';
+        const rawSavedModel = localStorage.getItem('hms_gemini_model');
+        const savedModel = normalizeGeminiModelFromApp(rawSavedModel);
+        if (savedModel !== rawSavedModel) {
             localStorage.setItem('hms_gemini_model', savedModel);
         }
         if (!Array.from(select.options).some(opt => opt.value === savedModel)) {
@@ -6349,6 +6349,49 @@ function sanitizeGeminiKey(rawKey) {
         k = k.substring(7).trim();
     }
     return k.trim();
+}
+
+const RETIRED_GEMINI_MODELS_APP = new Set([
+    'gemini-1.0-pro',
+    'gemini-1.5-flash',
+    'gemini-1.5-flash-latest',
+    'gemini-1.5-pro',
+    'gemini-1.5-pro-latest',
+    'gemini-2.0-flash-exp',
+    'gemini-2.0-flash'
+]);
+
+function normalizeGeminiModelFromApp(model) {
+    const clean = String(model || '').replace(/^models\//, '').trim();
+    if (!clean || RETIRED_GEMINI_MODELS_APP.has(clean)) {
+        return 'gemini-2.5-flash';
+    }
+    return clean;
+}
+
+function extractGeminiCandidateTextFromApp(data) {
+    const parts = data?.candidates?.[0]?.content?.parts;
+    if (!Array.isArray(parts) || parts.length === 0) return '';
+    const nonThought = parts
+        .filter((p) => p && !p.thought && typeof p.text === 'string' && p.text.trim())
+        .map((p) => p.text.trim());
+    if (nonThought.length > 0) return nonThought.join('\n');
+    const anyText = parts
+        .filter((p) => p && typeof p.text === 'string' && p.text.trim())
+        .map((p) => p.text.trim());
+    return anyText.join('\n');
+}
+
+function isNonModelGeminiErrorFromApp(errorText) {
+    const msg = String(errorText || '').toLowerCase();
+    return (
+        msg.includes('api_key_invalid') ||
+        msg.includes('api key not valid') ||
+        msg.includes('generative language api has not been used') ||
+        msg.includes('referer') ||
+        msg.includes('referrer') ||
+        msg.includes('permission_denied')
+    );
 }
 
 function formatGeminiModelNameFromApp(model) {
@@ -6451,13 +6494,12 @@ async function testAndSaveGeminiKey(skipTest = false) {
     }
 
     const candidateModels = [
-        model,
+        normalizeGeminiModelFromApp(model),
         'gemini-2.5-flash',
         'gemini-3.8-flash',
         'gemini-3.0-flash',
         'gemini-2.5-flash-lite',
-        'gemini-2.5-pro',
-        'gemini-2.0-flash'
+        'gemini-2.5-pro'
     ];
     let uniqueModels = Array.from(new Set(candidateModels));
     let verifiedModel = null;
@@ -6489,7 +6531,11 @@ async function testAndSaveGeminiKey(skipTest = false) {
                 } catch (_) {}
                 lastErrorMsg = userMsg;
 
-                if (testRes.status === 404 || testRes.status === 400 || testRes.status === 410) {
+                if (isNonModelGeminiErrorFromApp(userMsg)) {
+                    break;
+                }
+
+                if (testRes.status === 404 || testRes.status === 400 || testRes.status === 410 || testRes.status === 429) {
                     const suggested = extractSuggestedGeminiModelsFromApp(userMsg, modelToTry);
                     for (const sm of suggested) {
                         if (!uniqueModels.includes(sm)) {
@@ -6505,7 +6551,7 @@ async function testAndSaveGeminiKey(skipTest = false) {
                     }
                     continue; // try next candidate model
                 }
-                break; // auth or quota error, stop looping
+                break; // auth or permission error, stop looping
             }
         } catch (err) {
             lastErrorMsg = err.message || 'Network error';
@@ -6586,7 +6632,7 @@ function clearGeminiKeyAndOffline() {
 function updateAIChatbotConnectionStatus() {
     const key = typeof localStorage !== 'undefined' ? localStorage.getItem('hms_gemini_api_key') : null;
     const rawModel = typeof localStorage !== 'undefined' ? localStorage.getItem('hms_gemini_model') : null;
-    const model = (!rawModel || rawModel === 'gemini-1.5-flash' || rawModel === 'gemini-1.5-pro' || rawModel === 'gemini-2.0-flash-exp') ? 'gemini-2.5-flash' : rawModel;
+    const model = normalizeGeminiModelFromApp(rawModel);
     const hasKey = !!(key && key.trim());
 
     const dot = document.getElementById('aiOnlineDot');
@@ -6876,15 +6922,14 @@ If English (en-IN), maintain crisp professional clinical English.`;
         }
     };
 
-    const requestedModel = (model || 'gemini-2.5-flash').replace(/^models\//, '');
+    const requestedModel = normalizeGeminiModelFromApp(model);
     const candidateModels = [
         requestedModel,
         'gemini-2.5-flash',
         'gemini-3.8-flash',
         'gemini-3.0-flash',
         'gemini-2.5-flash-lite',
-        'gemini-2.5-pro',
-        'gemini-2.0-flash'
+        'gemini-2.5-pro'
     ];
     let uniqueModels = Array.from(new Set(candidateModels));
     let lastError = null;
@@ -6904,17 +6949,25 @@ If English (en-IN), maintain crisp professional clinical English.`;
 
             if (response.ok) {
                 const data = await response.json();
-                const candidateText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (candidateText && candidateText.trim()) {
+                const candidateText = extractGeminiCandidateTextFromApp(data);
+                if (candidateText) {
                     if (typeof localStorage !== 'undefined' && m !== requestedModel) {
                         localStorage.setItem('hms_gemini_model', m);
+                        if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function' && typeof CustomEvent === 'function') {
+                            window.dispatchEvent(new CustomEvent('medicare_gemini_key_updated', { detail: { key: cleanKey, model: m } }));
+                        }
+                        if (typeof updateAIChatbotConnectionStatus === 'function') updateAIChatbotConnectionStatus();
                     }
-                    return candidateText.trim();
+                    return candidateText;
                 }
+                lastError = new Error(`Gemini API returned an empty response for ${m}`);
             } else {
                 const errorText = await response.text();
                 lastError = new Error(`Gemini API HTTP ${response.status}: ${errorText.slice(0, 150)}`);
-                if (response.status === 404 || response.status === 400 || response.status === 410) {
+                if (isNonModelGeminiErrorFromApp(errorText)) {
+                    break;
+                }
+                if (response.status === 404 || response.status === 400 || response.status === 410 || response.status === 429) {
                     const suggested = extractSuggestedGeminiModelsFromApp(errorText, m);
                     for (const sm of suggested) {
                         if (!uniqueModels.includes(sm)) {
