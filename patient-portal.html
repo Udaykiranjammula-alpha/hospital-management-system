@@ -211,6 +211,7 @@
                         <i class="fas fa-phone"></i> Connect Video Call
                     </button>
                     <span id="patientPeerStatus" style="font-size: 0.78rem; color: #94a3b8; font-family: 'JetBrains Mono', monospace;">Ready</span>
+                    <span id="patientCallQualityBadge" style="font-size: 0.74rem; color: #94a3b8; font-family: 'JetBrains Mono', monospace; background: rgba(15,23,42,0.8); border: 1px solid rgba(56,189,248,0.28); padding: 3px 8px; border-radius: 999px;">Auto HD Ready</span>
                 </div>
                 <div style="position: relative; width: 100%; aspect-ratio: 16/9; background: #020617; border-radius: 14px; overflow: hidden; border: 1px solid rgba(56,189,248,0.3);">
                     <video id="patientRemoteDoctorVideo" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; display: none;"></video>
@@ -228,12 +229,21 @@
                     <button type="button" class="btn btn-primary btn-sm" onclick="sendPeerChatMessage('patient')"><i class="fas fa-paper-plane"></i></button>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                    <div style="display: flex; gap: 8px;">
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                         <button type="button" class="btn btn-outline btn-sm" id="patientMuteMicBtn" onclick="toggleTelemedAudio()">
                             <i class="fas fa-microphone"></i> Mute Mic
                         </button>
                         <button type="button" class="btn btn-outline btn-sm" id="patientMuteCamBtn" onclick="toggleTelemedVideo()">
                             <i class="fas fa-video"></i> Camera Off
+                        </button>
+                        <select id="patientQualitySelect" class="form-control" onchange="setTelemedVideoQuality(this.value)" title="Select Video Call Quality" style="width: auto; height: 32px; padding: 3px 8px; font-size: 0.76rem; background: rgba(15, 23, 42, 0.85); color: #e2e8f0; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px;">
+                            <option value="auto">Auto Adaptive</option>
+                            <option value="fhd">1080p HD Boost</option>
+                            <option value="hd">720p Crisp HD</option>
+                            <option value="saver">360p Low Data</option>
+                        </select>
+                        <button type="button" class="btn btn-outline btn-sm" id="patientBoostQualityBtn" onclick="toggleTelemedQualityBoost()" title="Boost Call Quality to 1080p HD">
+                            <i class="fas fa-bolt"></i> HD Boost
                         </button>
                     </div>
                     <button type="button" class="btn btn-danger btn-sm" onclick="endPeerTelemedCall(); closeModal('patientVideoCallModal');">

@@ -601,6 +601,88 @@ async function runAllTests() {
     assert(appJs.includes('function openEditBloodStockModal('), 'app.js defines openEditBloodStockModal');
     assert(appJs.includes('function deleteBloodDonor('), 'app.js defines deleteBloodDonor');
 
+    // ----------------------------------------------------
+    // TEST SUITE 19: WebRTC Video Call Quality Boost & Adaptive Bitrate
+    // ----------------------------------------------------
+    console.log('\n--- TEST SUITE 19: WebRTC Video Call Quality Boost & Adaptive Bitrate ---');
+    assert(teleMarkup.includes('id="telemedQualitySelect"'), 'telemedicine.html has #telemedQualitySelect quality dropdown');
+    assert(teleMarkup.includes('id="btnBoostVideoQuality"'), 'telemedicine.html has #btnBoostVideoQuality HD Boost button');
+    assert(teleMarkup.includes('id="telemedQualityBadge"'), 'telemedicine.html has #telemedQualityBadge live telemetry pill');
+    assert(portalMarkup.includes('id="patientQualitySelect"'), 'patient-portal.html has #patientQualitySelect quality dropdown');
+    assert(portalMarkup.includes('id="patientBoostQualityBtn"'), 'patient-portal.html has #patientBoostQualityBtn HD Boost button');
+    assert(portalMarkup.includes('id="patientCallQualityBadge"'), 'patient-portal.html has #patientCallQualityBadge live telemetry pill');
+    assert(appJs.includes('const TELEMED_QUALITY_PROFILES = {'), 'app.js defines TELEMED_QUALITY_PROFILES');
+    assert(appJs.includes('function getTelemedMediaConstraints('), 'app.js defines getTelemedMediaConstraints');
+    assert(appJs.includes('async function applyPeerCallQualityParameters('), 'app.js defines applyPeerCallQualityParameters');
+    assert(appJs.includes('async function setTelemedVideoQuality('), 'app.js defines setTelemedVideoQuality');
+    assert(appJs.includes('function toggleTelemedQualityBoost('), 'app.js defines toggleTelemedQualityBoost');
+    assert(appJs.includes('function startTelemedStatsMonitor('), 'app.js defines startTelemedStatsMonitor');
+
+    // Sandbox behavioral tests for WebRTC quality profiles, sender bitrate tuning, and boost toggle
+    const qualitySandbox = {
+        window: { location: { origin: 'http://localhost', search: '', pathname: '/telemedicine.html' } },
+        document: {
+            getElementById: () => null,
+            querySelectorAll: () => [],
+            addEventListener: () => {}
+        },
+        localStorage: {
+            _data: {},
+            getItem(k) { return this._data[k] || null; },
+            setItem(k, v) { this._data[k] = String(v); }
+        },
+        navigator: { mediaDevices: {} },
+        console,
+        setTimeout,
+        clearTimeout,
+        setInterval,
+        clearInterval,
+        showToast: () => {}
+    };
+    vm.createContext(qualitySandbox);
+    const qualitySliceStart = appJs.indexOf('let telemedStreamInterval = null;');
+    const qualitySliceEnd = appJs.indexOf('async function showPeerRoomInviteModal(');
+    const qualityCode = appJs.slice(qualitySliceStart, qualitySliceEnd) +
+        appJs.slice(appJs.indexOf('async function applyPeerCallQualityParameters('), appJs.indexOf('function stopTelemedStatsMonitor('));
+    vm.runInContext(qualityCode, qualitySandbox);
+
+    const fhdConstraints = qualitySandbox.getTelemedMediaConstraints('fhd');
+    assert(fhdConstraints.video.width.ideal === 1920 && fhdConstraints.video.height.ideal === 1080, 'FHD Boost requests 1920x1080 ideal video');
+    assert(fhdConstraints.audio.echoCancellation === true && fhdConstraints.audio.noiseSuppression === true && fhdConstraints.audio.autoGainControl === true, 'Audio constraints enable echoCancellation, noiseSuppression, and autoGainControl');
+
+    const saverConstraints = qualitySandbox.getTelemedMediaConstraints('saver');
+    assert(saverConstraints.video.width.ideal === 640 && saverConstraints.video.height.ideal === 360, 'Saver preset requests 640x360 low-data video');
+
+    let appliedVideoParams = null;
+    let touchedAudioSender = false;
+    const mockPc = {
+        getSenders: () => [
+            {
+                track: { kind: 'audio' },
+                getParameters: () => ({ encodings: [{}] }),
+                setParameters: async () => { touchedAudioSender = true; }
+            },
+            {
+                track: { kind: 'video', contentHint: '' },
+                getParameters: () => ({ encodings: [{}] }),
+                setParameters: async (p) => { appliedVideoParams = p; }
+            }
+        ]
+    };
+    const updatedSenders = await qualitySandbox.applyPeerCallQualityParameters(mockPc, 'fhd');
+    assert(updatedSenders === true, 'applyPeerCallQualityParameters updates video sender');
+    assert(touchedAudioSender === false, 'applyPeerCallQualityParameters leaves audio sender untouched');
+    assert(appliedVideoParams && appliedVideoParams.encodings[0].maxBitrate === 2800000, 'FHD Boost sets maxBitrate to 2.8 Mbps');
+    assert(appliedVideoParams && appliedVideoParams.degradationPreference === 'maintain-resolution', 'FHD Boost sets degradationPreference to maintain-resolution');
+
+    await qualitySandbox.setTelemedVideoQuality('invalid_preset', true);
+    assert(qualitySandbox.localStorage.getItem('hms_telemed_quality') === 'auto', 'Invalid quality preset safely falls back to auto');
+
+    await qualitySandbox.toggleTelemedQualityBoost();
+    assert(qualitySandbox.localStorage.getItem('hms_telemed_quality') === 'fhd', 'toggleTelemedQualityBoost switches from auto to fhd');
+    await qualitySandbox.toggleTelemedQualityBoost();
+    assert(qualitySandbox.localStorage.getItem('hms_telemed_quality') === 'auto', 'toggleTelemedQualityBoost switches back from fhd to auto');
+
     console.log(`\n====================================================`);
     console.log(`TOTAL TESTS: ${totalTests} | PASSED: ${passedTests} | FAILED: ${failedTests}`);
     console.log(`====================================================\n`);

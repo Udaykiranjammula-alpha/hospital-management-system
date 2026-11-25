@@ -10482,6 +10482,88 @@ let isTelemedVideoMuted = false;
 let telemedPeer = null;
 let telemedActiveCall = null;
 let telemedDataConn = null;
+let telemedQualityPreset = (typeof localStorage !== 'undefined' && localStorage.getItem('hms_telemed_quality')) || 'auto';
+let telemedEffectivePreset = telemedQualityPreset;
+let telemedStatsInterval = null;
+let telemedLastStatsSnapshot = null;
+let telemedGoodNetworkStreak = 0;
+
+const TELEMED_QUALITY_PROFILES = {
+    auto: {
+        label: 'Auto Adaptive (720p–1080p)',
+        shortLabel: 'Auto HD',
+        maxBitrate: 1500000,
+        maxFramerate: 30,
+        degradationPreference: 'balanced',
+        contentHint: 'motion',
+        video: {
+            width: { ideal: 1280, max: 1920 },
+            height: { ideal: 720, max: 1080 },
+            frameRate: { ideal: 30, max: 30 },
+            facingMode: 'user'
+        }
+    },
+    fhd: {
+        label: '1080p HD Boost (2.8 Mbps)',
+        shortLabel: '1080p Boost',
+        maxBitrate: 2800000,
+        maxFramerate: 30,
+        degradationPreference: 'maintain-resolution',
+        contentHint: 'detail',
+        video: {
+            width: { ideal: 1920, min: 1280 },
+            height: { ideal: 1080, min: 720 },
+            frameRate: { ideal: 30, max: 60 },
+            facingMode: 'user'
+        }
+    },
+    hd: {
+        label: '720p Crisp HD (1.4 Mbps)',
+        shortLabel: '720p HD',
+        maxBitrate: 1400000,
+        maxFramerate: 30,
+        degradationPreference: 'maintain-resolution',
+        contentHint: 'motion',
+        video: {
+            width: { ideal: 1280, min: 640 },
+            height: { ideal: 720, min: 480 },
+            frameRate: { ideal: 30, max: 30 },
+            facingMode: 'user'
+        }
+    },
+    saver: {
+        label: '360p Low Data (450 kbps)',
+        shortLabel: '360p Saver',
+        maxBitrate: 450000,
+        maxFramerate: 24,
+        degradationPreference: 'maintain-framerate',
+        contentHint: 'motion',
+        video: {
+            width: { ideal: 640, max: 854 },
+            height: { ideal: 360, max: 480 },
+            frameRate: { ideal: 20, max: 24 },
+            facingMode: 'user'
+        }
+    }
+};
+
+function getTelemedQualityProfile(preset = telemedQualityPreset) {
+    return TELEMED_QUALITY_PROFILES[preset] || TELEMED_QUALITY_PROFILES.auto;
+}
+
+function getTelemedMediaConstraints(preset = telemedQualityPreset) {
+    const profile = getTelemedQualityProfile(preset);
+    return {
+        video: { ...profile.video },
+        audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+            sampleRate: 48000,
+            channelCount: 1
+        }
+    };
+}
 
 function appendPeerChatLine(senderLabel, text, isSelf = false) {
     const safeText = String(text).replace(/</g, '&lt;');
@@ -10526,6 +10608,7 @@ function getTelemedIceConfig() {
         iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
             { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' },
             {
                 urls: 'turn:openrelay.metered.ca:80',
                 username: 'openrelayproject',
@@ -10542,54 +10625,66 @@ function getTelemedIceConfig() {
                 credential: 'openrelayproject'
             }
         ],
-        iceCandidatePoolSize: 4
+        iceCandidatePoolSize: 6,
+        bundlePolicy: 'max-bundle',
+        rtcpMuxPolicy: 'require'
     };
 }
 
 function createSyntheticFallbackStream() {
     const c = document.createElement('canvas');
-    c.width = 640;
-    c.height = 360;
+    c.width = 1280;
+    c.height = 720;
     const ctx = c.getContext('2d');
     let f = 0;
     const draw = () => {
         if (!c.isConnected && f > 1800) return;
-        const g = ctx.createLinearGradient(0, 0, 640, 360);
+        const g = ctx.createLinearGradient(0, 0, 1280, 720);
         g.addColorStop(0, '#0f172a');
         g.addColorStop(1, '#1e3a5f');
         ctx.fillStyle = g;
-        ctx.fillRect(0, 0, 640, 360);
+        ctx.fillRect(0, 0, 1280, 720);
         ctx.fillStyle = '#38bdf8';
         ctx.beginPath();
-        ctx.arc(320, 150 + Math.sin(f * 0.05) * 4, 44, 0, Math.PI * 2);
+        ctx.arc(640, 300 + Math.sin(f * 0.05) * 6, 80, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = '#f8fafc';
-        ctx.font = 'bold 18px sans-serif';
+        ctx.font = 'bold 32px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('MediCare Live Video Participant (Cam Fallback)', 320, 240);
+        ctx.fillText('MediCare Live Video Participant (HD Cam Fallback)', 640, 460);
         f++;
         requestAnimationFrame(draw);
     };
     draw();
-    return c.captureStream ? c.captureStream(24) : new MediaStream();
+    return c.captureStream ? c.captureStream(30) : new MediaStream();
 }
 
-async function acquireTelemedLocalMedia() {
+async function acquireTelemedLocalMedia(preset = telemedQualityPreset) {
     if (telemedMediaStream && telemedMediaStream.getTracks().some(t => t.readyState === 'live')) {
         return telemedMediaStream;
     }
+    const profile = getTelemedQualityProfile(preset);
+    const primaryConstraints = getTelemedMediaConstraints(preset);
     let stream = null;
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         try {
-            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            stream = await navigator.mediaDevices.getUserMedia(primaryConstraints);
         } catch (_) {
             try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                stream = await navigator.mediaDevices.getUserMedia(getTelemedMediaConstraints('hd'));
             } catch (_) {
                 try {
-                    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: primaryConstraints.audio });
                 } catch (_) {
-                    stream = null;
+                    try {
+                        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    } catch (_) {
+                        try {
+                            stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        } catch (_) {
+                            stream = null;
+                        }
+                    }
                 }
             }
         }
@@ -10597,6 +10692,12 @@ async function acquireTelemedLocalMedia() {
     if (!stream) {
         stream = createSyntheticFallbackStream();
         if (typeof showToast === 'function') showToast('📷 Camera busy/unavailable — using fallback video stream so call still connects!', 'info');
+    } else {
+        stream.getVideoTracks().forEach((track) => {
+            try {
+                if ('contentHint' in track) track.contentHint = profile.contentHint;
+            } catch (_) {}
+        });
     }
     telemedMediaStream = stream;
 
@@ -10612,6 +10713,214 @@ async function acquireTelemedLocalMedia() {
         patSelfVid.srcObject = stream;
     }
     return stream;
+}
+
+async function applyPeerCallQualityParameters(pc, preset = telemedEffectivePreset) {
+    if (!pc || typeof pc.getSenders !== 'function') return false;
+    const profile = getTelemedQualityProfile(preset);
+    let updated = false;
+    const senders = pc.getSenders();
+    for (const sender of senders) {
+        if (!sender || !sender.track || sender.track.kind !== 'video') continue;
+        try {
+            if ('contentHint' in sender.track) {
+                sender.track.contentHint = profile.contentHint;
+            }
+            if (typeof sender.getParameters === 'function' && typeof sender.setParameters === 'function') {
+                const params = sender.getParameters() || {};
+                if (!Array.isArray(params.encodings) || params.encodings.length === 0) {
+                    params.encodings = [{}];
+                }
+                params.encodings[0].maxBitrate = profile.maxBitrate;
+                params.encodings[0].maxFramerate = profile.maxFramerate;
+                params.degradationPreference = profile.degradationPreference;
+                await sender.setParameters(params);
+                updated = true;
+            }
+        } catch (_) {}
+    }
+    return updated;
+}
+
+function syncTelemedQualityUI() {
+    const profile = getTelemedQualityProfile(telemedQualityPreset);
+    const isBoost = telemedQualityPreset === 'fhd';
+    ['telemedQualitySelect', 'patientQualitySelect'].forEach((id) => {
+        const sel = document.getElementById(id);
+        if (sel && sel.value !== telemedQualityPreset) {
+            sel.value = telemedQualityPreset;
+        }
+    });
+    ['btnBoostVideoQuality', 'patientBoostQualityBtn'].forEach((id) => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        btn.classList.toggle('active', isBoost);
+        btn.style.borderColor = isBoost ? '#38bdf8' : 'rgba(255,255,255,0.18)';
+        btn.style.background = isBoost
+            ? 'linear-gradient(135deg, rgba(14,165,233,0.35), rgba(56,189,248,0.2))'
+            : 'rgba(255,255,255,0.06)';
+        btn.style.color = isBoost ? '#38bdf8' : '';
+        btn.title = isBoost ? '1080p HD Boost Active (click for Auto Adaptive)' : 'Boost Call Quality to 1080p HD (2.8 Mbps)';
+    });
+    ['telemedQualityBadge', 'patientCallQualityBadge'].forEach((id) => {
+        const badge = document.getElementById(id);
+        if (badge && !telemedActiveCall) {
+            badge.textContent = `${profile.shortLabel} Ready`;
+            badge.style.color = isBoost ? '#38bdf8' : '#94a3b8';
+        }
+    });
+}
+
+async function setTelemedVideoQuality(preset = 'auto', silent = false) {
+    if (!TELEMED_QUALITY_PROFILES[preset]) preset = 'auto';
+    telemedQualityPreset = preset;
+    telemedEffectivePreset = preset;
+    telemedGoodNetworkStreak = 0;
+    try {
+        if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('hms_telemed_quality', preset);
+        }
+    } catch (_) {}
+
+    const profile = getTelemedQualityProfile(preset);
+    if (telemedMediaStream) {
+        const vTracks = telemedMediaStream.getVideoTracks();
+        for (const track of vTracks) {
+            try {
+                if ('contentHint' in track) track.contentHint = profile.contentHint;
+                if (typeof track.applyConstraints === 'function') {
+                    await track.applyConstraints(profile.video).catch(() => {});
+                }
+            } catch (_) {}
+        }
+    }
+
+    if (telemedActiveCall && telemedActiveCall.peerConnection) {
+        await applyPeerCallQualityParameters(telemedActiveCall.peerConnection, preset);
+    }
+
+    syncTelemedQualityUI();
+    if (!silent && typeof showToast === 'function') {
+        showToast(`🎬 Video quality set to ${profile.label}`, 'success');
+    }
+    return profile;
+}
+
+function toggleTelemedQualityBoost() {
+    const nextPreset = telemedQualityPreset === 'fhd' ? 'auto' : 'fhd';
+    return setTelemedVideoQuality(nextPreset, false);
+}
+
+function stopTelemedStatsMonitor() {
+    if (telemedStatsInterval) {
+        clearInterval(telemedStatsInterval);
+        telemedStatsInterval = null;
+    }
+    telemedLastStatsSnapshot = null;
+    telemedGoodNetworkStreak = 0;
+    syncTelemedQualityUI();
+}
+
+function startTelemedStatsMonitor(call) {
+    stopTelemedStatsMonitor();
+    if (!call || !call.peerConnection || typeof call.peerConnection.getStats !== 'function') return;
+
+    const pc = call.peerConnection;
+    applyPeerCallQualityParameters(pc, telemedEffectivePreset);
+
+    const onConnState = () => {
+        if (pc.connectionState === 'connected' || pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
+            applyPeerCallQualityParameters(pc, telemedEffectivePreset);
+        }
+    };
+    if (typeof pc.addEventListener === 'function') {
+        pc.addEventListener('connectionstatechange', onConnState);
+        pc.addEventListener('iceconnectionstatechange', onConnState);
+    }
+
+    telemedStatsInterval = setInterval(async () => {
+        if (!telemedActiveCall || telemedActiveCall.peerConnection !== pc) {
+            stopTelemedStatsMonitor();
+            return;
+        }
+        try {
+            const stats = await pc.getStats();
+            let width = 0;
+            let height = 0;
+            let fps = 0;
+            let bytesRecv = 0;
+            let bytesSent = 0;
+            let packetsLost = 0;
+            let packetsRecv = 0;
+            let rttMs = null;
+
+            stats.forEach((report) => {
+                if (report.type === 'inbound-rtp' && report.kind === 'video') {
+                    if (report.frameWidth) width = report.frameWidth;
+                    if (report.frameHeight) height = report.frameHeight;
+                    if (report.framesPerSecond) fps = Math.round(report.framesPerSecond);
+                    bytesRecv += report.bytesReceived || 0;
+                    packetsLost += report.packetsLost || 0;
+                    packetsRecv += report.packetsReceived || 0;
+                } else if (report.type === 'outbound-rtp' && report.kind === 'video') {
+                    bytesSent += report.bytesSent || 0;
+                } else if (report.type === 'candidate-pair' && (report.nominated || report.state === 'succeeded')) {
+                    if (typeof report.currentRoundTripTime === 'number') {
+                        rttMs = Math.round(report.currentRoundTripTime * 1000);
+                    }
+                }
+            });
+
+            const now = Date.now();
+            let bitrateKbps = 0;
+            let lossPct = 0;
+            if (telemedLastStatsSnapshot) {
+                const dtSec = Math.max((now - telemedLastStatsSnapshot.ts) / 1000, 0.5);
+                const deltaBytes = Math.max(0, (bytesRecv - telemedLastStatsSnapshot.bytesRecv) + (bytesSent - telemedLastStatsSnapshot.bytesSent));
+                bitrateKbps = Math.round((deltaBytes * 8) / (dtSec * 1000));
+                const dLost = Math.max(0, packetsLost - telemedLastStatsSnapshot.packetsLost);
+                const dRecv = Math.max(0, packetsRecv - telemedLastStatsSnapshot.packetsRecv);
+                if (dLost + dRecv > 0) {
+                    lossPct = Number(((dLost / (dLost + dRecv)) * 100).toFixed(1));
+                }
+            }
+            telemedLastStatsSnapshot = { ts: now, bytesRecv, bytesSent, packetsLost, packetsRecv };
+
+            // Auto-adaptive network protection when in 'auto' mode
+            if (telemedQualityPreset === 'auto') {
+                if ((lossPct > 5 || (rttMs !== null && rttMs > 350)) && telemedEffectivePreset !== 'saver') {
+                    telemedEffectivePreset = 'saver';
+                    telemedGoodNetworkStreak = 0;
+                    await applyPeerCallQualityParameters(pc, 'saver');
+                } else if (lossPct < 1.5 && (rttMs === null || rttMs < 150) && telemedEffectivePreset === 'saver') {
+                    telemedGoodNetworkStreak++;
+                    if (telemedGoodNetworkStreak >= 3) {
+                        telemedEffectivePreset = 'auto';
+                        telemedGoodNetworkStreak = 0;
+                        await applyPeerCallQualityParameters(pc, 'auto');
+                    }
+                }
+            }
+
+            const resText = (width && height) ? `${height}p` : getTelemedQualityProfile(telemedEffectivePreset).shortLabel;
+            const fpsText = fps ? `${fps}fps` : '';
+            const rateText = bitrateKbps ? (bitrateKbps >= 1000 ? `${(bitrateKbps / 1000).toFixed(1)} Mbps` : `${bitrateKbps} kbps`) : '';
+            const pingText = rttMs !== null ? `${rttMs}ms` : '';
+            const summary = [resText, fpsText, rateText, pingText].filter(Boolean).join(' • ');
+
+            const healthColor = (lossPct > 5 || (rttMs !== null && rttMs > 300))
+                ? '#f87171'
+                : ((lossPct > 2 || (rttMs !== null && rttMs > 150)) ? '#fbbf24' : '#34d399');
+
+            ['telemedQualityBadge', 'patientCallQualityBadge'].forEach((id) => {
+                const badge = document.getElementById(id);
+                if (badge) {
+                    badge.textContent = summary || 'Live HD';
+                    badge.style.color = healthColor;
+                }
+            });
+        } catch (_) {}
+    }, 2000);
 }
 
 async function showPeerRoomInviteModal(roomId, joinUrl) {
@@ -10754,7 +11063,11 @@ async function hostPeerTelemedRoom() {
         telemedPeer.on('call', (call) => {
             telemedActiveCall = call;
             call.answer(localStream);
-            call.on('stream', attachRemotePeerStream);
+            startTelemedStatsMonitor(call);
+            call.on('stream', (remoteStream) => {
+                attachRemotePeerStream(remoteStream);
+                applyPeerCallQualityParameters(call.peerConnection, telemedEffectivePreset);
+            });
             call.on('close', () => endPeerTelemedCall(false));
         });
 
@@ -10826,10 +11139,12 @@ async function joinPeerTelemedRoom(customRoomId = '') {
             bindPeerDataConnection(dataConn);
             const call = telemedPeer.call(`medicare-${roomId}`, localStream);
             telemedActiveCall = call;
+            startTelemedStatsMonitor(call);
             call.on('stream', (remoteStream) => {
                 connected = true;
                 clearTimeout(joinTimeout);
                 attachRemotePeerStream(remoteStream);
+                applyPeerCallQualityParameters(call.peerConnection, telemedEffectivePreset);
             });
             call.on('close', () => {
                 clearTimeout(joinTimeout);
@@ -10859,6 +11174,7 @@ async function joinPeerTelemedRoom(customRoomId = '') {
 }
 
 function endPeerTelemedCall(keepStream = false) {
+    stopTelemedStatsMonitor();
     if (telemedDataConn) {
         try { telemedDataConn.close(); } catch (_) {}
         telemedDataConn = null;
@@ -10898,6 +11214,7 @@ function endPeerTelemedCall(keepStream = false) {
 function openPatientVideoCallModal(prefillRoom = '') {
     const inp = document.getElementById('patientPeerRoomInput');
     if (inp && prefillRoom) inp.value = prefillRoom;
+    syncTelemedQualityUI();
     openModal('patientVideoCallModal');
 }
 
@@ -10935,6 +11252,7 @@ function initTelemedicinePage() {
     startTelemedPatientStream();
     startTelemedVitalsHUD();
     startTelemedTimer();
+    syncTelemedQualityUI();
 
     if (typeof window !== 'undefined' && window.location && window.location.search) {
         const params = new URLSearchParams(window.location.search);
@@ -11258,9 +11576,35 @@ async function toggleRealCameraStream() {
             throw new Error('WebRTC getUserMedia not supported in this browser context.');
         }
 
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        let stream = null;
+        try {
+            stream = await navigator.mediaDevices.getUserMedia(getTelemedMediaConstraints(telemedQualityPreset));
+        } catch (_) {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        }
         telemedMediaStream = stream;
         isTelemedCameraActive = true;
+
+        const profile = getTelemedQualityProfile(telemedQualityPreset);
+        stream.getVideoTracks().forEach((track) => {
+            try {
+                if ('contentHint' in track) track.contentHint = profile.contentHint;
+            } catch (_) {}
+        });
+
+        if (telemedActiveCall && telemedActiveCall.peerConnection && typeof telemedActiveCall.peerConnection.getSenders === 'function') {
+            const senders = telemedActiveCall.peerConnection.getSenders();
+            const newVTrack = stream.getVideoTracks()[0];
+            const newATrack = stream.getAudioTracks()[0];
+            for (const sender of senders) {
+                if (sender.track && sender.track.kind === 'video' && newVTrack && typeof sender.replaceTrack === 'function') {
+                    await sender.replaceTrack(newVTrack).catch(() => {});
+                } else if (sender.track && sender.track.kind === 'audio' && newATrack && typeof sender.replaceTrack === 'function') {
+                    await sender.replaceTrack(newATrack).catch(() => {});
+                }
+            }
+            await applyPeerCallQualityParameters(telemedActiveCall.peerConnection, telemedEffectivePreset);
+        }
 
         if (selfVideo) {
             selfVideo.srcObject = stream;

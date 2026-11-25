@@ -144,10 +144,16 @@
                                 <span class="badge badge-primary" style="position: absolute; top: 4px; left: 4px; font-size: 8px; padding: 1px 4px;">HOST</span>
                             </div>
 
-                            <!-- Recording Pulse Tag -->
-                            <div class="telemed-recording-badge" style="position: absolute; top: 18px; left: 20px; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); border: 1px solid rgba(239, 68, 68, 0.5); padding: 6px 14px; border-radius: 20px; display: flex; align-items: center; gap: 8px; z-index: 15;">
-                                <span class="telemed-rec-pulse" style="width: 10px; height: 10px; border-radius: 50%; background: #ef4444; box-shadow: 0 0 10px #ef4444; animation: ppgHeartbeatAnim 1.2s infinite;"></span>
-                                <span style="font-size: 11px; font-weight: 700; color: #fca5a5; letter-spacing: 0.5px;">REC 4K ENCRYPTED</span>
+                            <!-- Recording Pulse Tag & Live WebRTC Quality Telemetry -->
+                            <div style="position: absolute; top: 18px; left: 20px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; z-index: 15;">
+                                <div class="telemed-recording-badge" style="background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); border: 1px solid rgba(239, 68, 68, 0.5); padding: 6px 14px; border-radius: 20px; display: flex; align-items: center; gap: 8px;">
+                                    <span class="telemed-rec-pulse" style="width: 10px; height: 10px; border-radius: 50%; background: #ef4444; box-shadow: 0 0 10px #ef4444; animation: ppgHeartbeatAnim 1.2s infinite;"></span>
+                                    <span style="font-size: 11px; font-weight: 700; color: #fca5a5; letter-spacing: 0.5px;">REC 4K ENCRYPTED</span>
+                                </div>
+                                <div style="background: rgba(15, 23, 42, 0.78); backdrop-filter: blur(10px); border: 1px solid rgba(56, 189, 248, 0.35); padding: 6px 12px; border-radius: 20px; display: flex; align-items: center; gap: 6px;">
+                                    <i class="fas fa-signal" style="color: #34d399; font-size: 11px;"></i>
+                                    <span id="telemedQualityBadge" style="font-size: 11px; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: #94a3b8;">Auto HD Ready</span>
+                                </div>
                             </div>
 
                             <!-- Picture-in-Picture Vitals HUD Overlay -->
@@ -213,7 +219,16 @@
                                 </button>
                             </div>
 
-                            <div style="display: flex; gap: 10px; align-items: center;">
+                            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                                <select id="telemedQualitySelect" class="form-control" onchange="setTelemedVideoQuality(this.value)" title="Select Video Call Quality Profile" style="width: auto; height: 34px; padding: 4px 10px; font-size: 0.78rem; font-weight: 600; background: rgba(15, 23, 42, 0.85); color: #e2e8f0; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 10px;">
+                                    <option value="auto">Auto Adaptive</option>
+                                    <option value="fhd">1080p HD Boost</option>
+                                    <option value="hd">720p Crisp HD</option>
+                                    <option value="saver">360p Low Data</option>
+                                </select>
+                                <button class="btn btn-outline btn-sm" id="btnBoostVideoQuality" onclick="toggleTelemedQualityBoost()" title="Boost Call Quality to 1080p HD (2.8 Mbps)" style="border-radius: 10px; border: 1px solid rgba(255,255,255,0.18);">
+                                    <i class="fas fa-bolt"></i> HD Boost
+                                </button>
                                 <button class="btn btn-outline btn-sm" onclick="triggerTelemedVitalsSync()" title="Refresh Synchronized Telemetry">
                                     <i class="fas fa-arrows-rotate"></i> Sync Vitals
                                 </button>
