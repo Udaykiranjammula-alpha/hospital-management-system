@@ -5953,9 +5953,10 @@ function initAIChatbot() {
                 <div>
                     <label style="font-size:11px; font-weight:600; color:#e2e8f0; display:block; margin-bottom:4px;">Target Model:</label>
                     <select id="geminiModelSelect" class="ai-input" style="width:100%; font-size:11px; background:#1e293b; color:#ffffff;">
-                        <option value="gemini-1.5-flash">gemini-1.5-flash (Recommended - Fast &amp; Accurate)</option>
-                        <option value="gemini-2.0-flash-exp">gemini-2.0-flash-exp (Gemini 2.0 Flash)</option>
-                        <option value="gemini-1.5-pro">gemini-1.5-pro (Deep Clinical Reasoning)</option>
+                        <option value="gemini-2.5-flash">gemini-2.5-flash (Latest Recommended - Fast &amp; Accurate)</option>
+                        <option value="gemini-2.0-flash">gemini-2.0-flash (Stable Gemini 2.0 Flash)</option>
+                        <option value="gemini-2.5-pro">gemini-2.5-pro (Deep Clinical Reasoning)</option>
+                        <option value="gemini-1.5-flash">gemini-1.5-flash (Legacy Alias)</option>
                     </select>
                 </div>
                 <div id="geminiTestAlert" style="display:none; font-size:11px; padding:8px 12px; border-radius:8px;"></div>
@@ -6337,6 +6338,34 @@ function sanitizeGeminiKey(rawKey) {
     return k.trim();
 }
 
+async function discoverWorkingGeminiModelsFromApp(apiKey) {
+    try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+        if (!res.ok) return [];
+        const data = await res.json();
+        const models = (data.models || [])
+            .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
+            .map(m => String(m.name || '').replace(/^models\//, ''))
+            .filter(name => name.includes('gemini') && !name.includes('embedding') && !name.includes('imagen'));
+
+        models.sort((a, b) => {
+            const score = (n) => {
+                if (n === 'gemini-2.5-flash') return 100;
+                if (n === 'gemini-2.0-flash') return 90;
+                if (n.includes('2.5') && n.includes('flash')) return 85;
+                if (n.includes('2.0') && n.includes('flash')) return 80;
+                if (n.includes('flash')) return 70;
+                if (n.includes('pro')) return 50;
+                return 10;
+            };
+            return score(b) - score(a);
+        });
+        return models;
+    } catch (_) {
+        return [];
+    }
+}
+
 async function testAndSaveGeminiKey(skipTest = false) {
     const input = document.getElementById('geminiApiKeyInput');
     const select = document.getElementById('geminiModelSelect');
@@ -6385,15 +6414,20 @@ async function testAndSaveGeminiKey(skipTest = false) {
 
     const candidateModels = [
         model,
-        'gemini-1.5-flash',
+        'gemini-2.5-flash',
         'gemini-2.0-flash',
-        'gemini-1.5-pro'
+        'gemini-2.5-flash-lite',
+        'gemini-2.5-pro',
+        'gemini-1.5-flash'
     ];
-    const uniqueModels = Array.from(new Set(candidateModels));
+    let uniqueModels = Array.from(new Set(candidateModels));
     let verifiedModel = null;
     let lastErrorMsg = '';
+    let triedCount = 0;
 
-    for (const modelToTry of uniqueModels) {
+    for (let i = 0; i < uniqueModels.length; i++) {
+        const modelToTry = uniqueModels[i];
+        triedCount++;
         try {
             const testRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelToTry}:generateContent?key=${key}`, {
                 method: 'POST',
@@ -6416,6 +6450,12 @@ async function testAndSaveGeminiKey(skipTest = false) {
                 lastErrorMsg = userMsg;
 
                 if (testRes.status === 404 || testRes.status === 400) {
+                    if (i === uniqueModels.length - 1 && triedCount < 12) {
+                        const discovered = await discoverWorkingGeminiModelsFromApp(key);
+                        for (const dm of discovered) {
+                            if (!uniqueModels.includes(dm)) uniqueModels.push(dm);
+                        }
+                    }
                     continue; // try next candidate model
                 }
                 break; // auth or quota error, stop looping
@@ -6783,15 +6823,19 @@ If English (en-IN), maintain crisp professional clinical English.`;
     const requestedModel = (model || 'gemini-1.5-flash').replace(/^models\//, '');
     const candidateModels = [
         requestedModel,
-        'gemini-1.5-flash',
+        'gemini-2.5-flash',
         'gemini-2.0-flash',
-        'gemini-1.5-pro',
-        'gemini-1.5-flash-8b'
+        'gemini-2.5-flash-lite',
+        'gemini-2.5-pro',
+        'gemini-1.5-flash'
     ];
-    const uniqueModels = Array.from(new Set(candidateModels));
+    let uniqueModels = Array.from(new Set(candidateModels));
     let lastError = null;
+    let triedCount = 0;
 
-    for (const m of uniqueModels) {
+    for (let i = 0; i < uniqueModels.length; i++) {
+        const m = uniqueModels[i];
+        triedCount++;
         try {
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${cleanKey}`;
             const response = await fetch(url, {
@@ -6813,6 +6857,12 @@ If English (en-IN), maintain crisp professional clinical English.`;
                 const errorText = await response.text();
                 lastError = new Error(`Gemini API HTTP ${response.status}: ${errorText.slice(0, 150)}`);
                 if (response.status === 404 || response.status === 400) {
+                    if (i === uniqueModels.length - 1 && triedCount < 12) {
+                        const discovered = await discoverWorkingGeminiModelsFromApp(cleanKey);
+                        for (const dm of discovered) {
+                            if (!uniqueModels.includes(dm)) uniqueModels.push(dm);
+                        }
+                    }
                     continue; // try next candidate model
                 }
                 break;
