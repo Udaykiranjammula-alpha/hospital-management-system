@@ -696,6 +696,16 @@ async function runAllTests() {
     assert(appJs.includes("payload.type === 'vitals'"), 'bindPeerDataConnection handles P2P vitals payload');
     assert(styleCss.includes('#patientLocalSelfVideo'), 'css/style.css includes mobile PiP rule for #patientLocalSelfVideo');
 
+    // ------------------------------------------
+    // TEST SUITE 21: Patient Portal Directory & Blood Search
+    // ------------------------------------------
+    console.log('\n--- TEST SUITE 21: Patient Portal Directory & Blood Search ---');
+    assert(patPortalSrc.includes('id="portalDirectorySearch"'), 'patient-portal.html has #portalDirectorySearch');
+    assert(patPortalSrc.includes('id="btnTabDirectory"'), 'patient-portal.html has #btnTabDirectory');
+    assert(patPortalSrc.includes('id="portalTabDirectory"'), 'patient-portal.html has #portalTabDirectory');
+    assert(appJs.includes('function renderPortalHospitalDirectory'), 'app.js defines renderPortalHospitalDirectory');
+    assert(appJs.includes('function filterPortalDirectory'), 'app.js defines filterPortalDirectory');
+
     console.log(`\n====================================================`);
     console.log(`TOTAL TESTS: ${totalTests} | PASSED: ${passedTests} | FAILED: ${failedTests}`);
     console.log(`====================================================\n`);

@@ -9326,6 +9326,146 @@ function switchPortalPatient(id) {
     showToast(`Switched view to patient ${id}`, 'info');
 }
 
+function renderPortalHospitalDirectory(query = '') {
+    const q = String(query || '').toLowerCase().trim();
+    const doctors = loadData('hms_doctors', defaultDoctors);
+    const resources = loadData('hms_resources', defaultResources);
+    const bloodStock = loadData('hms_blood_stock', { 'A+': 18, 'A-': 6, 'B+': 22, 'B-': 4, 'AB+': 9, 'AB-': 3, 'O+': 28, 'O-': 5 });
+
+    const hospitalPrograms = [
+        { name: '24/7 Emergency & Trauma Care', desc: 'Biometric PPG triage, ICU stabilization & GPS ambulance dispatch', icon: 'fa-truck-medical', color: '#ef4444', link: 'emergency.html' },
+        { name: 'Cardiology & Heart Care Unit', desc: 'ECG telemetry, hypertension clinic & cardiac specialist consults', icon: 'fa-heart-pulse', color: '#f43f5e', link: 'appointments.html?doctor=D001' },
+        { name: 'AI Radiology & Diagnostic Lab', desc: 'Chest X-Ray AI screening, blood biochemistry & pathology reports', icon: 'fa-flask', color: '#38bdf8', link: 'laboratory.html' },
+        { name: 'Telemedicine Video Consults', desc: 'HD 2-way video doctor consultations, live chat & e-prescriptions', icon: 'fa-video', color: '#10b981', link: 'telemedicine.html' },
+        { name: 'Orthopedics & Joint Recovery', desc: 'Fracture care, sports medicine & post-operative follow-up', icon: 'fa-bone', color: '#f59e0b', link: 'appointments.html?doctor=D002' },
+        { name: 'Neurology & Stroke Response', desc: 'Rapid neuro-evaluation, migraine clinic & stroke monitoring', icon: 'fa-brain', color: '#a855f7', link: 'appointments.html?doctor=D003' },
+        { name: 'Pediatrics & Child Wellness', desc: 'Immunizations, pediatric fever clinic & growth tracking', icon: 'fa-baby', color: '#ec4899', link: 'appointments.html?doctor=D004' },
+        { name: '24/7 Blood Bank & Pharmacy', desc: '8 blood group reserves, verified e-Rx & fast medication dispensing', icon: 'fa-droplet', color: '#fb7185', link: 'blood-bank.html' }
+    ];
+
+    const availableDoctors = doctors.filter(d => (d.availability || '').toLowerCase().includes('available'));
+    const bloodEntries = Object.entries(bloodStock);
+    const activeBloodGroups = bloodEntries.filter(([, u]) => Number(u) > 0);
+    const totalBloodUnits = bloodEntries.reduce((s, [, u]) => s + Number(u || 0), 0);
+
+    const summaryEl = document.getElementById('portalQuickOverviewStats');
+    if (summaryEl) {
+        summaryEl.innerHTML = `
+            <div style="background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.25); border-radius:12px; padding:12px 14px; cursor:pointer;" onclick="switchPortalTab('directory')">
+                <div style="font-size:0.72rem; color:#94a3b8; text-transform:uppercase;">Doctors Present</div>
+                <div style="font-size:1.3rem; font-weight:800; color:#38bdf8;">${availableDoctors.length} / ${doctors.length} <span style="font-size:0.76rem; font-weight:500; color:#34d399;">Available</span></div>
+            </div>
+            <div style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.25); border-radius:12px; padding:12px 14px; cursor:pointer;" onclick="switchPortalTab('directory')">
+                <div style="font-size:0.72rem; color:#94a3b8; text-transform:uppercase;">Departments & Programs</div>
+                <div style="font-size:1.3rem; font-weight:800; color:#34d399;">${hospitalPrograms.length} <span style="font-size:0.76rem; font-weight:500; color:#cbd5e1;">Active Units</span></div>
+            </div>
+            <div style="background:rgba(244,63,94,0.08); border:1px solid rgba(244,63,94,0.25); border-radius:12px; padding:12px 14px; cursor:pointer;" onclick="switchPortalTab('directory')">
+                <div style="font-size:0.72rem; color:#94a3b8; text-transform:uppercase;">Blood Groups Available</div>
+                <div style="font-size:1.3rem; font-weight:800; color:#fb7185;">${activeBloodGroups.length} / ${bloodEntries.length} <span style="font-size:0.76rem; font-weight:500; color:#cbd5e1;">(${totalBloodUnits} units)</span></div>
+            </div>
+            <div style="background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.25); border-radius:12px; padding:12px 14px; cursor:pointer;" onclick="switchPortalTab('directory')">
+                <div style="font-size:0.72rem; color:#94a3b8; text-transform:uppercase;">Hospital Facilities</div>
+                <div style="font-size:1.3rem; font-weight:800; color:#fbbf24;">${resources.length} <span style="font-size:0.76rem; font-weight:500; color:#cbd5e1;">Care Resources</span></div>
+            </div>`;
+    }
+
+    const filteredBlood = bloodEntries.filter(([group]) => !q || group.toLowerCase().includes(q) || 'blood'.includes(q));
+    const filteredDoctors = doctors.filter(d =>
+        !q ||
+        (d.name || '').toLowerCase().includes(q) ||
+        (d.department || '').toLowerCase().includes(q) ||
+        (d.specialization || '').toLowerCase().includes(q) ||
+        'doctor'.includes(q)
+    );
+    const filteredPrograms = hospitalPrograms.filter(p =>
+        !q ||
+        p.name.toLowerCase().includes(q) ||
+        p.desc.toLowerCase().includes(q) ||
+        'program'.includes(q) ||
+        'project'.includes(q) ||
+        'department'.includes(q)
+    );
+
+    const container = document.getElementById('portalDirectoryContainer');
+    if (!container) return;
+
+    const safe = (v) => String(v || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    container.innerHTML = `
+        <div style="margin-bottom: 22px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+                <h4 style="margin:0; color:#fb7185;"><i class="fas fa-droplet"></i> Blood Bank Availability (${filteredBlood.length} of ${bloodEntries.length} Groups)</h4>
+                <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                    ${['', 'O+', 'O-', 'A+', 'B+', 'AB+', 'AB-'].map(bg => `
+                        <button type="button" class="btn btn-sm ${q === bg.toLowerCase() ? 'btn-primary' : 'btn-outline'}" style="padding:3px 9px; font-size:0.74rem;" onclick="filterPortalDirectory('${bg}')">${bg || 'All'}</button>
+                    `).join('')}
+                </div>
+            </div>
+            ${filteredBlood.length ? `
+                <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(135px, 1fr)); gap:10px;">
+                    ${filteredBlood.map(([group, units]) => {
+                        const u = Number(units || 0);
+                        const statusColor = u === 0 ? '#ef4444' : (u < 5 ? '#f59e0b' : '#10b981');
+                        const statusText = u === 0 ? 'Out of Stock' : (u < 5 ? 'Low Stock' : 'Available');
+                        return `
+                            <div style="background:rgba(255,255,255,0.03); border:1px solid ${statusColor}44; border-radius:10px; padding:12px; text-align:center;">
+                                <div style="font-size:1.35rem; font-weight:800; color:#f43f5e;">${safe(group)}</div>
+                                <div style="font-size:1.05rem; font-weight:700; color:#fff; margin:2px 0;">${u} units</div>
+                                <span style="font-size:0.72rem; color:${statusColor}; font-weight:600;">${statusText}</span>
+                            </div>`;
+                    }).join('')}
+                </div>` : '<p style="color:var(--text-muted); font-size:0.86rem;">No blood group matched your search.</p>'}
+        </div>
+
+        <div style="margin-bottom: 22px;">
+            <h4 style="margin:0 0 10px 0; color:#38bdf8;"><i class="fas fa-user-md"></i> Doctors On Duty (${filteredDoctors.length} of ${doctors.length})</h4>
+            ${filteredDoctors.length ? `
+                <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:12px;">
+                    ${filteredDoctors.map(d => {
+                        const isAvail = (d.availability || '').toLowerCase().includes('available');
+                        return `
+                            <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.09); border-radius:12px; padding:14px; display:flex; flex-direction:column; justify-content:space-between; gap:10px;">
+                                <div>
+                                    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                                        <strong style="font-size:0.98rem;">${safe(d.name)}</strong>
+                                        <span class="badge ${isAvail ? 'badge-success' : 'badge-warning'}" style="font-size:0.7rem;">${safe(d.availability || 'On Call')}</span>
+                                    </div>
+                                    <div style="font-size:0.82rem; color:#38bdf8; margin-top:3px;">${safe(d.department)} &bull; ${safe(d.specialization)}</div>
+                                    <div style="font-size:0.76rem; color:var(--text-muted); margin-top:4px;">${safe(d.experience || 8)} yrs experience &bull; ${safe(d.phone || '')}</div>
+                                </div>
+                                <a href="appointments.html?doctor=${encodeURIComponent(d.id)}" class="btn btn-sm btn-outline" style="text-align:center;">
+                                    <i class="fas fa-calendar-plus"></i> Book Consultation
+                                </a>
+                            </div>`;
+                    }).join('')}
+                </div>` : '<p style="color:var(--text-muted); font-size:0.86rem;">No doctors matched your search.</p>'}
+        </div>
+
+        <div>
+            <h4 style="margin:0 0 10px 0; color:#34d399;"><i class="fas fa-hospital-user"></i> Hospital Specialties, Programs & Services (${filteredPrograms.length})</h4>
+            ${filteredPrograms.length ? `
+                <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:12px;">
+                    ${filteredPrograms.map(p => `
+                        <a href="${p.link}" style="text-decoration:none; color:inherit; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.09); border-radius:12px; padding:14px; display:flex; gap:12px; align-items:flex-start;">
+                            <div style="width:36px; height:36px; border-radius:10px; background:${p.color}22; color:${p.color}; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                <i class="fas ${p.icon}"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight:700; font-size:0.9rem; margin-bottom:3px;">${safe(p.name)}</div>
+                                <div style="font-size:0.76rem; color:var(--text-muted); line-height:1.4;">${safe(p.desc)}</div>
+                            </div>
+                        </a>
+                    `).join('')}
+                </div>` : '<p style="color:var(--text-muted); font-size:0.86rem;">No hospital departments or programs matched your search.</p>'}
+        </div>`;
+}
+
+function filterPortalDirectory(query = '') {
+    const inp = document.getElementById('portalDirectorySearch');
+    if (inp && inp.value !== query) inp.value = query;
+    switchPortalTab('directory');
+    renderPortalHospitalDirectory(query);
+}
+
 function renderPortalPatientData(id) {
     const patients = loadData('hms_patients', defaultPatients);
     const patient = patients.find(p => p.id === id) || patients[0];
@@ -9424,11 +9564,13 @@ function renderPortalPatientData(id) {
             </div>
         `).join('') : '<p style="color:var(--text-muted); text-align:center; padding:20px;">No outstanding hospital bills.</p>';
     }
+    // 5. Hospital Directory & Availability
+    renderPortalHospitalDirectory(document.getElementById('portalDirectorySearch')?.value || '');
 }
 
 function switchPortalTab(tab) {
     playSound('click');
-    const tabs = ['rxs', 'labs', 'appts', 'bills'];
+    const tabs = ['rxs', 'labs', 'appts', 'bills', 'directory'];
     tabs.forEach(t => {
         const el = document.getElementById(`portalTab${t.charAt(0).toUpperCase() + t.slice(1)}`);
         const btn = document.getElementById(`btnTab${t.charAt(0).toUpperCase() + t.slice(1)}`);

@@ -84,6 +84,20 @@
                     <!-- Populated dynamically by renderPatientPortal() in JS -->
                 </div>
 
+                <!-- Patient Quick-Finder Search & Live Hospital Availability -->
+                <div class="card" style="padding: 16px; margin-bottom: 18px; border: 1px solid rgba(56, 189, 248, 0.25);">
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px;">
+                        <div style="position: relative; flex: 1; min-width: 240px;">
+                            <i class="fas fa-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #38bdf8;"></i>
+                            <input type="text" id="portalDirectorySearch" class="form-control" placeholder="Search blood group (e.g. O+, AB-), doctor, or hospital department/program..." style="padding-left: 38px;" oninput="filterPortalDirectory(this.value)">
+                        </div>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="filterPortalDirectory(document.getElementById('portalDirectorySearch').value)">
+                            <i class="fas fa-search"></i> Find Care & Blood
+                        </button>
+                    </div>
+                    <div id="portalQuickOverviewStats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px;"></div>
+                </div>
+
                 <!-- Navigation Tabs -->
                 <div class="portal-nav-pills" style="margin-bottom: 20px;">
                     <button class="btn btn-primary" id="btnTabRx" onclick="switchPortalTab('rxs')">
@@ -97,6 +111,9 @@
                     </button>
                     <button class="btn btn-outline" id="btnTabBills" onclick="switchPortalTab('bills')">
                         <i class="fas fa-file-invoice-dollar"></i> Hospital Bills & Online Pay
+                    </button>
+                    <button class="btn btn-outline" id="btnTabDirectory" onclick="switchPortalTab('directory')">
+                        <i class="fas fa-hospital"></i> Doctors, Programs & Blood Bank
                     </button>
                     <button class="btn btn-success" onclick="openPatientVideoCallModal()" style="margin-left: auto;">
                         <i class="fas fa-video"></i> Join Doctor Video Call
@@ -142,6 +159,16 @@
                         <h3 class="card-title"><i class="fas fa-file-invoice-dollar" style="color:var(--primary);"></i> Financial Statement & Online Checkout</h3>
                     </div>
                     <div style="padding: 20px;" id="portalBillsContainer">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- TAB 5: HOSPITAL DIRECTORY, DOCTORS, PROGRAMS & BLOOD BANK -->
+                <div id="portalTabDirectory" class="card" style="display: none;">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-hospital-user" style="color:var(--primary);"></i> Hospital Doctors, Specialties & Blood Bank Availability</h3>
+                    </div>
+                    <div style="padding: 20px;" id="portalDirectoryContainer">
                         <!-- Populated by JS -->
                     </div>
                 </div>
