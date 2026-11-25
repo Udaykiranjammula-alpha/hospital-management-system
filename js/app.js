@@ -10474,18 +10474,57 @@ function getTelemedIceConfig() {
     };
 }
 
+function createSyntheticFallbackStream() {
+    const c = document.createElement('canvas');
+    c.width = 640;
+    c.height = 360;
+    const ctx = c.getContext('2d');
+    let f = 0;
+    const draw = () => {
+        if (!c.isConnected && f > 1800) return;
+        const g = ctx.createLinearGradient(0, 0, 640, 360);
+        g.addColorStop(0, '#0f172a');
+        g.addColorStop(1, '#1e3a5f');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, 640, 360);
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.arc(320, 150 + Math.sin(f * 0.05) * 4, 44, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#f8fafc';
+        ctx.font = 'bold 18px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('MediCare Live Video Participant (Cam Fallback)', 320, 240);
+        f++;
+        requestAnimationFrame(draw);
+    };
+    draw();
+    return c.captureStream ? c.captureStream(24) : new MediaStream();
+}
+
 async function acquireTelemedLocalMedia() {
     if (telemedMediaStream && telemedMediaStream.getTracks().some(t => t.readyState === 'live')) {
         return telemedMediaStream;
     }
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error('Browser camera/microphone API requires HTTPS or localhost.');
-    }
     let stream = null;
-    try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    } catch (_) {
-        stream = await navigator.mediaDevices.getUserMedia({ video: true }).catch(() => navigator.mediaDevices.getUserMedia({ audio: true }));
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        } catch (_) {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            } catch (_) {
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                } catch (_) {
+                    stream = null;
+                }
+            }
+        }
+    }
+    if (!stream) {
+        stream = createSyntheticFallbackStream();
+        if (typeof showToast === 'function') showToast('📷 Camera busy/unavailable — using fallback video stream so call still connects!', 'info');
     }
     telemedMediaStream = stream;
 
@@ -10578,6 +10617,12 @@ async function hostPeerTelemedRoom() {
         });
 
         telemedPeer.on('error', (err) => {
+            if (err && err.type === 'unavailable-id') {
+                const freshId = `HMS-${Math.floor(1000 + Math.random() * 9000)}`;
+                if (input) input.value = freshId;
+                hostPeerTelemedRoom();
+                return;
+            }
             showToast(`Call signaling notice: ${err.message || err.type}`, 'warning');
         });
     } catch (err) {
