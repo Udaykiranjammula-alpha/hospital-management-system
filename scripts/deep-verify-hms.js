@@ -715,6 +715,17 @@ async function runAllTests() {
     assert(appJs.includes('function attachIceDiagnostics'), 'app.js attaches ICE NAT/firewall diagnostics');
     assert(appJs.includes('function openTurnConfigModal'), 'app.js provides Cross-Wi-Fi TURN Relay config modal');
     assert(telemedHtml.includes('id="btnTurnRelayConfig"'), 'telemedicine.html exposes Cross-Wi-Fi TURN button');
+
+    // ------------------------------------------
+    // TEST SUITE 22: Offline SVG Avatars & Zero Broken Images
+    // ------------------------------------------
+    console.log('\n--- TEST SUITE 22: Offline SVG Avatars & Zero Broken Images ---');
+    assert(appJs.includes('function getLocalAvatarDataUri'), 'app.js defines getLocalAvatarDataUri');
+    const htmlDirFiles = fs.readdirSync(rootDir).filter(f => f.endsWith('.html'));
+    const htmlUsingExternalAvatars = htmlDirFiles.filter(f => fs.readFileSync(path.join(rootDir, f), 'utf8').includes('ui-avatars.com'));
+    assert(htmlUsingExternalAvatars.length === 0, 'No HTML files reference external ui-avatars.com', `Found in: ${htmlUsingExternalAvatars.join(', ')}`);
+    const appRealUiAvatars = appJs.split('\n').filter(line => line.includes('ui-avatars.com') && !line.includes('!storedAvatar.includes'));
+    assert(appRealUiAvatars.length === 0, 'app.js no longer assigns external ui-avatars.com URLs');
     assert(fs.readFileSync(path.join(rootDir, 'index.html'), 'utf8').includes('id="loginDoctorSelect"'), 'index.html has #loginDoctorSelect for all doctors');
     assert(fs.readFileSync(path.join(rootDir, 'index.html'), 'utf8').includes('id="loginPatientSelect"'), 'index.html has #loginPatientSelect for all patients');
     assert(fs.readFileSync(path.join(rootDir, 'index.html'), 'utf8').includes('id="btnPublicHospitalInfo"'), 'index.html has #btnPublicHospitalInfo for new visitors');

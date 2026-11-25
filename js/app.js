@@ -867,6 +867,17 @@ function getRoleConfig(role) {
     return ROLES.ADMIN;
 }
 
+function getLocalAvatarDataUri(name = 'User', bgHex = '#0284c7') {
+    const cleaned = String(name || 'User').replace(/^(dr\.?|mr\.?|ms\.?|mrs\.?)\s+/i, '').trim() || 'U';
+    const parts = cleaned.split(/\s+/).filter(Boolean);
+    const initials = (parts.length >= 2
+        ? (parts[0][0] + parts[parts.length - 1][0])
+        : cleaned.slice(0, 2)).toUpperCase().replace(/[^A-Z0-9]/g, '') || 'U';
+    const safeColor = /^#[0-9a-fA-F]{3,8}$/.test(String(bgHex)) ? bgHex : '#0284c7';
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${safeColor}"/><stop offset="100%" stop-color="#0f172a"/></linearGradient></defs><rect width="128" height="128" rx="28" fill="url(#g)"/><text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" fill="#ffffff" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="48" font-weight="800">${initials}</text></svg>`;
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
 function getCurrentUser() {
     const role = localStorage.getItem('hms_user_role') || 'Admin';
     const loginCategory = localStorage.getItem('hms_login_category') || (role === 'Doctor' ? 'DOCTOR' : (role === 'Patient' ? 'PATIENT' : (role === 'Admin' ? 'ADMIN' : 'STAFF')));
@@ -874,7 +885,9 @@ function getCurrentUser() {
     const doctorId = localStorage.getItem('hms_doctor_id') || (role === 'Doctor' ? 'D001' : '');
     const patientId = localStorage.getItem('hms_patient_id') || (role === 'Patient' ? 'P001' : '');
     const department = localStorage.getItem('hms_department') || (role === 'Doctor' ? 'Cardiology' : (role === 'Patient' ? 'ABHA Health Portal' : 'Hospital Operations'));
-    const avatar = localStorage.getItem('hms_user_avatar') || `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=0284c7&color=fff`;
+    const roleColor = role === 'Patient' ? '#a855f7' : (role === 'Pharmacist' ? '#ec4899' : (role === 'Receptionist' ? '#10b981' : (role === 'LabTechnician' ? '#06b6d4' : '#0284c7')));
+    const storedAvatar = localStorage.getItem('hms_user_avatar');
+    const avatar = (storedAvatar && !storedAvatar.includes('ui-avatars.com')) ? storedAvatar : getLocalAvatarDataUri(username, roleColor);
     return { loginCategory, role, username, displayName: username, doctorId, patientId, department, avatar };
 }
 
@@ -2138,6 +2151,14 @@ document.addEventListener('DOMContentLoaded', () => {
     initLiveHUD();
     initGlobalHUD();
     initAIChatbot();
+    // Global image error fallback so no avatar or thumbnail ever renders a broken image icon
+    document.addEventListener('error', (e) => {
+        const el = e.target;
+        if (el && el.tagName === 'IMG' && !el.dataset.fallbackApplied) {
+            el.dataset.fallbackApplied = '1';
+            el.src = getLocalAvatarDataUri(el.alt || 'User');
+        }
+    }, true);
     // 4. Modal Backdrop Click Dismiss (ONLY when clicking outer dark overlay)
     document.addEventListener('click', (e) => {
         if (e.target.classList.contains('modal-overlay')) {
@@ -2334,49 +2355,49 @@ function startHospitalWarpSequence(callback) {
 // Registered authorized personnel credentials with role mapping
 const VALID_CREDENTIALS = [
     // 1. ADMIN CATEGORY (Full System Control)
-    { username: 'admin', password: 'password123', category: 'ADMIN', role: 'Admin', displayName: 'System Administrator', department: 'Executive Operations', avatar: 'https://ui-avatars.com/api/?name=Admin&background=2563eb&color=fff' },
-    { username: 'admin', password: 'admin123', category: 'ADMIN', role: 'Admin', displayName: 'System Administrator', department: 'Executive Operations', avatar: 'https://ui-avatars.com/api/?name=Admin&background=2563eb&color=fff' },
-    { username: 'admin', password: 'admin', category: 'ADMIN', role: 'Admin', displayName: 'System Administrator', department: 'Executive Operations', avatar: 'https://ui-avatars.com/api/?name=Admin&background=2563eb&color=fff' },
-    { username: 'phaneendra', password: 'password123', category: 'ADMIN', role: 'Admin', displayName: 'Phaneendra Kumar (Team Lead)', department: 'System Architecture', avatar: 'https://ui-avatars.com/api/?name=Phaneendra+Kumar&background=f59e0b&color=fff' },
-    { username: 'nistala', password: 'password123', category: 'ADMIN', role: 'Admin', displayName: 'Phaneendra Kumar (Team Lead)', department: 'System Architecture', avatar: 'https://ui-avatars.com/api/?name=Phaneendra+Kumar&background=f59e0b&color=fff' },
-    { username: 'uday', password: 'password123', category: 'ADMIN', role: 'Admin', displayName: 'Uday Kiran (Developer)', department: 'Full Stack Engineering', avatar: 'https://ui-avatars.com/api/?name=Uday+Kiran&background=8b5cf6&color=fff' },
-    { username: 'udaykiran', password: 'password123', category: 'ADMIN', role: 'Admin', displayName: 'Uday Kiran (Developer)', department: 'Full Stack Engineering', avatar: 'https://ui-avatars.com/api/?name=Uday+Kiran&background=8b5cf6&color=fff' },
+    { username: 'admin', password: 'password123', category: 'ADMIN', role: 'Admin', displayName: 'System Administrator', department: 'Executive Operations', avatar: getLocalAvatarDataUri('Admin', '#2563eb') },
+    { username: 'admin', password: 'admin123', category: 'ADMIN', role: 'Admin', displayName: 'System Administrator', department: 'Executive Operations', avatar: getLocalAvatarDataUri('Admin', '#2563eb') },
+    { username: 'admin', password: 'admin', category: 'ADMIN', role: 'Admin', displayName: 'System Administrator', department: 'Executive Operations', avatar: getLocalAvatarDataUri('Admin', '#2563eb') },
+    { username: 'phaneendra', password: 'password123', category: 'ADMIN', role: 'Admin', displayName: 'Phaneendra Kumar (Team Lead)', department: 'System Architecture', avatar: getLocalAvatarDataUri('Phaneendra Kumar', '#f59e0b') },
+    { username: 'nistala', password: 'password123', category: 'ADMIN', role: 'Admin', displayName: 'Phaneendra Kumar (Team Lead)', department: 'System Architecture', avatar: getLocalAvatarDataUri('Phaneendra Kumar', '#f59e0b') },
+    { username: 'uday', password: 'password123', category: 'ADMIN', role: 'Admin', displayName: 'Uday Kiran (Developer)', department: 'Full Stack Engineering', avatar: getLocalAvatarDataUri('Uday Kiran', '#8b5cf6') },
+    { username: 'udaykiran', password: 'password123', category: 'ADMIN', role: 'Admin', displayName: 'Uday Kiran (Developer)', department: 'Full Stack Engineering', avatar: getLocalAvatarDataUri('Uday Kiran', '#8b5cf6') },
 
     // 2. DOCTOR CATEGORY (Clinical Practice Cockpit)
-    { username: 'doctor', password: 'password123', category: 'DOCTOR', role: 'Doctor', doctorId: 'D001', displayName: 'Dr. Priya Sharma', department: 'Cardiology', avatar: 'https://ui-avatars.com/api/?name=Dr+Sharma&background=0284c7&color=fff' },
-    { username: 'doctor', password: 'doctor123', category: 'DOCTOR', role: 'Doctor', doctorId: 'D001', displayName: 'Dr. Priya Sharma', department: 'Cardiology', avatar: 'https://ui-avatars.com/api/?name=Dr+Sharma&background=0284c7&color=fff' },
-    { username: 'doctor', password: 'doctor', category: 'DOCTOR', role: 'Doctor', doctorId: 'D001', displayName: 'Dr. Priya Sharma', department: 'Cardiology', avatar: 'https://ui-avatars.com/api/?name=Dr+Sharma&background=0284c7&color=fff' },
-    { username: 'dr.sharma', password: 'password123', category: 'DOCTOR', role: 'Doctor', doctorId: 'D001', displayName: 'Dr. Priya Sharma', department: 'Cardiology', avatar: 'https://ui-avatars.com/api/?name=Dr+Sharma&background=0284c7&color=fff' },
-    { username: 'dr sharma', password: 'password123', category: 'DOCTOR', role: 'Doctor', doctorId: 'D001', displayName: 'Dr. Priya Sharma', department: 'Cardiology', avatar: 'https://ui-avatars.com/api/?name=Dr+Sharma&background=0284c7&color=fff' },
-    { username: 'dr.verma', password: 'password123', category: 'DOCTOR', role: 'Doctor', doctorId: 'D002', displayName: 'Dr. Rahul Verma', department: 'Orthopedics', avatar: 'https://ui-avatars.com/api/?name=Rahul+Verma&background=f59e0b&color=fff' },
-    { username: 'dr.desai', password: 'password123', category: 'DOCTOR', role: 'Doctor', doctorId: 'D003', displayName: 'Dr. Sneha Desai', department: 'Neurology', avatar: 'https://ui-avatars.com/api/?name=Sneha+Desai&background=8b5cf6&color=fff' },
-    { username: 'dr.iyer', password: 'password123', category: 'DOCTOR', role: 'Doctor', doctorId: 'D005', displayName: 'Dr. Meera Iyer', department: 'General Medicine', avatar: 'https://ui-avatars.com/api/?name=Meera+Iyer&background=ec4899&color=fff' },
-    { username: 'balaji', password: 'password123', category: 'DOCTOR', role: 'Doctor', doctorId: 'D001', displayName: 'Neelakanta Balaji (Physician)', department: 'Cardiology', avatar: 'https://ui-avatars.com/api/?name=Balaji&background=10b981&color=fff' },
-    { username: 'neelakanta', password: 'password123', category: 'DOCTOR', role: 'Doctor', doctorId: 'D001', displayName: 'Neelakanta Balaji (Physician)', department: 'Cardiology', avatar: 'https://ui-avatars.com/api/?name=Balaji&background=10b981&color=fff' },
+    { username: 'doctor', password: 'password123', category: 'DOCTOR', role: 'Doctor', doctorId: 'D001', displayName: 'Dr. Priya Sharma', department: 'Cardiology', avatar: getLocalAvatarDataUri('Dr Sharma', '#0284c7') },
+    { username: 'doctor', password: 'doctor123', category: 'DOCTOR', role: 'Doctor', doctorId: 'D001', displayName: 'Dr. Priya Sharma', department: 'Cardiology', avatar: getLocalAvatarDataUri('Dr Sharma', '#0284c7') },
+    { username: 'doctor', password: 'doctor', category: 'DOCTOR', role: 'Doctor', doctorId: 'D001', displayName: 'Dr. Priya Sharma', department: 'Cardiology', avatar: getLocalAvatarDataUri('Dr Sharma', '#0284c7') },
+    { username: 'dr.sharma', password: 'password123', category: 'DOCTOR', role: 'Doctor', doctorId: 'D001', displayName: 'Dr. Priya Sharma', department: 'Cardiology', avatar: getLocalAvatarDataUri('Dr Sharma', '#0284c7') },
+    { username: 'dr sharma', password: 'password123', category: 'DOCTOR', role: 'Doctor', doctorId: 'D001', displayName: 'Dr. Priya Sharma', department: 'Cardiology', avatar: getLocalAvatarDataUri('Dr Sharma', '#0284c7') },
+    { username: 'dr.verma', password: 'password123', category: 'DOCTOR', role: 'Doctor', doctorId: 'D002', displayName: 'Dr. Rahul Verma', department: 'Orthopedics', avatar: getLocalAvatarDataUri('Rahul Verma', '#f59e0b') },
+    { username: 'dr.desai', password: 'password123', category: 'DOCTOR', role: 'Doctor', doctorId: 'D003', displayName: 'Dr. Sneha Desai', department: 'Neurology', avatar: getLocalAvatarDataUri('Sneha Desai', '#8b5cf6') },
+    { username: 'dr.iyer', password: 'password123', category: 'DOCTOR', role: 'Doctor', doctorId: 'D005', displayName: 'Dr. Meera Iyer', department: 'General Medicine', avatar: getLocalAvatarDataUri('Meera Iyer', '#ec4899') },
+    { username: 'balaji', password: 'password123', category: 'DOCTOR', role: 'Doctor', doctorId: 'D001', displayName: 'Neelakanta Balaji (Physician)', department: 'Cardiology', avatar: getLocalAvatarDataUri('Balaji', '#10b981') },
+    { username: 'neelakanta', password: 'password123', category: 'DOCTOR', role: 'Doctor', doctorId: 'D001', displayName: 'Neelakanta Balaji (Physician)', department: 'Cardiology', avatar: getLocalAvatarDataUri('Balaji', '#10b981') },
 
     // 3. STAFF / OPERATIONS CATEGORY
     // Receptionist
-    { username: 'reception', password: 'password123', category: 'STAFF', role: 'Receptionist', displayName: 'Ananya Desai (Receptionist)', department: 'Front Desk & Patient Admissions', avatar: 'https://ui-avatars.com/api/?name=Reception&background=10b981&color=fff' },
-    { username: 'receptionist', password: 'password123', category: 'STAFF', role: 'Receptionist', displayName: 'Ananya Desai (Receptionist)', department: 'Front Desk & Patient Admissions', avatar: 'https://ui-avatars.com/api/?name=Reception&background=10b981&color=fff' },
-    { username: 'reception', password: 'reception123', category: 'STAFF', role: 'Receptionist', displayName: 'Ananya Desai (Receptionist)', department: 'Front Desk & Patient Admissions', avatar: 'https://ui-avatars.com/api/?name=Reception&background=10b981&color=fff' },
-    { username: 'reception', password: 'reception', category: 'STAFF', role: 'Receptionist', displayName: 'Ananya Desai (Receptionist)', department: 'Front Desk & Patient Admissions', avatar: 'https://ui-avatars.com/api/?name=Reception&background=10b981&color=fff' },
+    { username: 'reception', password: 'password123', category: 'STAFF', role: 'Receptionist', displayName: 'Ananya Desai (Receptionist)', department: 'Front Desk & Patient Admissions', avatar: getLocalAvatarDataUri('Reception', '#10b981') },
+    { username: 'receptionist', password: 'password123', category: 'STAFF', role: 'Receptionist', displayName: 'Ananya Desai (Receptionist)', department: 'Front Desk & Patient Admissions', avatar: getLocalAvatarDataUri('Reception', '#10b981') },
+    { username: 'reception', password: 'reception123', category: 'STAFF', role: 'Receptionist', displayName: 'Ananya Desai (Receptionist)', department: 'Front Desk & Patient Admissions', avatar: getLocalAvatarDataUri('Reception', '#10b981') },
+    { username: 'reception', password: 'reception', category: 'STAFF', role: 'Receptionist', displayName: 'Ananya Desai (Receptionist)', department: 'Front Desk & Patient Admissions', avatar: getLocalAvatarDataUri('Reception', '#10b981') },
     // Pharmacy
-    { username: 'pharmacist', password: 'password123', category: 'STAFF', role: 'Pharmacist', displayName: 'Sushma Singh (Pharmacist)', department: 'Pharmacy & Drug Dispensary', avatar: 'https://ui-avatars.com/api/?name=Pharmacist&background=ec4899&color=fff' },
-    { username: 'pharmacy', password: 'password123', category: 'STAFF', role: 'Pharmacist', displayName: 'Sushma Singh (Pharmacist)', department: 'Pharmacy & Drug Dispensary', avatar: 'https://ui-avatars.com/api/?name=Pharmacist&background=ec4899&color=fff' },
-    { username: 'pharmacist', password: 'pharmacist', category: 'STAFF', role: 'Pharmacist', displayName: 'Sushma Singh (Pharmacist)', department: 'Pharmacy & Drug Dispensary', avatar: 'https://ui-avatars.com/api/?name=Pharmacist&background=ec4899&color=fff' },
+    { username: 'pharmacist', password: 'password123', category: 'STAFF', role: 'Pharmacist', displayName: 'Sushma Singh (Pharmacist)', department: 'Pharmacy & Drug Dispensary', avatar: getLocalAvatarDataUri('Pharmacist', '#ec4899') },
+    { username: 'pharmacy', password: 'password123', category: 'STAFF', role: 'Pharmacist', displayName: 'Sushma Singh (Pharmacist)', department: 'Pharmacy & Drug Dispensary', avatar: getLocalAvatarDataUri('Pharmacist', '#ec4899') },
+    { username: 'pharmacist', password: 'pharmacist', category: 'STAFF', role: 'Pharmacist', displayName: 'Sushma Singh (Pharmacist)', department: 'Pharmacy & Drug Dispensary', avatar: getLocalAvatarDataUri('Pharmacist', '#ec4899') },
     // Lab Technician
-    { username: 'pathologist', password: 'password123', category: 'STAFF', role: 'LabTechnician', displayName: 'Ravi Kumar (Lab Technologist)', department: 'Pathology Diagnostics', avatar: 'https://ui-avatars.com/api/?name=Pathologist&background=06b6d4&color=fff' },
-    { username: 'lab', password: 'password123', category: 'STAFF', role: 'LabTechnician', displayName: 'Ravi Kumar (Lab Technologist)', department: 'Pathology Diagnostics', avatar: 'https://ui-avatars.com/api/?name=Pathologist&background=06b6d4&color=fff' },
-    { username: 'labtech', password: 'password123', category: 'STAFF', role: 'LabTechnician', displayName: 'Ravi Kumar (Lab Technologist)', department: 'Pathology Diagnostics', avatar: 'https://ui-avatars.com/api/?name=Pathologist&background=06b6d4&color=fff' },
-    { username: 'pathologist', password: 'pathologist', category: 'STAFF', role: 'LabTechnician', displayName: 'Ravi Kumar (Lab Technologist)', department: 'Pathology Diagnostics', avatar: 'https://ui-avatars.com/api/?name=Pathologist&background=06b6d4&color=fff' },
+    { username: 'pathologist', password: 'password123', category: 'STAFF', role: 'LabTechnician', displayName: 'Ravi Kumar (Lab Technologist)', department: 'Pathology Diagnostics', avatar: getLocalAvatarDataUri('Pathologist', '#06b6d4') },
+    { username: 'lab', password: 'password123', category: 'STAFF', role: 'LabTechnician', displayName: 'Ravi Kumar (Lab Technologist)', department: 'Pathology Diagnostics', avatar: getLocalAvatarDataUri('Pathologist', '#06b6d4') },
+    { username: 'labtech', password: 'password123', category: 'STAFF', role: 'LabTechnician', displayName: 'Ravi Kumar (Lab Technologist)', department: 'Pathology Diagnostics', avatar: getLocalAvatarDataUri('Pathologist', '#06b6d4') },
+    { username: 'pathologist', password: 'pathologist', category: 'STAFF', role: 'LabTechnician', displayName: 'Ravi Kumar (Lab Technologist)', department: 'Pathology Diagnostics', avatar: getLocalAvatarDataUri('Pathologist', '#06b6d4') },
 
     // 4. PATIENT PORTAL CATEGORY (Self-Service Health Passport — Patient Data Only)
-    { username: 'patient', password: 'password123', category: 'PATIENT', role: 'Patient', patientId: 'P001', displayName: 'Rajesh Kumar', department: 'ABHA Health Portal', avatar: 'https://ui-avatars.com/api/?name=Rajesh+Kumar&background=a855f7&color=fff' },
-    { username: 'patient', password: 'patient123', category: 'PATIENT', role: 'Patient', patientId: 'P001', displayName: 'Rajesh Kumar', department: 'ABHA Health Portal', avatar: 'https://ui-avatars.com/api/?name=Rajesh+Kumar&background=a855f7&color=fff' },
-    { username: 'patient', password: 'patient', category: 'PATIENT', role: 'Patient', patientId: 'P001', displayName: 'Rajesh Kumar', department: 'ABHA Health Portal', avatar: 'https://ui-avatars.com/api/?name=Rajesh+Kumar&background=a855f7&color=fff' },
-    { username: 'rajesh', password: 'password123', category: 'PATIENT', role: 'Patient', patientId: 'P001', displayName: 'Rajesh Kumar', department: 'ABHA Health Portal', avatar: 'https://ui-avatars.com/api/?name=Rajesh+Kumar&background=a855f7&color=fff' },
-    { username: 'priya.patel', password: 'password123', category: 'PATIENT', role: 'Patient', patientId: 'P002', displayName: 'Priya Patel', department: 'ABHA Health Portal', avatar: 'https://ui-avatars.com/api/?name=Priya+Patel&background=a855f7&color=fff' },
-    { username: 'vikram', password: 'password123', category: 'PATIENT', role: 'Patient', patientId: 'P005', displayName: 'Vikram Reddy', department: 'ABHA Health Portal', avatar: 'https://ui-avatars.com/api/?name=Vikram+Reddy&background=a855f7&color=fff' }
+    { username: 'patient', password: 'password123', category: 'PATIENT', role: 'Patient', patientId: 'P001', displayName: 'Rajesh Kumar', department: 'ABHA Health Portal', avatar: getLocalAvatarDataUri('Rajesh Kumar', '#a855f7') },
+    { username: 'patient', password: 'patient123', category: 'PATIENT', role: 'Patient', patientId: 'P001', displayName: 'Rajesh Kumar', department: 'ABHA Health Portal', avatar: getLocalAvatarDataUri('Rajesh Kumar', '#a855f7') },
+    { username: 'patient', password: 'patient', category: 'PATIENT', role: 'Patient', patientId: 'P001', displayName: 'Rajesh Kumar', department: 'ABHA Health Portal', avatar: getLocalAvatarDataUri('Rajesh Kumar', '#a855f7') },
+    { username: 'rajesh', password: 'password123', category: 'PATIENT', role: 'Patient', patientId: 'P001', displayName: 'Rajesh Kumar', department: 'ABHA Health Portal', avatar: getLocalAvatarDataUri('Rajesh Kumar', '#a855f7') },
+    { username: 'priya.patel', password: 'password123', category: 'PATIENT', role: 'Patient', patientId: 'P002', displayName: 'Priya Patel', department: 'ABHA Health Portal', avatar: getLocalAvatarDataUri('Priya Patel', '#a855f7') },
+    { username: 'vikram', password: 'password123', category: 'PATIENT', role: 'Patient', patientId: 'P005', displayName: 'Vikram Reddy', department: 'ABHA Health Portal', avatar: getLocalAvatarDataUri('Vikram Reddy', '#a855f7') }
 ];
 
 window.VALID_CREDENTIALS = VALID_CREDENTIALS;
@@ -3587,7 +3608,7 @@ function viewPatient(id) {
             </div>
         `).join('') : '<p style="color:var(--text-muted); padding:10px 0;">No hospital invoices on record.</p>';
 
-        const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(patient.name)}&background=0284c7&color=fff&size=128`;
+        const avatarUrl = getLocalAvatarDataUri(patient.name, '#0284c7');
 
         content.innerHTML = `
             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; padding-bottom:16px; border-bottom:1px solid var(--glass-border);">
@@ -3705,7 +3726,7 @@ function renderDoctors(data) {
 
     if (emptyState) emptyState.style.display = 'none';
     grid.innerHTML = data.map(d => {
-        const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(d.name)}&background=0284c7&color=fff&size=128`;
+        const avatarUrl = getLocalAvatarDataUri(d.name, '#0284c7');
         return `
             <div class="doctor-card">
                 <div class="doctor-header">
@@ -3895,7 +3916,7 @@ function viewDoctor(id) {
 
         content.innerHTML = `
             <div style="display:flex; align-items:center; gap:16px; margin-bottom:18px;">
-                <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(doctor.name)}&background=0284c7&color=fff&size=128" class="doctor-avatar">
+                <img src="${getLocalAvatarDataUri(doctor.name, '#0284c7')}" alt="${doctor.name}" class="doctor-avatar">
                 <div>
                     <h2 style="color:var(--primary); margin:0;">${doctor.name}</h2>
                     <div style="font-weight:600; color:var(--text-secondary);">${doctor.specialization} (${doctor.department})</div>
@@ -14314,7 +14335,7 @@ async function renderABHACard(patient, containerId = 'abhaCardVisualContainer') 
             <div style="display:grid; grid-template-columns:auto 1fr auto; gap:20px; align-items:center;">
                 <!-- Patient Avatar -->
                 <div style="position:relative;">
-                    <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(patient.name)}&background=0284c7&color=fff&size=160" alt="${patient.name}" style="width:84px; height:84px; border-radius:16px; border:2px solid #38bdf8; box-shadow:0 0 16px rgba(56,189,248,0.35);">
+                    <img src="${getLocalAvatarDataUri(patient.name, '#0284c7')}" alt="${patient.name}" style="width:84px; height:84px; border-radius:16px; border:2px solid #38bdf8; box-shadow:0 0 16px rgba(56,189,248,0.35);">
                     <span style="position:absolute; bottom:-6px; left:50%; transform:translateX(-50%); background:#0f172a; border:1px solid #38bdf8; color:#38bdf8; font-size:9px; font-weight:800; padding:1px 6px; border-radius:8px;">${patient.bloodGroup}</span>
                 </div>
 
