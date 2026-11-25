@@ -10464,6 +10464,41 @@ let isTelemedAudioMuted = false;
 let isTelemedVideoMuted = false;
 let telemedPeer = null;
 let telemedActiveCall = null;
+let telemedDataConn = null;
+
+function bindPeerDataConnection(conn) {
+    if (!conn) return;
+    telemedDataConn = conn;
+    conn.on('data', (payload) => {
+        if (!payload || !payload.text) return;
+        const senderLabel = payload.from === 'patient' ? 'Patient' : 'Doctor';
+        const log = document.getElementById('patientCallChatLog');
+        if (log) {
+            if (log.innerText.includes('In-call chat ready')) log.innerHTML = '';
+            log.innerHTML += `<div><strong style="color:#38bdf8;">${senderLabel}:</strong> ${String(payload.text).replace(/</g, '&lt;')}</div>`;
+            log.scrollTop = log.scrollHeight;
+        }
+        if (typeof showToast === 'function') {
+            showToast(`💬 ${senderLabel}: ${payload.text}`, 'info');
+        }
+    });
+}
+
+function sendPeerChatMessage(roleLabel = 'doctor') {
+    const inp = document.getElementById('patientCallChatInput');
+    const text = inp ? inp.value.trim() : '';
+    if (!text) return;
+    if (inp) inp.value = '';
+    if (telemedDataConn && telemedDataConn.open) {
+        telemedDataConn.send({ from: roleLabel, text });
+    }
+    const log = document.getElementById('patientCallChatLog');
+    if (log) {
+        if (log.innerText.includes('In-call chat ready')) log.innerHTML = '';
+        log.innerHTML += `<div><strong style="color:#34d399;">You:</strong> ${text.replace(/</g, '&lt;')}</div>`;
+        log.scrollTop = log.scrollHeight;
+    }
+}
 
 function getTelemedIceConfig() {
     return {
@@ -10693,6 +10728,8 @@ async function hostPeerTelemedRoom() {
             showToast(`📡 Room ${roomId} live! Share ID "${roomId}" or scan QR on the other device.`, 'success');
         });
 
+        telemedPeer.on('connection', bindPeerDataConnection);
+
         telemedPeer.on('call', (call) => {
             telemedActiveCall = call;
             call.answer(localStream);
@@ -10764,6 +10801,8 @@ async function joinPeerTelemedRoom(customRoomId = '') {
         }, 12000);
 
         telemedPeer.on('open', () => {
+            const dataConn = telemedPeer.connect(`medicare-${roomId}`);
+            bindPeerDataConnection(dataConn);
             const call = telemedPeer.call(`medicare-${roomId}`, localStream);
             telemedActiveCall = call;
             call.on('stream', (remoteStream) => {
@@ -10799,6 +10838,10 @@ async function joinPeerTelemedRoom(customRoomId = '') {
 }
 
 function endPeerTelemedCall(keepStream = false) {
+    if (telemedDataConn) {
+        try { telemedDataConn.close(); } catch (_) {}
+        telemedDataConn = null;
+    }
     if (telemedActiveCall) {
         try { telemedActiveCall.close(); } catch (_) {}
         telemedActiveCall = null;
@@ -11220,12 +11263,17 @@ function toggleTelemedAudio() {
         btn.innerHTML = isTelemedAudioMuted ? '<i class="fas fa-microphone-slash" style="color:#ef4444;"></i>' : '<i class="fas fa-microphone"></i>';
         btn.style.borderColor = isTelemedAudioMuted ? '#ef4444' : 'rgba(255,255,255,0.15)';
     }
+    const patBtn = document.getElementById('patientMuteMicBtn');
+    if (patBtn) {
+        patBtn.innerHTML = isTelemedAudioMuted ? '<i class="fas fa-microphone-slash" style="color:#ef4444;"></i> Unmute Mic' : '<i class="fas fa-microphone"></i> Mute Mic';
+    }
     if (telemedMediaStream) {
         telemedMediaStream.getAudioTracks().forEach(t => t.enabled = !isTelemedAudioMuted);
     }
     if (typeof playSound === 'function') playSound('click');
     showToast(isTelemedAudioMuted ? 'Microphone Muted' : 'Microphone Unmuted', 'info');
 }
+const toggleTelemedMic = toggleTelemedAudio;
 
 function toggleTelemedVideo() {
     isTelemedVideoMuted = !isTelemedVideoMuted;
@@ -11233,6 +11281,10 @@ function toggleTelemedVideo() {
     if (btn) {
         btn.innerHTML = isTelemedVideoMuted ? '<i class="fas fa-video-slash" style="color:#ef4444;"></i>' : '<i class="fas fa-video"></i>';
         btn.style.borderColor = isTelemedVideoMuted ? '#ef4444' : 'rgba(255,255,255,0.15)';
+    }
+    const patBtn = document.getElementById('patientMuteCamBtn');
+    if (patBtn) {
+        patBtn.innerHTML = isTelemedVideoMuted ? '<i class="fas fa-video-slash" style="color:#ef4444;"></i> Camera On' : '<i class="fas fa-video"></i> Camera Off';
     }
     if (telemedMediaStream) {
         telemedMediaStream.getVideoTracks().forEach(t => t.enabled = !isTelemedVideoMuted);
