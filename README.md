@@ -179,17 +179,6 @@ The platform is configured for continuous zero-downtime deployment on the **Verc
 
 ---
 
-## 👥 Hackathon Presentation Team
-
-- **Lead**: NISTALA SAI VENKATA ABHIRAM
-- **Members**:
-  - GANGADHAR
-  - UDAY KIRAN
-  - MADAN
-- **Mentor**: PROF. KISHORE RAJU
-
----
-
 ## 📄 License
 
 This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.  
