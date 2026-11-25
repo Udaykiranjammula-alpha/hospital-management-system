@@ -2102,13 +2102,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // 4. Modal Backdrop Click Dismiss (ONLY when clicking outer dark overlay)
     document.addEventListener('click', (e) => {
         if (e.target.classList.contains('modal-overlay')) {
+            if (e.target.id === 'patientVideoCallModal' && typeof endPeerTelemedCall === 'function') {
+                endPeerTelemedCall(false);
+            }
             closeModal(e.target.id);
         }
     });
     // 4b. Escape Key Modal Dismiss
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            document.querySelectorAll('.modal-overlay.active').forEach(m => closeModal(m.id));
+            document.querySelectorAll('.modal-overlay.active').forEach(m => {
+                if (m.id === 'patientVideoCallModal' && typeof endPeerTelemedCall === 'function') {
+                    endPeerTelemedCall(false);
+                }
+                closeModal(m.id);
+            });
         }
     });
     // 5. Active Nav Highlighting
@@ -11022,6 +11030,105 @@ function attachRemotePeerStream(remoteStream) {
     if (typeof showToast === 'function') showToast('🎥 Live 2-Way Video Call Connected!', 'success');
 }
 
+function bindPeerReconnectHandler(peer, badgeEl, patStatusEl) {
+    if (!peer || typeof peer.on !== 'function') return;
+    peer.on('disconnected', () => {
+        if (peer.destroyed) return;
+        if (badgeEl) {
+            badgeEl.style.display = 'inline-block';
+            badgeEl.style.color = '#fbbf24';
+            badgeEl.textContent = 'Reconnecting signaling...';
+        }
+        if (patStatusEl) {
+            patStatusEl.style.color = '#fbbf24';
+            patStatusEl.textContent = 'Reconnecting...';
+        }
+        try {
+            peer.reconnect();
+        } catch (_) {}
+    });
+}
+
+function exportTelemedSummaryReport() {
+    const patSelect = document.getElementById('telemedPatientSelect');
+    const patLabel = (patSelect && patSelect.options && patSelect.selectedIndex >= 0)
+        ? patSelect.options[patSelect.selectedIndex].text
+        : 'Telemedicine Patient';
+    const hr = document.getElementById('telemedHrVal')?.textContent || '76';
+    const spo2 = document.getElementById('telemedSpo2Val')?.textContent || '98';
+    const bp = document.getElementById('telemedBpVal')?.textContent || '122/80';
+    const temp = document.getElementById('telemedTempVal')?.textContent || '98.6';
+    const diag = document.getElementById('telemedDiagnosis')?.value || 'Clinical Tele-Evaluation';
+    const soap = document.getElementById('telemedSoapNotes')?.value || 'No additional SOAP notes recorded.';
+    const med = document.getElementById('telemedMedName')?.value || 'N/A';
+    const dose = document.getElementById('telemedMedDose')?.value || '';
+    const freq = document.getElementById('telemedMedFreq')?.value || '';
+    const dur = document.getElementById('telemedMedDur')?.value || '';
+    const safe = (v) => String(v).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    let modal = document.getElementById('telemedSummaryModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'telemedSummaryModal';
+        modal.className = 'modal-overlay';
+        modal.style.display = 'none';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 680px;">
+                <div class="modal-header">
+                    <h3 class="modal-title" style="color: #38bdf8;"><i class="fas fa-file-medical"></i> Telemedicine Consultation Summary</h3>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="window.print()"><i class="fas fa-print"></i> Print Summary</button>
+                        <button class="modal-close" onclick="closeModal('telemedSummaryModal')">&times;</button>
+                    </div>
+                </div>
+                <div id="telemedSummaryBody" class="modal-body" style="line-height: 1.6;"></div>
+            </div>`;
+        document.body.appendChild(modal);
+    }
+
+    const body = document.getElementById('telemedSummaryBody');
+    if (body) {
+        body.innerHTML = `
+            <div style="border-bottom: 1px solid rgba(56,189,248,0.25); padding-bottom: 12px; margin-bottom: 16px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+                <div><strong>Patient:</strong> ${safe(patLabel)}</div>
+                <div style="color: var(--text-muted);"><strong>Date:</strong> ${new Date().toLocaleString()}</div>
+            </div>
+            <div style="display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px;">
+                <div style="background: rgba(15,23,42,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:10px;">
+                    <div style="font-size:0.72rem; color:#94a3b8;">HEART RATE</div>
+                    <div style="font-weight:700; color:#f87171;">${safe(hr)} BPM</div>
+                </div>
+                <div style="background: rgba(15,23,42,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:10px;">
+                    <div style="font-size:0.72rem; color:#94a3b8;">SPO2</div>
+                    <div style="font-weight:700; color:#38bdf8;">${safe(spo2)}%</div>
+                </div>
+                <div style="background: rgba(15,23,42,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:10px;">
+                    <div style="font-size:0.72rem; color:#94a3b8;">BLOOD PRESSURE</div>
+                    <div style="font-weight:700; color:#34d399;">${safe(bp)} mmHg</div>
+                </div>
+                <div style="background: rgba(15,23,42,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:10px;">
+                    <div style="font-size:0.72rem; color:#94a3b8;">CORE TEMP</div>
+                    <div style="font-weight:700; color:#fbbf24;">${safe(temp)} °F</div>
+                </div>
+            </div>
+            <div style="margin-bottom: 14px;">
+                <div style="font-size:0.78rem; color:#94a3b8; text-transform:uppercase;">Clinical Impression</div>
+                <div style="font-weight:700; font-size:1rem;">${safe(diag)}</div>
+            </div>
+            <div style="margin-bottom: 14px;">
+                <div style="font-size:0.78rem; color:#94a3b8; text-transform:uppercase;">SOAP Notes & Counseling</div>
+                <div style="background: rgba(15,23,42,0.45); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px;">${safe(soap)}</div>
+            </div>
+            <div>
+                <div style="font-size:0.78rem; color:#94a3b8; text-transform:uppercase;">Prescribed Medication</div>
+                <div style="background: rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.28); border-radius:10px; padding:12px;">
+                    <strong>${safe(med)}</strong> — ${safe(dose)} • ${safe(freq)} (${safe(dur)})
+                </div>
+            </div>`;
+    }
+    openModal('telemedSummaryModal');
+}
+
 async function hostPeerTelemedRoom() {
     if (typeof window.Peer === 'undefined') {
         showToast('WebRTC signaling library is still loading. Please retry in a moment.', 'warning');
@@ -11043,6 +11150,7 @@ async function hostPeerTelemedRoom() {
         const localStream = await acquireTelemedLocalMedia();
         endPeerTelemedCall(true);
         telemedPeer = new window.Peer(`medicare-${roomId}`, { config: getTelemedIceConfig() });
+        bindPeerReconnectHandler(telemedPeer, badge, null);
 
         telemedPeer.on('open', () => {
             const joinUrl = `${window.location.origin}/patient-portal.html?room=${encodeURIComponent(roomId)}`;
@@ -11118,6 +11226,7 @@ async function joinPeerTelemedRoom(customRoomId = '') {
         const localStream = await acquireTelemedLocalMedia();
         endPeerTelemedCall(true);
         telemedPeer = new window.Peer(undefined, { config: getTelemedIceConfig() });
+        bindPeerReconnectHandler(telemedPeer, badge, patStatus);
 
         let connected = false;
         const joinTimeout = setTimeout(() => {
