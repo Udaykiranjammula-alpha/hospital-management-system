@@ -70,6 +70,14 @@
                 </div>
 
                 <!-- Operations Staff Sub-Role Selector (visible when STAFF category is selected) -->
+                <div id="doctorSubSelector" class="staff-sub-selector" style="display: none; margin-top: 10px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+                        <span style="font-size:0.75rem; font-weight:700; color:#34d399;"><i class="fas fa-user-md"></i> Select Doctor Account</span>
+                        <span style="font-size:0.7rem; color:var(--text-muted);">Password: <code>password123</code></span>
+                    </div>
+                    <select id="loginDoctorSelect" class="form-control" style="font-size:0.84rem; padding:8px 12px;" onchange="onLoginDoctorSelected(this.value)"></select>
+                </div>
+
                 <div id="staffSubRoleSelector" class="staff-sub-selector" style="display: none;">
                     <span class="sub-label"><i class="fas fa-arrow-turn-down"></i> Select Operational Staff Role:</span>
                     <div class="sub-btn-group">
@@ -176,22 +184,43 @@
             const p = document.getElementById('password');
 
             if (cat === 'admin') {
+                const docSub = document.getElementById('doctorSubSelector'); if (docSub) docSub.style.display = 'none';
                 if (sub) sub.style.display = 'none';
                 if (u) u.value = 'admin';
                 if (p) p.value = 'password123';
             } else if (cat === 'doctor') {
                 if (sub) sub.style.display = 'none';
-                if (u) u.value = 'dr.sharma';
-                if (p) p.value = 'password123';
+                const docSub = document.getElementById('doctorSubSelector');
+                if (docSub) docSub.style.display = 'block';
+                populateLoginDoctorSelect();
             } else if (cat === 'staff') {
+                const docSub = document.getElementById('doctorSubSelector'); if (docSub) docSub.style.display = 'none';
                 if (sub) sub.style.display = 'block';
                 selectStaffSubRole('receptionist');
             } else if (cat === 'patient') {
+                const docSub = document.getElementById('doctorSubSelector'); if (docSub) docSub.style.display = 'none';
                 if (sub) sub.style.display = 'none';
                 if (u) u.value = 'patient';
                 if (p) p.value = 'password123';
             }
             if (typeof playSound === 'function') playSound('click');
+        }
+
+        function populateLoginDoctorSelect() {
+            const sel = document.getElementById('loginDoctorSelect');
+            if (!sel) return;
+            const docs = (typeof loadData === 'function' && typeof defaultDoctors !== 'undefined')
+                ? loadData('hms_doctors', defaultDoctors)
+                : [];
+            sel.innerHTML = docs.map(d => `<option value="${d.id}">${d.name} (${d.department} &bull; ${d.id})</option>`).join('');
+            if (docs.length > 0) onLoginDoctorSelected(docs[0].id);
+        }
+
+        function onLoginDoctorSelected(docId) {
+            const u = document.getElementById('username');
+            const p = document.getElementById('password');
+            if (u) u.value = docId || 'D001';
+            if (p) p.value = 'password123';
         }
 
         function selectStaffSubRole(roleKey, btn) {

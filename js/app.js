@@ -366,6 +366,9 @@ if (typeof window !== 'undefined') {
             if (document.getElementById('publicHospitalDirectoryModal')?.classList.contains('active') && typeof filterPublicHospitalDirectory === 'function') {
                 filterPublicHospitalDirectory(document.getElementById('publicDirectorySearch')?.value || '');
             }
+            if ((normalizePageName(window.location.pathname) === 'dashboard.html') && typeof initDashboardPage === 'function') {
+                initDashboardPage();
+            }
         }
     });
 }
@@ -2602,10 +2605,31 @@ function handleLogin(e) {
         return false;
     }
 
-    // 2. Validate against authorized list
-    const matchedAccount = VALID_CREDENTIALS.find(c => 
+    // 2. Validate against authorized list OR dynamic doctors registry
+    let matchedAccount = VALID_CREDENTIALS.find(c => 
         c.username.toLowerCase() === userInput.toLowerCase() && c.password === passwordInput
     );
+
+    if (!matchedAccount && passwordInput === 'password123') {
+        const docs = loadData('hms_doctors', defaultDoctors);
+        const qUser = userInput.toLowerCase();
+        const doc = docs.find(d =>
+            (d.id && d.id.toLowerCase() === qUser) ||
+            (d.email && d.email.split('@')[0].toLowerCase() === qUser) ||
+            (d.name && d.name.toLowerCase() === qUser)
+        );
+        if (doc) {
+            matchedAccount = {
+                username: doc.id.toLowerCase(),
+                password: 'password123',
+                role: 'Doctor',
+                displayName: doc.name,
+                doctorId: doc.id,
+                department: doc.department,
+                title: doc.specialization || 'Consultant Physician'
+            };
+        }
+    }
 
     if (!matchedAccount) {
         // AUTHENTICATION FAILED!
