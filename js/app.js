@@ -10469,8 +10469,24 @@ function getTelemedIceConfig() {
     return {
         iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:stun1.l.google.com:19302' }
-        ]
+            { urls: 'stun:stun1.l.google.com:19302' },
+            {
+                urls: 'turn:openrelay.metered.ca:80',
+                username: 'openrelayproject',
+                credential: 'openrelayproject'
+            },
+            {
+                urls: 'turn:openrelay.metered.ca:443',
+                username: 'openrelayproject',
+                credential: 'openrelayproject'
+            },
+            {
+                urls: 'turns:openrelay.metered.ca:443?transport=tcp',
+                username: 'openrelayproject',
+                credential: 'openrelayproject'
+            }
+        ],
+        iceCandidatePoolSize: 4
     };
 }
 
@@ -10642,6 +10658,11 @@ async function joinPeerTelemedRoom(customRoomId = '') {
         return;
     }
 
+    if (telemedPeer && !telemedPeer.destroyed && telemedPeer.id === `medicare-${roomId}`) {
+        showToast(`You are hosting Room ${roomId} here! Open the copied link on the OTHER phone or browser tab to join.`, 'info');
+        return;
+    }
+
     const badge = document.getElementById('peerRoomStatusBadge');
     if (badge) {
         badge.style.display = 'inline-block';
@@ -10659,14 +10680,49 @@ async function joinPeerTelemedRoom(customRoomId = '') {
         endPeerTelemedCall(true);
         telemedPeer = new window.Peer(undefined, { config: getTelemedIceConfig() });
 
+        let connected = false;
+        const joinTimeout = setTimeout(() => {
+            if (!connected) {
+                if (badge) {
+                    badge.style.color = '#fca5a5';
+                    badge.textContent = `Host not found (${roomId})`;
+                }
+                if (patStatus) {
+                    patStatus.style.color = '#fca5a5';
+                    patStatus.textContent = `Host not found for ${roomId} — click Host Live Call on Device 1 first`;
+                }
+                showToast(`No active host found for Room ${roomId}. Make sure Device 1 clicked "Host Live Call" first!`, 'warning');
+            }
+        }, 12000);
+
         telemedPeer.on('open', () => {
             const call = telemedPeer.call(`medicare-${roomId}`, localStream);
             telemedActiveCall = call;
-            call.on('stream', attachRemotePeerStream);
-            call.on('close', () => endPeerTelemedCall(false));
+            call.on('stream', (remoteStream) => {
+                connected = true;
+                clearTimeout(joinTimeout);
+                attachRemotePeerStream(remoteStream);
+            });
+            call.on('close', () => {
+                clearTimeout(joinTimeout);
+                endPeerTelemedCall(false);
+            });
         });
 
         telemedPeer.on('error', (err) => {
+            clearTimeout(joinTimeout);
+            if (err && err.type === 'peer-unavailable') {
+                if (badge) {
+                    badge.style.color = '#fca5a5';
+                    badge.textContent = `Room ${roomId} not hosted`;
+                }
+                if (patStatus) {
+                    patStatus.style.color = '#fca5a5';
+                    patStatus.textContent = `Room ${roomId} is not hosted yet`;
+                }
+                showToast(`Room ${roomId} is not hosted yet. Click "Host Live Call" on Device 1 first!`, 'warning');
+                return;
+            }
             showToast(`Could not join room ${roomId}: ${err.message || err.type}`, 'error');
         });
     } catch (err) {
